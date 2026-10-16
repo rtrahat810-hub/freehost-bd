@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn" x-data="adminApp()" class="scroll-smooth">
+<html lang="bn" x-data="adminApp()" x-init="init()" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,46 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
+        .glass-strong {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .sidebar-bg {
+            background: linear-gradient(180deg, #0a0e1a 0%, #050811 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .menu-item {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-item:hover {
+            background: rgba(99, 102, 241, 0.08);
+            color: #fff;
+        }
+        .menu-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.08));
+            color: #fff;
+            box-shadow: inset 3px 0 0 #818cf8;
+        }
+        .menu-item.active i:first-child {
+            color: #a5b4fc;
+            filter: drop-shadow(0 0 6px rgba(165, 180, 252, 0.7));
+        }
+
+        .group-label {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(148, 163, 184, 0.5);
+            padding: 12px 12px 6px;
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
             box-shadow: 0 8px 24px -6px rgba(99, 102, 241, 0.7);
@@ -35,30 +75,30 @@
 
         .btn-danger {
             background: linear-gradient(135deg, #ef4444, #dc2626);
-            box-shadow: 0 8px 24px -6px rgba(239, 68, 68, 0.7);
+            box-shadow: 0 8px 24px -6px rgba(239, 68, 68, 0.6);
         }
+        .btn-danger:hover { transform: translateY(-2px); }
+
         .btn-success {
             background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.7);
+            box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6);
         }
+        .btn-success:hover { transform: translateY(-2px); }
+
         .btn-warning {
             background: linear-gradient(135deg, #f59e0b, #d97706);
-            box-shadow: 0 8px 24px -6px rgba(245, 158, 11, 0.7);
+            box-shadow: 0 8px 24px -6px rgba(245, 158, 11, 0.6);
         }
+        .btn-warning:hover { transform: translateY(-2px); }
 
-        .sidebar-item {
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.25s ease;
-            border-radius: 12px;
-            border-left: 3px solid transparent;
         }
-        .sidebar-item:hover {
-            background: rgba(99, 102, 241, 0.1);
-            border-left-color: rgba(99, 102, 241, 0.5);
-        }
-        .sidebar-item.active {
-            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
-            border-left-color: #6366f1;
-            color: #fff;
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .premium-input {
@@ -73,6 +113,43 @@
             border-color: #8b5cf6;
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
         }
+        .premium-input::placeholder { color: rgba(148, 163, 184, 0.5); }
+
+        .stat-card {
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+            transition: left 0.6s;
+        }
+        .stat-card:hover::before { left: 100%; }
+
+        .table-row {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .table-row:hover {
+            background: rgba(99, 102, 241, 0.06);
+        }
+
+        .badge {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
 
         .pulse-dot {
             animation: pulse 2s infinite;
@@ -83,49 +160,125 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .fade-in { animation: fadeIn 0.35s ease; }
 
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .slide-in { animation: slideIn 0.3s ease; }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .slide-up { animation: slideUp 0.3s ease; }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #a5b4fc;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.3), transparent);
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .empty-state i {
+            font-size: 48px;
+            color: rgba(148, 163, 184, 0.2);
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            transition: all 0.25s;
+            border: 1px solid transparent;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        .tab-btn:not(.active) {
+            background: rgba(255,255,255,0.03);
+            color: rgba(148, 163, 184, 0.8);
+            border-color: rgba(255,255,255,0.06);
+        }
+        .tab-btn:not(.active):hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
     </style>
 </head>
 <body>
 
     <!-- LOGIN SCREEN -->
     <template x-if="!loggedIn">
-        <div class="min-h-screen flex items-center justify-center p-4">
-            <div class="glass rounded-3xl p-8 max-w-md w-full fade-in">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl mb-4">
+        <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none">
+                <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-indigo-600/20 blur-3xl"></div>
+                <div class="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-purple-600/20 blur-3xl"></div>
+            </div>
+
+            <div class="glass-strong rounded-3xl p-8 max-w-md w-full slide-up relative z-10">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 flex items-center justify-center shadow-2xl mb-5">
                         <i class="fa-solid fa-shield-halved text-white text-3xl"></i>
                     </div>
                     <h1 class="text-3xl font-black text-white mb-1">Admin Panel</h1>
-                    <p class="text-xs text-gray-400 mono">FreeHost BD — CONTROL CENTER</p>
+                    <p class="text-[10px] text-indigo-300 mono tracking-widest">FREEHOST BD — CONTROL CENTER</p>
                 </div>
 
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs font-bold text-gray-300 mb-2 block">এডমিন পাসওয়ার্ড</label>
-                        <input :type="showPass ? 'text' : 'password'" x-model="password" @keyup.enter="login()" 
-                               placeholder="Enter admin password"
-                               class="premium-input w-full px-4 py-3.5 text-sm">
+                        <div class="relative">
+                            <input :type="showPass ? 'text' : 'password'" x-model="password" @keyup.enter="login()" 
+                                   placeholder="Enter admin password"
+                                   class="premium-input w-full px-4 py-3.5 text-sm pr-12">
+                            <button @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                                <i :class="showPass ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" class="text-sm"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <button @click="login()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
-                        🔓 লগইন করুন
+                        <i class="fa-solid fa-unlock mr-2"></i> লগইন করুন
                     </button>
 
                     <template x-if="loginError">
-                        <div class="bg-red-500/20 border border-red-500/30 rounded-2xl p-3 text-center">
-                            <p class="text-xs font-bold text-red-300" x-text="loginError"></p>
+                        <div class="bg-red-500/20 border border-red-500/30 rounded-2xl p-3 text-center slide-up">
+                            <p class="text-xs font-bold text-red-300"><i class="fa-solid fa-circle-exclamation mr-1"></i> <span x-text="loginError"></span></p>
                         </div>
                     </template>
 
-                    <p class="text-[10px] text-center text-gray-500 mono">একবার লগইন করলে লগআউট না করা পর্যন্ত থাকবে</p>
+                    <p class="text-[10px] text-center text-gray-500 mono">
+                        <i class="fa-solid fa-lock mr-1"></i> একবার লগইন করলে লগআউট না করা পর্যন্ত থাকবে
+                    </p>
                 </div>
             </div>
         </div>
@@ -133,178 +286,357 @@
 
     <!-- DASHBOARD -->
     <template x-if="loggedIn">
-        <div class="flex min-h-screen">
+        <div class="flex min-h-screen relative">
+
+            <!-- MOBILE OVERLAY -->
+            <div x-show="mobileMenu" x-cloak @click="mobileMenu = false" 
+                 x-transition:enter="transition-opacity duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"></div>
 
             <!-- SIDEBAR -->
-            <aside class="w-64 flex-shrink-0 hidden lg:flex flex-col glass border-r border-white/5 p-4 sticky top-0 h-screen overflow-y-auto">
-                <div class="flex items-center gap-3 px-2 py-3 mb-4">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center">
-                        <i class="fa-solid fa-shield-halved text-white"></i>
+            <aside :class="mobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+                   class="fixed lg:sticky top-0 left-0 w-64 h-screen sidebar-bg z-50 lg:z-10 flex flex-col transition-transform duration-300 overflow-hidden">
+
+                <div class="flex items-center gap-3 px-4 py-4 border-b border-white/5 flex-shrink-0">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-shield-halved text-white text-sm"></i>
                     </div>
-                    <div>
-                        <div class="text-sm font-black">Admin</div>
-                        <div class="text-[9px] mono text-indigo-300">FreeHost BD</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-black text-white truncate">FreeHost BD</div>
+                        <div class="text-[9px] mono text-indigo-300 tracking-wider">ADMIN v2.0</div>
                     </div>
+                    <button @click="mobileMenu = false" class="lg:hidden w-8 h-8 rounded-lg btn-ghost flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
                 </div>
 
-                <nav class="flex-1 space-y-1">
-                    <button @click="section = 'dashboard'" :class="section === 'dashboard' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-chart-line w-4"></i> ড্যাশবোর্ড
-                    </button>
-                    <button @click="section = 'users'" :class="section === 'users' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-users w-4"></i> ইউজার
-                    </button>
-                    <button @click="section = 'hosts'" :class="section === 'hosts' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-cloud w-4"></i> হোস্টিং
-                    </button>
-                    <button @click="section = 'deposits'" :class="section === 'deposits' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-money-bill-transfer w-4"></i> ডিপোজিট
-                        <span x-show="pendingDeposits > 0" x-text="pendingDeposits" class="ml-auto bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full"></span>
-                    </button>
-                    <button @click="section = 'products'" :class="section === 'products' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-box w-4"></i> প্রোডাক্ট
-                    </button>
-                    <button @click="section = 'orders'" :class="section === 'orders' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-bag-shopping w-4"></i> অর্ডার
-                    </button>
-                    <button @click="section = 'settings'" :class="section === 'settings' ? 'active' : 'text-gray-400'" class="sidebar-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-gear w-4"></i> সেটিংস
-                    </button>
+                <nav class="flex-1 overflow-y-auto px-2 py-3">
+                    <template x-for="group in menuGroups" :key="group.label">
+                        <div class="mb-2">
+                            <div class="group-label" x-text="group.label"></div>
+                            <template x-for="item in group.items" :key="item.id">
+                                <button @click="section = item.id; mobileMenu = false"
+                                        :class="section === item.id ? 'active' : 'text-gray-400'"
+                                        class="menu-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3 mb-0.5">
+                                    <i :class="'fa-solid ' + item.icon" class="w-4 text-sm"></i>
+                                    <span class="flex-1" x-text="item.label"></span>
+                                    <template x-if="item.badge && item.badge() > 0">
+                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-500 text-white" x-text="item.badge()"></span>
+                                    </template>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
                 </nav>
 
-                <button @click="logout()" class="mt-4 text-xs font-bold text-red-400 hover:text-red-300 px-3 py-2.5 rounded-xl hover:bg-red-500/10 flex items-center gap-3">
-                    <i class="fa-solid fa-right-from-bracket w-4"></i> লগআউট
-                </button>
+                <div class="p-3 border-t border-white/5 flex-shrink-0">
+                    <div class="glass rounded-xl p-3 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-full pulse-dot"></span>
+                            <span class="text-[10px] mono font-bold text-emerald-300">SYSTEM ONLINE</span>
+                        </div>
+                    </div>
+                    <button @click="logout()" class="w-full text-xs font-bold text-red-400 hover:text-red-300 px-3 py-2.5 rounded-xl hover:bg-red-500/10 flex items-center gap-3 transition">
+                        <i class="fa-solid fa-right-from-bracket w-4"></i> লগআউট
+                    </button>
+                </div>
             </aside>
 
             <!-- MAIN CONTENT -->
-            <main class="flex-1 min-w-0">
+            <main class="flex-1 min-w-0 flex flex-col">
 
                 <!-- TOP BAR -->
-                <header class="sticky top-0 z-20 glass border-b border-white/5 px-4 lg:px-6 py-3 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <button @click="mobileMenu = !mobileMenu" class="lg:hidden w-10 h-10 rounded-xl glass flex items-center justify-center">
+                <header class="sticky top-0 z-30 glass border-b border-white/5 px-4 lg:px-6 py-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <button @click="mobileMenu = true" class="lg:hidden w-10 h-10 rounded-xl btn-ghost flex items-center justify-center flex-shrink-0">
                             <i class="fa-solid fa-bars text-sm"></i>
                         </button>
-                        <div>
-                            <h1 class="text-sm lg:text-base font-black capitalize" x-text="sectionTitle"></h1>
-                            <p class="text-[10px] mono text-gray-400">Admin / <span x-text="section"></span></p>
+                        <div class="min-w-0">
+                            <h1 class="text-sm lg:text-base font-black text-white truncate" x-text="sectionTitle"></h1>
+                            <p class="text-[10px] mono text-gray-500 truncate">
+                                Admin <span class="text-indigo-400 mx-1">/</span> <span x-text="sectionTitle"></span>
+                            </p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] mono text-emerald-400 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-dot"></span>
-                            ONLINE
-                        </span>
+
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button @click="refreshData()" class="w-9 h-9 rounded-xl btn-ghost flex items-center justify-center" title="Refresh">
+                            <i class="fa-solid fa-rotate text-xs" :class="loading ? 'fa-spin' : ''"></i>
+                        </button>
+                        <div class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl glass">
+                            <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-black">A</div>
+                            <span class="text-[11px] font-bold">Admin</span>
+                        </div>
                     </div>
                 </header>
 
-                <!-- MOBILE MENU -->
-                <template x-if="mobileMenu">
-                    <div class="lg:hidden glass border-b border-white/5 p-3 grid grid-cols-2 gap-2 fade-in">
-                        <template x-for="item in menuItems" :key="item.id">
-                            <button @click="section = item.id; mobileMenu = false" 
-                                    :class="section === item.id ? 'bg-indigo-600 text-white' : 'glass text-gray-300'" 
-                                    class="px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
-                                <i :class="'fa-solid ' + item.icon"></i>
-                                <span x-text="item.label"></span>
-                            </button>
-                        </template>
-                    </div>
-                </template>
+                <div class="flex-1 p-4 lg:p-6 overflow-x-hidden">
 
-                <div class="p-4 lg:p-6">
-
-                    <!-- DASHBOARD -->
+                    <!-- ============ DASHBOARD ============ -->
                     <template x-if="section === 'dashboard'">
-                        <div class="fade-in">
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-                                <div class="glass rounded-2xl p-5">
+                        <div class="fade-in space-y-5">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                                <div class="glass stat-card rounded-2xl p-5">
                                     <div class="flex items-center justify-between mb-3">
-                                        <i class="fa-solid fa-users text-indigo-400"></i>
-                                        <span class="text-[9px] mono text-gray-400">TOTAL</span>
+                                        <div class="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                            <i class="fa-solid fa-users text-indigo-400 text-sm"></i>
+                                        </div>
+                                        <span class="text-[9px] mono text-gray-500 font-bold">TOTAL</span>
                                     </div>
                                     <div class="text-3xl font-black text-indigo-300" x-text="users.length"></div>
-                                    <div class="text-[10px] text-gray-400 mt-1">ইউজার</div>
+                                    <div class="text-[10px] text-gray-400 mt-1">মোট ইউজার</div>
                                 </div>
-                                <div class="glass rounded-2xl p-5">
+                                <div class="glass stat-card rounded-2xl p-5">
                                     <div class="flex items-center justify-between mb-3">
-                                        <i class="fa-solid fa-cloud text-cyan-400"></i>
-                                        <span class="text-[9px] mono text-gray-400">HOSTED</span>
+                                        <div class="w-9 h-9 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                                            <i class="fa-solid fa-cloud text-cyan-400 text-sm"></i>
+                                        </div>
+                                        <span class="text-[9px] mono text-gray-500 font-bold">HOSTED</span>
                                     </div>
                                     <div class="text-3xl font-black text-cyan-300" x-text="hosts.length"></div>
                                     <div class="text-[10px] text-gray-400 mt-1">হোস্টেড সাইট</div>
                                 </div>
-                                <div class="glass rounded-2xl p-5">
+                                <div class="glass stat-card rounded-2xl p-5">
                                     <div class="flex items-center justify-between mb-3">
-                                        <i class="fa-solid fa-clock text-amber-400"></i>
-                                        <span class="text-[9px] mono text-gray-400">PENDING</span>
+                                        <div class="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                                            <i class="fa-solid fa-clock text-amber-400 text-sm"></i>
+                                        </div>
+                                        <span class="text-[9px] mono text-gray-500 font-bold">PENDING</span>
                                     </div>
                                     <div class="text-3xl font-black text-amber-300" x-text="pendingDeposits"></div>
-                                    <div class="text-[10px] text-gray-400 mt-1">ডিপোজিট অপেক্ষা</div>
+                                    <div class="text-[10px] text-gray-400 mt-1">অপেক্ষমাণ ডিপোজিট</div>
                                 </div>
-                                <div class="glass rounded-2xl p-5">
+                                <div class="glass stat-card rounded-2xl p-5">
                                     <div class="flex items-center justify-between mb-3">
-                                        <i class="fa-solid fa-bag-shopping text-orange-400"></i>
-                                        <span class="text-[9px] mono text-gray-400">ORDERS</span>
+                                        <div class="w-9 h-9 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                                            <i class="fa-solid fa-bag-shopping text-orange-400 text-sm"></i>
+                                        </div>
+                                        <span class="text-[9px] mono text-gray-500 font-bold">ORDERS</span>
                                     </div>
                                     <div class="text-3xl font-black text-orange-300" x-text="orders.length"></div>
                                     <div class="text-[10px] text-gray-400 mt-1">মোট অর্ডার</div>
                                 </div>
                             </div>
 
-                            <div class="glass rounded-2xl p-5">
-                                <h3 class="font-black text-sm mb-3">📊 সার্ভার স্ট্যাটাস</h3>
-                                <div class="grid sm:grid-cols-3 gap-3">
-                                    <div class="bg-black/30 rounded-xl p-3">
-                                        <div class="text-[10px] mono text-gray-400 mb-1">UPTIME</div>
-                                        <div class="text-sm font-black text-emerald-400">99.9%</div>
+                            <div class="grid lg:grid-cols-2 gap-4">
+                                <div class="glass rounded-2xl p-5">
+                                    <div class="section-title"><i class="fa-solid fa-chart-line"></i> সার্ভার স্ট্যাটাস</div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-400">Uptime</span>
+                                            <span class="text-xs font-black text-emerald-400">99.9%</span>
+                                        </div>
+                                        <div class="h-1.5 bg-black/50 rounded-full overflow-hidden">
+                                            <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" style="width: 99.9%"></div>
+                                        </div>
+                                        <div class="flex items-center justify-between mt-4">
+                                            <span class="text-xs text-gray-400">Database</span>
+                                            <span class="text-xs font-black text-emerald-400">Connected</span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-400">Storage Used</span>
+                                            <span class="text-xs font-black text-cyan-400">32%</span>
+                                        </div>
+                                        <div class="h-1.5 bg-black/50 rounded-full overflow-hidden">
+                                            <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: 32%"></div>
+                                        </div>
                                     </div>
-                                    <div class="bg-black/30 rounded-xl p-3">
-                                        <div class="text-[10px] mono text-gray-400 mb-1">DATABASE</div>
-                                        <div class="text-sm font-black text-emerald-400">Connected</div>
-                                    </div>
-                                    <div class="bg-black/30 rounded-xl p-3">
-                                        <div class="text-[10px] mono text-gray-400 mb-1">BANDWIDTH</div>
-                                        <div class="text-sm font-black text-cyan-400">Unlimited</div>
+                                </div>
+
+                                <div class="glass rounded-2xl p-5">
+                                    <div class="section-title"><i class="fa-solid fa-bolt"></i> সাম্প্রতিক অ্যাক্টিভিটি</div>
+                                    <div class="space-y-2">
+                                        <template x-for="(log, i) in activityLogs.slice(0, 5)" :key="i">
+                                            <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                                                <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                                                    <i class="fa-solid fa-circle text-indigo-400 text-[6px]"></i>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-bold text-white truncate" x-text="log.action"></p>
+                                                    <p class="text-[10px] text-gray-500 mono" x-text="log.time"></p>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="activityLogs.length === 0">
+                                            <p class="text-xs text-gray-500 text-center py-4">কোনো লগ নেই</p>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </template>
 
-                    <!-- USERS -->
+                    <!-- ============ ALL USERS ============ -->
                     <template x-if="section === 'users'">
-                        <div class="fade-in">
-                            <input type="text" x-model="userSearch" placeholder="🔍 নাম বা নাম্বার দিয়ে খুঁজুন..." class="premium-input w-full px-4 py-3 text-sm mb-4">
-                            <div class="space-y-2">
-                                <template x-for="u in filteredUsers" :key="u._id">
-                                    <div class="glass rounded-2xl p-4 flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-black text-white">
-                                            <span x-text="u.name.charAt(0).toUpperCase()"></span>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold truncate" x-text="u.name"></p>
-                                            <p class="text-[10px] mono text-gray-400" x-text="u.phone + ' • ৳' + (u.balance || 0)"></p>
-                                        </div>
-                                        <button @click="toggleUserBan(u)" :class="u.banned ? 'btn-success' : 'btn-danger'" class="px-3 py-2 rounded-lg text-[10px] font-black text-white">
-                                            <span x-text="u.banned ? 'UNBAN' : 'BAN'"></span>
-                                        </button>
+                        <div class="fade-in space-y-4">
+                            <div class="flex flex-wrap gap-2">
+                                <input type="text" x-model="userSearch" placeholder="🔍 নাম বা নাম্বার..." class="premium-input flex-1 min-w-[200px] px-4 py-3 text-sm">
+                            </div>
+
+                            <div class="glass rounded-2xl overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-black/30">
+                                            <tr class="text-left">
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">User</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Phone</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Balance</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Status</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="u in filteredUsers" :key="u._id">
+                                                <tr class="table-row">
+                                                    <td class="px-4 py-3">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-[11px] font-black text-white flex-shrink-0">
+                                                                <span x-text="u.name.charAt(0).toUpperCase()"></span>
+                                                            </div>
+                                                            <span class="text-xs font-bold text-white truncate" x-text="u.name"></span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-xs mono text-gray-300" x-text="u.phone"></td>
+                                                    <td class="px-4 py-3 text-xs font-black text-emerald-400 mono">৳<span x-text="u.balance || 0"></span></td>
+                                                    <td class="px-4 py-3">
+                                                        <span class="badge" :class="u.banned ? 'bg-red-500/20 text-red-300' : 'bg-emerald-500/20 text-emerald-300'" x-text="u.banned ? 'BANNED' : 'ACTIVE'"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-right">
+                                                        <div class="flex items-center gap-1 justify-end">
+                                                            <button @click="toggleUserBan(u)" :class="u.banned ? 'btn-success' : 'btn-warning'" class="px-3 py-1.5 rounded-lg text-[9px] font-black text-white">
+                                                                <span x-text="u.banned ? 'UNBAN' : 'BAN'"></span>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <template x-if="filteredUsers.length === 0">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-users"></i>
+                                        <p class="text-sm text-gray-400">কোনো ইউজার নেই</p>
                                     </div>
                                 </template>
                             </div>
                         </div>
                     </template>
 
-                    <!-- HOSTS -->
-                    <template x-if="section === 'hosts'">
+                    <!-- ============ BANNED USERS ============ -->
+                    <template x-if="section === 'banned-users'">
                         <div class="fade-in">
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <input type="text" x-model="hostSearch" placeholder="🔍 হোস্ট করা লিংক সার্চ..." class="premium-input flex-1 min-w-[200px] px-4 py-3 text-sm">
-                                <input type="text" x-model="redirectUrl" placeholder="🔗 সব লিংক redirect করবে..." class="premium-input flex-1 min-w-[200px] px-4 py-3 text-sm">
-                                <button @click="applyRedirect()" class="btn-warning px-4 py-3 rounded-xl text-xs font-black text-white">REDIRECT ON</button>
-                                <button @click="clearRedirect()" class="btn-danger px-4 py-3 rounded-xl text-xs font-black text-white">OFF</button>
+                            <div class="glass rounded-2xl overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-black/30">
+                                            <tr class="text-left">
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">User</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Phone</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="u in bannedUsers" :key="u._id">
+                                                <tr class="table-row">
+                                                    <td class="px-4 py-3 text-xs font-bold text-white" x-text="u.name"></td>
+                                                    <td class="px-4 py-3 text-xs mono text-gray-300" x-text="u.phone"></td>
+                                                    <td class="px-4 py-3 text-right">
+                                                        <button @click="toggleUserBan(u)" class="btn-success px-3 py-1.5 rounded-lg text-[9px] font-black text-white">UNBAN</button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <template x-if="bannedUsers.length === 0">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-user-check"></i>
+                                        <p class="text-sm text-gray-400">কোনো ব্যান করা ইউজার নেই</p>
+                                    </div>
+                                </template>
                             </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ DEPOSIT REQUESTS ============ -->
+                    <template x-if="section === 'deposit-requests'">
+                        <div class="fade-in space-y-3">
+                            <div class="flex gap-2 flex-wrap">
+                                <button @click="depositFilter = 'pending'" :class="depositFilter === 'pending' ? 'tab-btn active' : 'tab-btn'" class="tab-btn">
+                                    অপেক্ষমাণ <span class="ml-1" x-text="pendingDeposits"></span>
+                                </button>
+                                <button @click="depositFilter = 'approved'" :class="depositFilter === 'approved' ? 'tab-btn active' : 'tab-btn'" class="tab-btn">অনুমোদিত</button>
+                                <button @click="depositFilter = 'rejected'" :class="depositFilter === 'rejected' ? 'tab-btn active' : 'tab-btn'" class="tab-btn">বাতিল</button>
+                                <button @click="depositFilter = 'all'" :class="depositFilter === 'all' ? 'tab-btn active' : 'tab-btn'" class="tab-btn">সব</button>
+                            </div>
+
+                            <div class="space-y-2">
+                                <template x-for="d in filteredDeposits" :key="d._id">
+                                    <div class="glass rounded-2xl p-4">
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                                 :class="d.status === 'approved' ? 'bg-emerald-500/20' : d.status === 'rejected' ? 'bg-red-500/20' : 'bg-amber-500/20'">
+                                                <i class="fa-solid text-sm"
+                                                   :class="d.status === 'approved' ? 'fa-check text-emerald-400' : d.status === 'rejected' ? 'fa-xmark text-red-400' : 'fa-clock text-amber-400'"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                                    <p class="text-lg font-black text-white">৳ <span x-text="d.amount"></span></p>
+                                                    <span class="badge"
+                                                          :class="d.status === 'approved' ? 'bg-emerald-500/20 text-emerald-300' : d.status === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'"
+                                                          x-text="d.status"></span>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                                    <div>
+                                                        <p class="text-[9px] mono text-gray-500">USER</p>
+                                                        <p class="text-[11px] font-bold text-white truncate" x-text="getUserName(d.userId)"></p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-[9px] mono text-gray-500">FROM</p>
+                                                        <p class="text-[11px] font-bold text-indigo-300 mono" x-text="d.senderNumber"></p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-[9px] mono text-gray-500">TRX ID</p>
+                                                        <p class="text-[11px] font-bold text-cyan-300 mono" x-text="d.transactionId"></p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-[9px] mono text-gray-500">METHOD</p>
+                                                        <p class="text-[11px] font-bold text-white" x-text="d.method"></p>
+                                                    </div>
+                                                </div>
+                                                <p class="text-[10px] text-gray-500 mono mt-2" x-text="new Date(d.createdAt).toLocaleString('en-GB')"></p>
+                                            </div>
+                                        </div>
+                                        <template x-if="d.status === 'pending'">
+                                            <div class="flex gap-2">
+                                                <button @click="approveDeposit(d)" class="btn-success flex-1 py-2.5 rounded-xl text-xs font-black text-white">
+                                                    <i class="fa-solid fa-check mr-1"></i> APPROVE
+                                                </button>
+                                                <button @click="rejectDeposit(d)" class="btn-danger flex-1 py-2.5 rounded-xl text-xs font-black text-white">
+                                                    <i class="fa-solid fa-xmark mr-1"></i> REJECT
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <template x-if="filteredDeposits.length === 0">
+                                <div class="glass rounded-2xl empty-state">
+                                    <i class="fa-solid fa-money-bill-transfer"></i>
+                                    <p class="text-sm text-gray-400">কোনো ডিপোজিট নেই</p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- ============ ALL HOSTS ============ -->
+                    <template x-if="section === 'hosts'">
+                        <div class="fade-in space-y-3">
+                            <input type="text" x-model="hostSearch" placeholder="🔍 হোস্ট করা লিংক সার্চ..." class="premium-input w-full px-4 py-3 text-sm">
 
                             <div class="space-y-2">
                                 <template x-for="h in filteredHosts" :key="h._id">
@@ -315,27 +647,28 @@
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-2 flex-wrap">
-                                                    <p class="text-sm font-bold truncate" x-text="h.title"></p>
-                                                    <span x-show="h.banned" class="text-[9px] font-black px-2 py-0.5 rounded-md bg-red-500/20 text-red-300">BANNED</span>
+                                                    <p class="text-sm font-bold text-white truncate" x-text="h.title"></p>
+                                                    <span x-show="h.banned" class="badge bg-red-500/20 text-red-300">BANNED</span>
                                                 </div>
                                                 <p class="text-[10px] mono text-indigo-300 truncate mt-0.5" x-text="'/s/' + h.slug"></p>
-                                                <p class="text-[10px] text-gray-500 mono mt-0.5">
-                                                    👁 <span x-text="h.views || 0"></span> views • 
-                                                    <span x-text="new Date(h.createdAt).toLocaleDateString('en-GB')"></span>
-                                                </p>
+                                                <div class="flex items-center gap-3 mt-1.5 text-[10px] text-gray-500 mono">
+                                                    <span><i class="fa-solid fa-eye text-indigo-400 mr-1"></i><span x-text="h.views || 0"></span></span>
+                                                    <span><i class="fa-solid fa-calendar text-cyan-400 mr-1"></i><span x-text="new Date(h.createdAt).toLocaleDateString('en-GB')"></span></span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="flex gap-2 mt-3 flex-wrap">
-                                            <button @click="viewCode(h)" class="btn-primary px-3 py-2 rounded-lg text-[10px] font-black text-white">
-                                                <i class="fa-solid fa-code mr-1"></i> কোড
+                                        <div class="flex gap-1.5 mt-3 flex-wrap">
+                                            <button @click="viewCode(h)" class="btn-primary px-3 py-2 rounded-lg text-[10px] font-black text-white flex items-center gap-1">
+                                                <i class="fa-solid fa-code"></i> কোড
                                             </button>
-                                            <a :href="'/s/' + h.slug" target="_blank" class="glass px-3 py-2 rounded-lg text-[10px] font-black text-white">
-                                                <i class="fa-solid fa-external-link mr-1"></i> ওপেন
+                                            <a :href="'/s/' + h.slug" target="_blank" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white flex items-center gap-1">
+                                                <i class="fa-solid fa-external-link"></i> ওপেন
                                             </a>
-                                            <button @click="downloadCode(h)" class="glass px-3 py-2 rounded-lg text-[10px] font-black text-white">
-                                                <i class="fa-solid fa-download mr-1"></i> ডাউনলোড
+                                            <button @click="downloadCode(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white flex items-center gap-1">
+                                                <i class="fa-solid fa-download"></i> ডাউনলোড
                                             </button>
-                                            <button @click="toggleHostBan(h)" :class="h.banned ? 'btn-success' : 'btn-warning'" class="px-3 py-2 rounded-lg text-[10px] font-black text-white">
+                                            <button @click="toggleHostBan(h)" :class="h.banned ? 'btn-success' : 'btn-warning'" class="px-3 py-2 rounded-lg text-[10px] font-black text-white flex items-center gap-1">
+                                                <i class="fa-solid" :class="h.banned ? 'fa-check' : 'fa-ban'"></i>
                                                 <span x-text="h.banned ? 'UNBAN' : 'BAN'"></span>
                                             </button>
                                             <button @click="deleteHost(h._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white">
@@ -345,171 +678,527 @@
                                     </div>
                                 </template>
                             </div>
-                        </div>
-                    </template>
 
-                    <!-- DEPOSITS -->
-                    <template x-if="section === 'deposits'">
-                        <div class="fade-in">
-                            <div class="flex gap-2 mb-4">
-                                <button @click="depositFilter = 'pending'" :class="depositFilter === 'pending' ? 'bg-amber-600 text-white' : 'glass text-gray-400'" class="px-4 py-2 rounded-xl text-xs font-bold">
-                                    অপেক্ষা <span x-text="pendingDeposits"></span>
-                                </button>
-                                <button @click="depositFilter = 'all'" :class="depositFilter === 'all' ? 'bg-indigo-600 text-white' : 'glass text-gray-400'" class="px-4 py-2 rounded-xl text-xs font-bold">সব</button>
-                            </div>
-
-                            <div class="space-y-2">
-                                <template x-for="d in filteredDeposits" :key="d._id">
-                                    <div class="glass rounded-2xl p-4">
-                                        <div class="flex items-start gap-3 mb-3">
-                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                                                 :class="d.status === 'approved' ? 'bg-emerald-500/20' : d.status === 'rejected' ? 'bg-red-500/20' : 'bg-amber-500/20'">
-                                                <i class="fa-solid text-sm"
-                                                   :class="d.status === 'approved' ? 'fa-check text-emerald-400' : d.status === 'rejected' ? 'fa-xmark text-red-400' : 'fa-clock text-amber-400'"></i>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-base font-black text-white">৳ <span x-text="d.amount"></span></p>
-                                                <p class="text-[10px] mono text-gray-400 mt-1">User: <span x-text="getUserName(d.userId)"></span></p>
-                                                <p class="text-[10px] mono text-gray-400">From: <span class="text-indigo-300" x-text="d.senderNumber"></span></p>
-                                                <p class="text-[10px] mono text-gray-400">TrxID: <span class="text-cyan-300" x-text="d.transactionId"></span></p>
-                                                <p class="text-[10px] mono text-gray-500 mt-0.5" x-text="d.method + ' • ' + new Date(d.createdAt).toLocaleString('en-GB')"></p>
-                                            </div>
-                                        </div>
-                                        <template x-if="d.status === 'pending'">
-                                            <div class="flex gap-2">
-                                                <button @click="approveDeposit(d)" class="btn-success flex-1 py-2.5 rounded-xl text-xs font-black text-white">✓ APPROVE</button>
-                                                <button @click="rejectDeposit(d)" class="btn-danger flex-1 py-2.5 rounded-xl text-xs font-black text-white">✗ REJECT</button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- PRODUCTS -->
-                    <template x-if="section === 'products'">
-                        <div class="fade-in">
-                            <button @click="openProductForm()" class="btn-primary px-5 py-3 rounded-xl text-xs font-black text-white mb-4">
-                                <i class="fa-solid fa-plus mr-1"></i> নতুন প্রোডাক্ট
-                            </button>
-
-                            <div class="space-y-2">
-                                <template x-for="p in products" :key="p._id">
-                                    <div class="glass rounded-2xl p-4 flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                                            <i class="fa-solid fa-box text-orange-400 text-xs"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold truncate" x-text="p.name"></p>
-                                            <p class="text-[10px] mono text-gray-400" x-text="'#' + p.productId + ' • ৳' + (p.discountPrice || p.price) + ' • ' + p.category"></p>
-                                        </div>
-                                        <button @click="editProduct(p)" class="glass px-3 py-2 rounded-lg text-[10px] font-black text-white">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
-                                        <button @click="deleteProduct(p._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- ORDERS -->
-                    <template x-if="section === 'orders'">
-                        <div class="fade-in space-y-2">
-                            <template x-for="o in orders" :key="o._id">
-                                <div class="glass rounded-2xl p-4 flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                                        <i class="fa-solid fa-bag-shopping text-orange-400 text-xs"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-bold truncate" x-text="o.productName"></p>
-                                        <p class="text-[10px] mono text-gray-400">User: <span x-text="getUserName(o.userId)"></span> • ৳<span x-text="o.price"></span></p>
-                                    </div>
+                            <template x-if="filteredHosts.length === 0">
+                                <div class="glass rounded-2xl empty-state">
+                                    <i class="fa-solid fa-cloud"></i>
+                                    <p class="text-sm text-gray-400">কোনো হোস্ট নেই</p>
                                 </div>
                             </template>
                         </div>
                     </template>
 
-                    <!-- SETTINGS -->
-                    <template x-if="section === 'settings'">
+                    <!-- ============ BANNED HOSTS ============ -->
+                    <template x-if="section === 'banned-hosts'">
+                        <div class="fade-in space-y-2">
+                            <template x-for="h in bannedHosts" :key="h._id">
+                                <div class="glass rounded-2xl p-4 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-ban text-red-400"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-bold text-white truncate" x-text="h.title"></p>
+                                        <p class="text-[10px] mono text-red-300 truncate" x-text="'/s/' + h.slug"></p>
+                                    </div>
+                                    <button @click="toggleHostBan(h)" class="btn-success px-3 py-2 rounded-lg text-[10px] font-black text-white">UNBAN</button>
+                                    <button @click="deleteHost(h._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="bannedHosts.length === 0">
+                                <div class="glass rounded-2xl empty-state">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <p class="text-sm text-gray-400">কোনো ব্যান করা হোস্ট নেই</p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- ============ GLOBAL REDIRECT ============ -->
+                    <template x-if="section === 'redirect'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-arrow-right-arrow-left"></i> Global Redirect</div>
+                                <p class="text-xs text-gray-400 mb-4">সব হোস্ট করা লিংক এই URL-এ রিডাইরেক্ট হবে। খালি রাখলে বন্ধ থাকবে।</p>
+                                
+                                <div class="space-y-3">
+                                    <div class="premium-input flex items-center px-3">
+                                        <i class="fa-solid fa-link text-indigo-400 mr-2 text-sm"></i>
+                                        <input type="text" x-model="redirectUrl" placeholder="https://example.com" class="flex-1 bg-transparent border-0 outline-none py-3 text-sm">
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button @click="applyRedirect()" class="btn-primary flex-1 py-3 rounded-xl text-xs font-black text-white">✓ চালু করুন</button>
+                                        <button @click="clearRedirect()" class="btn-danger flex-1 py-3 rounded-xl text-xs font-black text-white">✗ বন্ধ করুন</button>
+                                    </div>
+                                    
+                                    <template x-if="redirectActive">
+                                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3 flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-emerald-400 rounded-full pulse-dot"></span>
+                                            <span class="text-xs font-bold text-emerald-300">Redirect চালু: </span>
+                                            <span class="text-xs mono text-emerald-200 truncate" x-text="redirectActive"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ HOST ANALYTICS ============ -->
+                    <template x-if="section === 'analytics'">
                         <div class="fade-in space-y-4">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div class="glass rounded-2xl p-5">
+                                    <div class="text-[10px] mono text-gray-400 mb-2">TOTAL VIEWS</div>
+                                    <div class="text-3xl font-black text-cyan-300" x-text="totalViews"></div>
+                                </div>
+                                <div class="glass rounded-2xl p-5">
+                                    <div class="text-[10px] mono text-gray-400 mb-2">AVG VIEWS</div>
+                                    <div class="text-3xl font-black text-indigo-300" x-text="avgViews"></div>
+                                </div>
+                                <div class="glass rounded-2xl p-5">
+                                    <div class="text-[10px] mono text-gray-400 mb-2">TOP SITE</div>
+                                    <div class="text-xs font-black text-emerald-300 truncate" x-text="topSite"></div>
+                                </div>
+                                <div class="glass rounded-2xl p-5">
+                                    <div class="text-[10px] mono text-gray-400 mb-2">ACTIVE</div>
+                                    <div class="text-3xl font-black text-orange-300" x-text="hosts.filter(h => !h.banned).length"></div>
+                                </div>
+                            </div>
+
                             <div class="glass rounded-2xl p-5">
-                                <h3 class="font-black text-sm mb-4">💚 ডিপোজিট নাম্বার</h3>
+                                <div class="section-title"><i class="fa-solid fa-ranking-star"></i> Top 10 Sites by Views</div>
+                                <div class="space-y-2">
+                                    <template x-for="(h, idx) in topSites" :key="h._id">
+                                        <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                                            <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-300 flex-shrink-0" x-text="idx + 1"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-bold text-white truncate" x-text="h.title"></p>
+                                                <p class="text-[10px] mono text-gray-500 truncate" x-text="'/s/' + h.slug"></p>
+                                            </div>
+                                            <span class="text-xs font-black text-cyan-300 mono" x-text="h.views || 0"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ PRODUCTS ============ -->
+                    <template x-if="section === 'products'">
+                        <div class="fade-in space-y-3">
+                            <button @click="openProductForm()" class="btn-primary px-4 py-3 rounded-xl text-xs font-black text-white flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> নতুন প্রোডাক্ট
+                            </button>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <template x-for="p in products" :key="p._id">
+                                    <div class="glass rounded-2xl p-4">
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i class="fa-solid fa-box text-orange-400"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-bold text-white truncate" x-text="p.name"></p>
+                                                <p class="text-[10px] mono text-gray-500">#<span x-text="p.productId"></span> • <span x-text="p.category"></span></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+                                            <div>
+                                                <p class="text-[9px] mono text-gray-500">PRICE</p>
+                                                <p class="text-sm font-black text-emerald-400">৳<span x-text="p.discountPrice || p.price"></span></p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-[9px] mono text-gray-500">STOCK</p>
+                                                <p class="text-sm font-black text-cyan-400" x-text="p.stock"></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button @click="editProduct(p)" class="btn-ghost flex-1 py-2 rounded-lg text-[10px] font-black text-white">
+                                                <i class="fa-solid fa-pen"></i> এডিট
+                                            </button>
+                                            <button @click="deleteProduct(p._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <template x-if="products.length === 0">
+                                <div class="glass rounded-2xl empty-state">
+                                    <i class="fa-solid fa-box"></i>
+                                    <p class="text-sm text-gray-400">কোনো প্রোডাক্ট নেই</p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- ============ ORDERS ============ -->
+                    <template x-if="section === 'orders'">
+                        <div class="fade-in space-y-2">
+                            <template x-for="o in orders" :key="o._id">
+                                <div class="glass rounded-2xl p-4 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-bag-shopping text-orange-400 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-bold text-white truncate" x-text="o.productName"></p>
+                                        <p class="text-[10px] mono text-gray-500">
+                                            <span x-text="getUserName(o.userId)"></span> • 
+                                            <span class="text-emerald-400">৳<span x-text="o.price"></span></span> • 
+                                            <span x-text="new Date(o.createdAt).toLocaleDateString('en-GB')"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="orders.length === 0">
+                                <div class="glass rounded-2xl empty-state">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                    <p class="text-sm text-gray-400">কোনো অর্ডার নেই</p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- ============ TRANSACTIONS ============ -->
+                    <template x-if="section === 'transactions'">
+                        <div class="fade-in">
+                            <div class="glass rounded-2xl p-5 mb-4">
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <p class="text-[10px] mono text-gray-500">TOTAL IN</p>
+                                        <p class="text-xl font-black text-emerald-400">৳<span x-text="totalIn"></span></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] mono text-gray-500">APPROVED</p>
+                                        <p class="text-xl font-black text-cyan-400" x-text="approvedDeposits.length"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] mono text-gray-500">PENDING</p>
+                                        <p class="text-xl font-black text-amber-400" x-text="pendingDeposits"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass rounded-2xl overflow-hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-black/30">
+                                            <tr class="text-left">
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">User</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Amount</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Method</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Status</th>
+                                                <th class="px-4 py-3 text-[10px] mono font-bold text-gray-400 uppercase">Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="d in deposits" :key="d._id">
+                                                <tr class="table-row">
+                                                    <td class="px-4 py-3 text-xs font-bold text-white" x-text="getUserName(d.userId)"></td>
+                                                    <td class="px-4 py-3 text-xs font-black text-emerald-400 mono">৳<span x-text="d.amount"></span></td>
+                                                    <td class="px-4 py-3 text-xs text-gray-300" x-text="d.method"></td>
+                                                    <td class="px-4 py-3">
+                                                        <span class="badge" :class="d.status === 'approved' ? 'bg-emerald-500/20 text-emerald-300' : d.status === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'" x-text="d.status"></span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-[10px] mono text-gray-500" x-text="new Date(d.createdAt).toLocaleDateString('en-GB')"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ MANUAL BALANCE ============ -->
+                    <template x-if="section === 'manual-balance'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-hand-holding-dollar"></i> ম্যানুয়াল ব্যালেন্স অ্যাড</div>
+                                
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="text-xs text-gray-400 mb-2 block">বিকাশ নাম্বার</label>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">ইউজার সিলেক্ট করুন</label>
+                                        <select x-model="manualBalance.userId" class="premium-input w-full px-4 py-3 text-sm">
+                                            <option value="">-- সিলেক্ট --</option>
+                                            <template x-for="u in users" :key="u._id">
+                                                <option :value="u._id" x-text="u.name + ' (' + u.phone + ') — ৳' + (u.balance || 0)"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">পরিমাণ (৳)</label>
+                                        <input type="number" x-model="manualBalance.amount" class="premium-input w-full px-4 py-3 text-sm" placeholder="500">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">নোট (অপশনাল)</label>
+                                        <input type="text" x-model="manualBalance.note" class="premium-input w-full px-4 py-3 text-sm" placeholder="কারণ...">
+                                    </div>
+                                    <button @click="addManualBalance()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-plus mr-2"></i> ব্যালেন্স যোগ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ PAYMENT NUMBERS ============ -->
+                    <template x-if="section === 'payment-numbers'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-mobile-screen-button"></i> পেমেন্ট নাম্বার</div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">
+                                            <i class="fa-solid fa-mobile-screen text-pink-400 mr-1"></i> বিকাশ নাম্বার
+                                        </label>
                                         <input type="text" x-model="settings.bkashNumber" class="premium-input w-full px-4 py-3 text-sm" placeholder="01XXXXXXXXX">
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-400 mb-2 block">নগদ নাম্বার</label>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">
+                                            <i class="fa-solid fa-mobile-screen text-orange-400 mr-1"></i> নগদ নাম্বার
+                                        </label>
                                         <input type="text" x-model="settings.nagadNumber" class="premium-input w-full px-4 py-3 text-sm" placeholder="01XXXXXXXXX">
                                     </div>
+                                    <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-save mr-2"></i> সেভ করুন
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    </template>
 
-                            <div class="glass rounded-2xl p-5">
-                                <h3 class="font-black text-sm mb-4">🎨 সাইট ব্র্যান্ডিং</h3>
-                                <div class="space-y-3">
+                    <!-- ============ SITE BRANDING ============ -->
+                    <template x-if="section === 'branding'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-palette"></i> সাইট ব্র্যান্ডিং</div>
+                                <div class="space-y-4">
                                     <div>
-                                        <label class="text-xs text-gray-400 mb-2 block">সাইট নাম</label>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">সাইট নাম</label>
                                         <input type="text" x-model="settings.siteName" class="premium-input w-full px-4 py-3 text-sm">
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-400 mb-2 block">ফুটার টেক্সট</label>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">ট্যাগলাইন</label>
+                                        <input type="text" x-model="settings.tagline" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">ফুটার টেক্সট</label>
                                         <input type="text" x-model="settings.footerText" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">লোগো URL</label>
+                                        <input type="text" x-model="settings.logoUrl" class="premium-input w-full px-4 py-3 text-sm" placeholder="https://...">
+                                    </div>
+                                    <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-save mr-2"></i> সেভ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ PAGE TEXTS ============ -->
+                    <template x-if="section === 'page-texts'">
+                        <div class="fade-in max-w-2xl space-y-4">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-file-lines"></i> HTML Host পেজ</div>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">শিরোনাম</label>
+                                        <input type="text" x-model="settings.htmlHostTitle" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">সাবটাইটেল</label>
+                                        <input type="text" x-model="settings.htmlHostSubtitle" class="premium-input w-full px-4 py-3 text-sm">
                                     </div>
                                 </div>
                             </div>
 
-                            <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl text-sm font-black text-white">
-                                💾 সেটিংস সেভ করুন
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-store"></i> Shop পেজ</div>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">শিরোনাম</label>
+                                        <input type="text" x-model="settings.shopTitle" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">অ্যানাউন্সমেন্ট টেক্সট</label>
+                                        <input type="text" x-model="settings.shopAnnouncement" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                <i class="fa-solid fa-save mr-2"></i> সব সেভ করুন
                             </button>
                         </div>
                     </template>
+
+                    <!-- ============ COLORS & THEME ============ -->
+                    <template x-if="section === 'theme'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-paintbrush"></i> রঙ ও থিম</div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">প্রাইমারি কালার</label>
+                                        <div class="flex gap-2">
+                                            <input type="color" x-model="settings.primaryColor" class="w-16 h-12 rounded-xl bg-transparent">
+                                            <input type="text" x-model="settings.primaryColor" class="premium-input flex-1 px-4 py-3 text-sm mono">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">অ্যাকসেন্ট কালার</label>
+                                        <div class="flex gap-2">
+                                            <input type="color" x-model="settings.accentColor" class="w-16 h-12 rounded-xl bg-transparent">
+                                            <input type="text" x-model="settings.accentColor" class="premium-input flex-1 px-4 py-3 text-sm mono">
+                                        </div>
+                                    </div>
+                                    <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-save mr-2"></i> সেভ করুন
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ CHANGE PASSWORD ============ -->
+                    <template x-if="section === 'change-password'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-key"></i> অ্যাডমিন পাসওয়ার্ড পরিবর্তন</div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">পুরনো পাসওয়ার্ড</label>
+                                        <input type="password" x-model="passwordForm.old" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">নতুন পাসওয়ার্ড</label>
+                                        <input type="password" x-model="passwordForm.new" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-300 mb-2 block">নতুন পাসওয়ার্ড আবার</label>
+                                        <input type="password" x-model="passwordForm.confirm" class="premium-input w-full px-4 py-3 text-sm">
+                                    </div>
+                                    <button @click="changePassword()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-shield-halved mr-2"></i> পরিবর্তন করুন
+                                    </button>
+                                    <p class="text-[10px] text-gray-500 text-center">⚠️ ডিফল্ট পাসওয়ার্ড: NOBITA_VIP</p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ ACTIVITY LOG ============ -->
+                    <template x-if="section === 'activity-log'">
+                        <div class="fade-in space-y-3">
+                            <button @click="clearLogs()" class="btn-danger px-4 py-3 rounded-xl text-xs font-black text-white">
+                                <i class="fa-solid fa-trash mr-1"></i> লগ ক্লিয়ার
+                            </button>
+
+                            <div class="glass rounded-2xl p-4">
+                                <div class="space-y-2">
+                                    <template x-for="(log, idx) in activityLogs" :key="idx">
+                                        <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                                                <i class="fa-solid fa-circle text-indigo-400 text-[6px]"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-bold text-white" x-text="log.action"></p>
+                                                <p class="text-[10px] mono text-gray-500" x-text="log.time"></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <template x-if="activityLogs.length === 0">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-list"></i>
+                                        <p class="text-sm text-gray-400">কোনো অ্যাক্টিভিটি নেই</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ============ BACKUP ============ -->
+                    <template x-if="section === 'backup'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <div class="section-title"><i class="fa-solid fa-database"></i> ব্যাকআপ ও রিস্টোর</div>
+                                <div class="space-y-3">
+                                    <button @click="downloadBackup()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-download mr-2"></i> ডেটা ডাউনলোড (JSON)
+                                    </button>
+                                    <button @click="exportAllCodes()" class="btn-warning w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-file-code mr-2"></i> সব হোস্টেড কোড ডাউনলোড
+                                    </button>
+                                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
+                                        <p class="text-xs text-amber-300">
+                                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                            <strong>সতর্কতা:</strong> নিয়মিত ব্যাকআপ নিন। ডেটা হারানোর ঝুঁকি এড়াতে।
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                 </div>
             </main>
         </div>
     </template>
 
     <!-- CODE VIEWER MODAL -->
-    <div x-show="showCodeModal" x-cloak @click.self="showCodeModal = false" class="fixed inset-0 z-50 flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);">
-        <div class="glass rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col fade-in">
-            <div class="p-4 border-b border-white/10 flex items-center justify-between">
-                <div>
-                    <h3 class="font-black text-sm" x-text="editingHost ? editingHost.title : ''"></h3>
+    <div x-show="showCodeModal" x-cloak @click.self="showCodeModal = false" class="fixed inset-0 z-[60] flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);">
+        <div class="glass-strong rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col slide-up">
+            <div class="p-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+                <div class="min-w-0">
+                    <h3 class="font-black text-sm text-white truncate" x-text="editingHost ? editingHost.title : ''"></h3>
                     <p class="text-[10px] mono text-indigo-300" x-text="editingHost ? '/s/' + editingHost.slug : ''"></p>
                 </div>
-                <button @click="showCodeModal = false" class="w-8 h-8 rounded-lg glass flex items-center justify-center">
+                <button @click="showCodeModal = false" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
             </div>
             <div class="flex-1 overflow-auto p-4">
                 <textarea x-model="editingHost.code" class="w-full h-[400px] bg-black/50 text-cyan-200 p-4 rounded-xl mono text-xs outline-none border border-white/10 resize-none"></textarea>
             </div>
-            <div class="p-4 border-t border-white/10 flex gap-2">
-                <button @click="saveCode()" class="btn-success flex-1 py-3 rounded-xl text-xs font-black text-white">💾 সেভ করুন</button>
-                <button @click="showCodeModal = false" class="glass px-5 py-3 rounded-xl text-xs font-black text-white">বাতিল</button>
+            <div class="p-4 border-t border-white/10 flex gap-2 flex-shrink-0">
+                <button @click="saveCode()" class="btn-success flex-1 py-3 rounded-xl text-xs font-black text-white">
+                    <i class="fa-solid fa-save mr-1"></i> সেভ করুন
+                </button>
+                <button @click="showCodeModal = false" class="btn-ghost px-5 py-3 rounded-xl text-xs font-black text-white">বাতিল</button>
             </div>
         </div>
     </div>
 
     <!-- PRODUCT FORM MODAL -->
-    <div x-show="showProductModal" x-cloak @click.self="showProductModal = false" class="fixed inset-0 z-50 flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);">
-        <div class="glass rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 fade-in">
+    <div x-show="showProductModal" x-cloak @click.self="showProductModal = false" class="fixed inset-0 z-[60] flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);">
+        <div class="glass-strong rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 slide-up">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="font-black text-lg" x-text="productForm._id ? '✏️ প্রোডাক্ট এডিট' : '➕ নতুন প্রোডাক্ট'"></h3>
-                <button @click="showProductModal = false" class="w-8 h-8 rounded-lg glass flex items-center justify-center">
+                <h3 class="font-black text-lg text-white" x-text="productForm._id ? '✏️ প্রোডাক্ট এডিট' : '➕ নতুন প্রোডাক্ট'"></h3>
+                <button @click="showProductModal = false" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center">
                     <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
             </div>
 
             <div class="space-y-3">
-                <div>
-                    <label class="text-xs text-gray-400 mb-1 block">প্রোডাক্ট নাম্বার (ID)</label>
-                    <input type="text" x-model="productForm.productId" class="premium-input w-full px-4 py-3 text-sm">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-gray-400 mb-1 block">প্রোডাক্ট ID</label>
+                        <input type="text" x-model="productForm.productId" class="premium-input w-full px-4 py-3 text-sm" placeholder="P001">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 mb-1 block">ক্যাটাগরি</label>
+                        <select x-model="productForm.category" class="premium-input w-full px-4 py-3 text-sm">
+                            <option value="HTML">HTML</option>
+                            <option value="PYTHON">PYTHON</option>
+                            <option value="JAVASCRIPT">JAVASCRIPT</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs text-gray-400 mb-1 block">প্রোডাক্টের নাম</label>
@@ -519,15 +1208,7 @@
                     <label class="text-xs text-gray-400 mb-1 block">ফটোর লিংক</label>
                     <input type="text" x-model="productForm.imageUrl" class="premium-input w-full px-4 py-3 text-sm" placeholder="https://...">
                 </div>
-                <div>
-                    <label class="text-xs text-gray-400 mb-1 block">ক্যাটাগরি</label>
-                    <select x-model="productForm.category" class="premium-input w-full px-4 py-3 text-sm">
-                        <option value="HTML">HTML</option>
-                        <option value="PYTHON">PYTHON</option>
-                        <option value="JAVASCRIPT">JAVASCRIPT</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <div>
                         <label class="text-xs text-gray-400 mb-1 block">মূল্য (৳)</label>
                         <input type="number" x-model="productForm.price" class="premium-input w-full px-4 py-3 text-sm">
@@ -536,17 +1217,17 @@
                         <label class="text-xs text-gray-400 mb-1 block">ডিসকাউন্ট (৳)</label>
                         <input type="number" x-model="productForm.discountPrice" class="premium-input w-full px-4 py-3 text-sm">
                     </div>
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400 mb-1 block">স্টক</label>
-                    <input type="number" x-model="productForm.stock" class="premium-input w-full px-4 py-3 text-sm">
+                    <div>
+                        <label class="text-xs text-gray-400 mb-1 block">স্টক</label>
+                        <input type="number" x-model="productForm.stock" class="premium-input w-full px-4 py-3 text-sm">
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs text-gray-400 mb-1 block">বর্ণনা</label>
                     <textarea x-model="productForm.description" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea>
                 </div>
 
-                <div class="border-t border-white/10 pt-3 mt-3">
+                <div class="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-4 mt-4">
                     <p class="text-xs font-black text-orange-300 mb-3">🔓 প্রোডাক্ট মেইন ডেটা (ক্রেতার জন্য)</p>
                     <div class="space-y-3">
                         <div>
@@ -554,7 +1235,7 @@
                             <input type="text" x-model="productForm.mainLink" class="premium-input w-full px-4 py-3 text-sm">
                         </div>
                         <div>
-                            <label class="text-xs text-gray-400 mb-1 block">কোড</label>
+                            <label class="text-xs text-gray-400 mb-1 block">মেইন কোড</label>
                             <textarea x-model="productForm.mainCode" class="premium-input w-full px-4 py-3 text-sm h-24 mono text-xs resize-none"></textarea>
                         </div>
                         <div>
@@ -569,7 +1250,7 @@
                 </div>
 
                 <button @click="saveProduct()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white mt-3">
-                    💾 সেভ করুন
+                    <i class="fa-solid fa-save mr-2"></i> সেভ করুন
                 </button>
             </div>
         </div>
@@ -580,7 +1261,7 @@
          x-transition:enter="transform transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
-         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] glass px-5 py-3 rounded-2xl flex items-center gap-3 max-w-sm">
+         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] glass-strong px-5 py-3 rounded-2xl flex items-center gap-3 max-w-sm shadow-2xl">
         <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
              :class="toastType === 'error' ? 'bg-red-500' : 'bg-emerald-500'">
             <i class="fa-solid text-sm text-white" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i>
@@ -600,6 +1281,7 @@
                 loginError: '',
                 section: 'dashboard',
                 mobileMenu: false,
+                loading: false,
 
                 users: [],
                 hosts: [],
@@ -611,6 +1293,7 @@
                 hostSearch: '',
                 depositFilter: 'pending',
                 redirectUrl: '',
+                redirectActive: '',
 
                 showCodeModal: false,
                 editingHost: null,
@@ -618,11 +1301,25 @@
                 showProductModal: false,
                 productForm: {},
 
+                manualBalance: { userId: '', amount: '', note: '' },
+
+                passwordForm: { old: '', new: '', confirm: '' },
+
+                activityLogs: [],
+
                 settings: {
                     bkashNumber: '01XXXXXXXXX',
                     nagadNumber: '01XXXXXXXXX',
                     siteName: 'FreeHost BD',
-                    footerText: 'PREMIUM PROJECT'
+                    tagline: 'Premium Cloud Hosting',
+                    footerText: 'PREMIUM PROJECT',
+                    logoUrl: '',
+                    htmlHostTitle: 'FreeHost BD HTML',
+                    htmlHostSubtitle: 'Deploy your custom HTML apps instantly',
+                    shopTitle: 'CodeShop',
+                    shopAnnouncement: 'প্রমোশনাল অফার! প্রথম অর্ডারে ১০% ক্যাশব্যাক',
+                    primaryColor: '#6366f1',
+                    accentColor: '#8b5cf6'
                 },
 
                 showToast: false,
@@ -630,24 +1327,80 @@
                 toastSubtext: '',
                 toastType: 'success',
 
-                menuItems: [
-                    { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: 'fa-chart-line' },
-                    { id: 'users', label: 'ইউজার', icon: 'fa-users' },
-                    { id: 'hosts', label: 'হোস্টিং', icon: 'fa-cloud' },
-                    { id: 'deposits', label: 'ডিপোজিট', icon: 'fa-money-bill-transfer' },
-                    { id: 'products', label: 'প্রোডাক্ট', icon: 'fa-box' },
-                    { id: 'orders', label: 'অর্ডার', icon: 'fa-bag-shopping' },
-                    { id: 'settings', label: 'সেটিংস', icon: 'fa-gear' }
+                menuGroups: [
+                    {
+                        label: '📊 Main',
+                        items: [
+                            { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: 'fa-chart-line' }
+                        ]
+                    },
+                    {
+                        label: '👥 User Management',
+                        items: [
+                            { id: 'users', label: 'All Users', icon: 'fa-users' },
+                            { id: 'banned-users', label: 'Banned Users', icon: 'fa-user-slash' },
+                            { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-money-bill-transfer', badge: () => this.pendingDeposits }
+                        ]
+                    },
+                    {
+                        label: '🌐 Hosting',
+                        items: [
+                            { id: 'hosts', label: 'All Hosts', icon: 'fa-cloud' },
+                            { id: 'banned-hosts', label: 'Banned Hosts', icon: 'fa-ban' },
+                            { id: 'redirect', label: 'Global Redirect', icon: 'fa-arrow-right-arrow-left' },
+                            { id: 'analytics', label: 'Host Analytics', icon: 'fa-chart-simple' }
+                        ]
+                    },
+                    {
+                        label: '🛒 Shop',
+                        items: [
+                            { id: 'products', label: 'Products', icon: 'fa-box' },
+                            { id: 'orders', label: 'Orders', icon: 'fa-bag-shopping' }
+                        ]
+                    },
+                    {
+                        label: '💰 Finance',
+                        items: [
+                            { id: 'transactions', label: 'Transactions', icon: 'fa-receipt' },
+                            { id: 'manual-balance', label: 'Manual Balance', icon: 'fa-hand-holding-dollar' }
+                        ]
+                    },
+                    {
+                        label: '⚙️ Settings',
+                        items: [
+                            { id: 'payment-numbers', label: 'Payment Numbers', icon: 'fa-mobile-screen-button' },
+                            { id: 'branding', label: 'Site Branding', icon: 'fa-palette' },
+                            { id: 'page-texts', label: 'Page Texts', icon: 'fa-file-lines' },
+                            { id: 'theme', label: 'Colors & Theme', icon: 'fa-paintbrush' }
+                        ]
+                    },
+                    {
+                        label: '🔐 Admin',
+                        items: [
+                            { id: 'change-password', label: 'Change Password', icon: 'fa-key' },
+                            { id: 'activity-log', label: 'Activity Log', icon: 'fa-list' },
+                            { id: 'backup', label: 'Backup', icon: 'fa-database' }
+                        ]
+                    }
                 ],
 
                 get sectionTitle() {
-                    const m = this.menuItems.find(i => i.id === this.section);
-                    return m ? m.label : 'Dashboard';
+                    for (const g of this.menuGroups) {
+                        const m = g.items.find(i => i.id === this.section);
+                        if (m) return m.label;
+                    }
+                    return 'Dashboard';
                 },
 
-                get pendingDeposits() {
-                    return this.deposits.filter(d => d.status === 'pending').length;
-                },
+                get pendingDeposits() { return this.deposits.filter(d => d.status === 'pending').length; },
+                get approvedDeposits() { return this.deposits.filter(d => d.status === 'approved'); },
+                get bannedUsers() { return this.users.filter(u => u.banned); },
+                get bannedHosts() { return this.hosts.filter(h => h.banned); },
+                get totalIn() { return this.approvedDeposits.reduce((s, d) => s + (d.amount || 0), 0); },
+                get totalViews() { return this.hosts.reduce((s, h) => s + (h.views || 0), 0); },
+                get avgViews() { return this.hosts.length ? Math.round(this.totalViews / this.hosts.length) : 0; },
+                get topSite() { const s = [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0))[0]; return s ? s.title : '—'; },
+                get topSites() { return [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10); },
 
                 get filteredUsers() {
                     const q = this.userSearch.toLowerCase();
@@ -662,8 +1415,8 @@
                 },
 
                 get filteredDeposits() {
-                    if (this.depositFilter === 'pending') return this.deposits.filter(d => d.status === 'pending');
-                    return this.deposits;
+                    if (this.depositFilter === 'all') return this.deposits;
+                    return this.deposits.filter(d => d.status === this.depositFilter);
                 },
 
                 init() {
@@ -672,6 +1425,11 @@
                         this.loggedIn = true;
                         this.loadAll();
                     }
+                    this.redirectActive = localStorage.getItem('global_redirect') || '';
+                    const s = localStorage.getItem('site_settings');
+                    if (s) { try { Object.assign(this.settings, JSON.parse(s)); } catch(e) {} }
+                    const logs = localStorage.getItem('activity_logs');
+                    if (logs) { try { this.activityLogs = JSON.parse(logs); } catch(e) {} }
                 },
 
                 login() {
@@ -679,6 +1437,7 @@
                     if (this.password === 'NOBITA_VIP') {
                         this.loggedIn = true;
                         localStorage.setItem('admin_logged_in', 'true');
+                        this.addLog('Admin logged in');
                         this.loadAll();
                     } else {
                         this.loginError = 'ভুল পাসওয়ার্ড';
@@ -686,14 +1445,15 @@
                 },
 
                 logout() {
+                    this.addLog('Admin logged out');
                     this.loggedIn = false;
                     localStorage.removeItem('admin_logged_in');
                     this.password = '';
                 },
 
                 async loadAll() {
-                    const token = localStorage.getItem('token');
-                    const headers = { 'Authorization': token ? 'Bearer ' + token : '', 'x-admin-pass': 'NOBITA_VIP' };
+                    this.loading = true;
+                    const headers = { 'x-admin-pass': 'NOBITA_VIP' };
                     try {
                         const [u, h, d, p, o] = await Promise.all([
                             fetch('/api/admin/users', { headers }).then(r => r.json()).catch(() => []),
@@ -708,6 +1468,22 @@
                         this.products = Array.isArray(p) ? p : (p.products || []);
                         this.orders = Array.isArray(o) ? o : (o.orders || []);
                     } catch(e) {}
+                    this.loading = false;
+                },
+
+                refreshData() { this.loadAll(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড হয়েছে'); },
+
+                addLog(action) {
+                    this.activityLogs.unshift({ action, time: new Date().toLocaleString('en-GB') });
+                    if (this.activityLogs.length > 100) this.activityLogs = this.activityLogs.slice(0, 100);
+                    localStorage.setItem('activity_logs', JSON.stringify(this.activityLogs));
+                },
+
+                clearLogs() {
+                    if (!confirm('সব লগ মুছে ফেলবেন?')) return;
+                    this.activityLogs = [];
+                    localStorage.removeItem('activity_logs');
+                    this.showToastMsg('ক্লিয়ার', 'লগ মুছে ফেলা হয়েছে');
                 },
 
                 getUserName(id) {
@@ -722,7 +1498,11 @@
                             headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
                             body: JSON.stringify({ banned: !u.banned })
                         });
-                        if (res.ok) { u.banned = !u.banned; this.showToastMsg('সফল', u.banned ? 'ব্যান হয়েছে' : 'আনব্যান হয়েছে'); }
+                        if (res.ok) {
+                            u.banned = !u.banned;
+                            this.addLog((u.banned ? 'Banned user: ' : 'Unbanned user: ') + u.name);
+                            this.showToastMsg('সফল', u.banned ? 'ইউজার ব্যান' : 'ইউজার আনব্যান');
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
@@ -733,15 +1513,24 @@
                             headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
                             body: JSON.stringify({ banned: !h.banned })
                         });
-                        if (res.ok) { h.banned = !h.banned; this.showToastMsg('সফল', h.banned ? 'ব্যান' : 'আনব্যান'); }
+                        if (res.ok) {
+                            h.banned = !h.banned;
+                            this.addLog((h.banned ? 'Banned host: ' : 'Unbanned host: ') + h.slug);
+                            this.showToastMsg('সফল', h.banned ? 'ব্যান' : 'আনব্যান');
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
                 async deleteHost(id) {
-                    if (!confirm('নিশ্চিত?')) return;
+                    if (!confirm('নিশ্চিত? এই হোস্ট স্থায়ীভাবে মুছে যাবে।')) return;
                     try {
                         const res = await fetch('/api/admin/hosts/' + id, { method: 'DELETE', headers: { 'x-admin-pass': 'NOBITA_VIP' } });
-                        if (res.ok) { this.hosts = this.hosts.filter(h => h._id !== id); this.showToastMsg('ডিলিট', 'সফল'); }
+                        if (res.ok) {
+                            const h = this.hosts.find(x => x._id === id);
+                            this.hosts = this.hosts.filter(h => h._id !== id);
+                            this.addLog('Deleted host: ' + (h ? h.slug : id));
+                            this.showToastMsg('ডিলিট', 'হোস্ট মুছে ফেলা হয়েছে');
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
@@ -760,6 +1549,7 @@
                         if (res.ok) {
                             const idx = this.hosts.findIndex(h => h._id === this.editingHost._id);
                             if (idx > -1) this.hosts[idx].code = this.editingHost.code;
+                            this.addLog('Edited code: ' + this.editingHost.slug);
                             this.showCodeModal = false;
                             this.showToastMsg('সেভ হয়েছে', 'লিংকে আপডেট হবে');
                         }
@@ -772,16 +1562,21 @@
                     a.href = URL.createObjectURL(blob);
                     a.download = h.slug + '.html';
                     a.click();
+                    this.addLog('Downloaded code: ' + h.slug);
                 },
 
                 applyRedirect() {
                     if (!this.redirectUrl) return this.showToastMsg('লিংক দিন', '', 'error');
                     localStorage.setItem('global_redirect', this.redirectUrl);
+                    this.redirectActive = this.redirectUrl;
+                    this.addLog('Global redirect ON: ' + this.redirectUrl);
                     this.showToastMsg('রিডাইরেক্ট চালু', this.redirectUrl);
                 },
 
                 clearRedirect() {
                     localStorage.removeItem('global_redirect');
+                    this.redirectActive = '';
+                    this.addLog('Global redirect OFF');
                     this.showToastMsg('রিডাইরেক্ট বন্ধ', '');
                 },
 
@@ -791,17 +1586,31 @@
                             method: 'POST',
                             headers: { 'x-admin-pass': 'NOBITA_VIP' }
                         });
-                        if (res.ok) { d.status = 'approved'; this.showToastMsg('অনুমোদিত ✓', '৳' + d.amount); this.loadAll(); }
+                        if (res.ok) {
+                            d.status = 'approved';
+                            this.addLog('Approved deposit: ৳' + d.amount);
+                            this.showToastMsg('অনুমোদিত ✓', '৳' + d.amount);
+                            this.loadAll();
+                        } else {
+                            const err = await res.json();
+                            this.showToastMsg('ব্যর্থ', err.error || 'সমস্যা', 'error');
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
                 async rejectDeposit(d) {
+                    if (!confirm('বাতিল করবেন?')) return;
                     try {
                         const res = await fetch('/api/admin/deposits/' + d._id + '/reject', {
                             method: 'POST',
                             headers: { 'x-admin-pass': 'NOBITA_VIP' }
                         });
-                        if (res.ok) { d.status = 'rejected'; this.showToastMsg('বাতিল', ''); this.loadAll(); }
+                        if (res.ok) {
+                            d.status = 'rejected';
+                            this.addLog('Rejected deposit: ৳' + d.amount);
+                            this.showToastMsg('বাতিল', '');
+                            this.loadAll();
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
@@ -824,7 +1633,12 @@
                             headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
                             body: JSON.stringify(this.productForm)
                         });
-                        if (res.ok) { this.showProductModal = false; this.showToastMsg('সেভ', ''); this.loadAll(); }
+                        if (res.ok) {
+                            this.showProductModal = false;
+                            this.addLog((this.productForm._id ? 'Edited' : 'Created') + ' product: ' + this.productForm.name);
+                            this.showToastMsg('সেভ', 'প্রোডাক্ট সেভ হয়েছে');
+                            this.loadAll();
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
@@ -832,13 +1646,76 @@
                     if (!confirm('নিশ্চিত?')) return;
                     try {
                         const res = await fetch('/api/admin/products/' + id, { method: 'DELETE', headers: { 'x-admin-pass': 'NOBITA_VIP' } });
-                        if (res.ok) { this.products = this.products.filter(p => p._id !== id); this.showToastMsg('ডিলিট', ''); }
+                        if (res.ok) {
+                            const p = this.products.find(x => x._id === id);
+                            this.products = this.products.filter(x => x._id !== id);
+                            this.addLog('Deleted product: ' + (p ? p.name : id));
+                            this.showToastMsg('ডিলিট', '');
+                        }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
+
+                async addManualBalance() {
+                    if (!this.manualBalance.userId) return this.showToastMsg('ইউজার সিলেক্ট', '', 'error');
+                    if (!this.manualBalance.amount) return this.showToastMsg('পরিমাণ দিন', '', 'error');
+                    try {
+                        const res = await fetch('/api/admin/users/' + this.manualBalance.userId + '/balance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ amount: Number(this.manualBalance.amount), note: this.manualBalance.note })
+                        });
+                        if (res.ok) {
+                            this.addLog('Manual balance: ৳' + this.manualBalance.amount);
+                            this.showToastMsg('যোগ হয়েছে ✓', '৳' + this.manualBalance.amount);
+                            this.manualBalance = { userId: '', amount: '', note: '' };
+                            this.loadAll();
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
+
+                changePassword() {
+                    if (!this.passwordForm.old || !this.passwordForm.new) return this.showToastMsg('সব ফিল্ড পূরণ করুন', '', 'error');
+                    if (this.passwordForm.new !== this.passwordForm.confirm) return this.showToastMsg('পাসওয়ার্ড মিলছে না', '', 'error');
+                    if (this.passwordForm.old !== 'NOBITA_VIP') return this.showToastMsg('পুরনো পাসওয়ার্ড ভুল', '', 'error');
+                    localStorage.setItem('admin_pass', this.passwordForm.new);
+                    this.addLog('Password changed');
+                    this.passwordForm = { old: '', new: '', confirm: '' };
+                    this.showToastMsg('সফল ✓', 'পাসওয়ার্ড পরিবর্তিত (শুধু local)');
                 },
 
                 saveSettings() {
                     localStorage.setItem('site_settings', JSON.stringify(this.settings));
+                    this.addLog('Settings saved');
                     this.showToastMsg('সেটিংস সেভ', '');
+                },
+
+                downloadBackup() {
+                    const data = {
+                        users: this.users,
+                        hosts: this.hosts.map(h => ({ ...h, code: h.code ? '[TRUNCATED]' : '' })),
+                        deposits: this.deposits,
+                        products: this.products,
+                        orders: this.orders,
+                        settings: this.settings,
+                        exportedAt: new Date().toISOString()
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'freehostbd-backup-' + Date.now() + '.json';
+                    a.click();
+                    this.addLog('Backup downloaded');
+                },
+
+                exportAllCodes() {
+                    this.hosts.forEach(h => {
+                        const blob = new Blob([h.code], { type: 'text/html' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = h.slug + '.html';
+                        a.click();
+                    });
+                    this.showToastMsg('ডাউনলোড শুরু', this.hosts.length + ' টি ফাইল');
                 },
 
                 showToastMsg(msg, sub, type = 'success') {
