@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="bn" x-data="accountApp()" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account — FreeHost BD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * { font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; }
+        [x-cloak] { display: none !important; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        body {
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 75%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .glass-3d {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 40%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-3d {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            background-size: 200% auto;
+            color: white;
+            box-shadow: 0 12px 35px -10px rgba(99, 102, 241, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-3d:hover {
+            background-position: right center;
+            transform: translateY(-2px);
+        }
+
+        .pulse-glow {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(16, 185, 129, 0.9); }
+        }
+
+        .premium-input {
+            background: linear-gradient(180deg, rgba(15,23,42,0.9), rgba(2,6,23,0.9));
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+            transition: all 0.35s ease;
+        }
+        .premium-input:focus-within {
+            border-color: #a855f7;
+            box-shadow: 0 0 0 4px rgba(139,92,246,0.18), 0 0 30px rgba(168,85,247,0.35);
+        }
+        .premium-input input {
+            background: transparent;
+            color: #fff;
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+        .premium-input input::placeholder { color: rgba(148,163,184,0.5); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.4s ease; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="relative z-30 glass-3d border-x-0 border-t-0 rounded-none">
+        <div class="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-user text-white"></i>
+                </div>
+                <div>
+                    <div class="text-lg font-black">FreeHost<span class="text-gradient"> BD</span></div>
+                    <div class="text-[10px] text-indigo-300 mono">USER ACCOUNT</div>
+                </div>
+            </a>
+            <div class="flex items-center gap-2">
+                <a href="/" class="text-xs font-bold text-white/60 hover:text-white px-3 py-2 rounded-lg hover:bg-white/5">হোস্টিং</a>
+                <a href="/shop" class="text-xs font-bold text-white/60 hover:text-white px-3 py-2 rounded-lg hover:bg-white/5">শপ</a>
+                <template x-if="user">
+                    <button @click="logout()" class="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-2 rounded-lg hover:bg-red-500/10">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> লগআউট
+                    </button>
+                </template>
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative z-10 max-w-4xl mx-auto px-4 py-10">
+
+        <!-- NOT LOGGED IN -->
+        <template x-if="!user">
+            <div class="max-w-md mx-auto fade-in">
+                <div class="glass-3d p-8 rounded-3xl">
+                    
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl mb-4">
+                            <i class="fa-solid fa-user-astronaut text-white text-2xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-black text-white mb-2" x-text="mode === 'login' ? 'লগইন করুন' : 'নতুন একাউন্ট'"></h1>
+                        <p class="text-xs text-gray-400" x-text="mode === 'login' ? 'আপনার একাউন্টে প্রবেশ করুন' : 'ফ্রি একাউন্ট খুলুন'"></p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <template x-if="mode === 'register'">
+                            <div>
+                                <label class="text-xs font-bold text-gray-300 mb-2 block">আপনার নাম</label>
+                                <div class="premium-input">
+                                    <input type="text" x-model="form.name" placeholder="e.g. Rakib Hasan">
+                                </div>
+                            </div>
+                        </template>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-300 mb-2 block">মোবাইল নাম্বার</label>
+                            <div class="premium-input">
+                                <input type="text" x-model="form.phone" placeholder="01XXXXXXXXX">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-300 mb-2 block">পাসওয়ার্ড</label>
+                            <div class="premium-input">
+                                <input :type="showPass ? 'text' : 'password'" x-model="form.password" placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <button @click="submit()" :disabled="loading" class="btn-3d w-full py-4 rounded-2xl font-black text-sm disabled:opacity-50">
+                            <span x-show="!loading" x-text="mode === 'login' ? '🚀 লগইন' : '✨ রেজিস্টার'"></span>
+                            <span x-show="loading">⏳ অপেক্ষা করুন...</span>
+                        </button>
+
+                        <div class="text-center pt-2">
+                            <button @click="mode = mode === 'login' ? 'register' : 'login'; error = ''" class="text-xs text-indigo-300 hover:text-indigo-200 font-bold">
+                                <span x-text="mode === 'login' ? 'নতুন একাউন্ট খুলুন →' : '← আগের একাউন্টে লগইন'"></span>
+                            </button>
+                        </div>
+
+                        <template x-if="error">
+                            <div class="bg-red-500/20 border border-red-500/35 rounded-2xl p-3 text-center">
+                                <p class="text-xs font-bold text-red-300" x-text="error"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- LOGGED IN -->
+        <template x-if="user">
+            <div class="fade-in">
+                
+                <!-- PROFILE HEADER -->
+                <div class="glass-3d rounded-3xl p-6 sm:p-8 mb-6">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                        <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 flex items-center justify-center text-3xl font-black text-white shadow-2xl">
+                            <span x-text="user.name.charAt(0).toUpperCase()"></span>
+                        </div>
+                        <div class="flex-1 text-center sm:text-left">
+                            <h1 class="text-2xl font-black text-white" x-text="user.name"></h1>
+                            <p class="text-xs mono text-indigo-300 mt-1" x-text="user.phone"></p>
+                            <div class="flex items-center justify-center sm:justify-start gap-3 mt-3">
+                                <span class="text-[10px] font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-glow"></span>
+                                    ACTIVE
+                                </span>
+                                <span class="text-[10px] mono text-gray-400">
+                                    <i class="fa-solid fa-calendar text-indigo-400 mr-1"></i>
+                                    <span x-text="new Date(user.createdAt).toLocaleDateString('en-GB')"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BALANCE CARD -->
+                <div class="grid sm:grid-cols-2 gap-4 mb-6">
+                    <div class="glass-3d rounded-3xl p-6 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-transparent">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] mono font-bold text-emerald-300 tracking-widest">আমার ব্যালেন্স</span>
+                            <i class="fa-solid fa-wallet text-emerald-400"></i>
+                        </div>
+                        <div class="text-4xl font-black text-emerald-300">৳ <span x-text="user.balance || 0"></span></div>
+                        <button @click="$dispatch('open-deposit')" class="mt-3 text-[11px] font-bold text-emerald-300 hover:text-emerald-200">
+                            <i class="fa-solid fa-plus mr-1"></i> ডিপোজিট করুন
+                        </button>
+                    </div>
+                    <div class="glass-3d rounded-3xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] mono font-bold text-indigo-300 tracking-widest">মোট হোস্টেড</span>
+                            <i class="fa-solid fa-cloud text-indigo-400"></i>
+                        </div>
+                        <div class="text-4xl font-black text-indigo-300" x-text="hostCount"></div>
+                        <a href="/" class="mt-3 text-[11px] font-bold text-indigo-300 hover:text-indigo-200 inline-block">
+                            <i class="fa-solid fa-plus mr-1"></i> নতুন হোস্ট
+                        </a>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="flex gap-2 mb-4 overflow-x-auto">
+                    <button @click="tab = 'hosts'" :class="tab === 'hosts' ? 'bg-indigo-600 text-white' : 'glass-3d text-gray-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                        <i class="fa-solid fa-cloud mr-1"></i> হোস্ট
+                    </button>
+                    <button @click="tab = 'deposits'" :class="tab === 'deposits' ? 'bg-emerald-600 text-white' : 'glass-3d text-gray-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                        <i class="fa-solid fa-money-bill-transfer mr-1"></i> ডিপোজিট
+                    </button>
+                    <button @click="tab = 'orders'" :class="tab === 'orders' ? 'bg-orange-600 text-white' : 'glass-3d text-gray-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                        <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
+                    </button>
+                </div>
+
+                <!-- HOSTS TAB -->
+                <template x-if="tab === 'hosts'">
+                    <div class="space-y-3">
+                        <template x-if="hosts.length === 0">
+                            <div class="glass-3d rounded-3xl p-10 text-center">
+                                <i class="fa-solid fa-cloud text-4xl text-gray-500 mb-3"></i>
+                                <p class="text-sm text-gray-400">এখনো কোনো হোস্ট নেই</p>
+                            </div>
+                        </template>
+                        <template x-for="h in hosts" :key="h._id">
+                            <div class="glass-3d rounded-2xl p-4 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                                    <i class="fa-brands fa-html5 text-cyan-400"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold truncate" x-text="h.title"></p>
+                                    <p class="text-[10px] mono text-gray-400 truncate" x-text="'/s/' + h.slug"></p>
+                                </div>
+                                <a :href="'/s/' + h.slug" target="_blank" class="text-xs text-indigo-400 hover:text-indigo-300">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- DEPOSITS TAB -->
+                <template x-if="tab === 'deposits'">
+                    <div class="space-y-3">
+                        <template x-if="deposits.length === 0">
+                            <div class="glass-3d rounded-3xl p-10 text-center">
+                                <i class="fa-solid fa-money-bill-transfer text-4xl text-gray-500 mb-3"></i>
+                                <p class="text-sm text-gray-400">এখনো কোনো ডিপোজিট নেই</p>
+                            </div>
+                        </template>
+                        <template x-for="d in deposits" :key="d._id">
+                            <div class="glass-3d rounded-2xl p-4 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                                     :class="d.status === 'approved' ? 'bg-emerald-500/20 border-emerald-500/30' : d.status === 'rejected' ? 'bg-red-500/20 border-red-500/30' : 'bg-amber-500/20 border-amber-500/30'">
+                                    <i class="fa-solid text-xs"
+                                       :class="d.status === 'approved' ? 'fa-check text-emerald-400' : d.status === 'rejected' ? 'fa-xmark text-red-400' : 'fa-clock text-amber-400'"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold">৳ <span x-text="d.amount"></span></p>
+                                    <p class="text-[10px] mono text-gray-400 truncate" x-text="d.method + ' • ' + d.transactionId"></p>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-1 rounded-lg"
+                                      :class="d.status === 'approved' ? 'bg-emerald-500/20 text-emerald-300' : d.status === 'rejected' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'"
+                                      x-text="d.status"></span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- ORDERS TAB -->
+                <template x-if="tab === 'orders'">
+                    <div class="space-y-3">
+                        <template x-if="orders.length === 0">
+                            <div class="glass-3d rounded-3xl p-10 text-center">
+                                <i class="fa-solid fa-bag-shopping text-4xl text-gray-500 mb-3"></i>
+                                <p class="text-sm text-gray-400">এখনো কোনো অর্ডার নেই</p>
+                                <a href="/shop" class="btn-3d inline-block mt-4 px-5 py-2.5 rounded-xl text-xs font-bold">শপে যান</a>
+                            </div>
+                        </template>
+                        <template x-for="o in orders" :key="o._id">
+                            <div class="glass-3d rounded-2xl p-4 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+                                    <i class="fa-solid fa-code text-orange-400 text-xs"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold truncate" x-text="o.productName"></p>
+                                    <p class="text-[10px] mono text-gray-400" x-text="'৳ ' + o.price + ' • ' + new Date(o.createdAt).toLocaleDateString('en-GB')"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- DEPOSIT MODAL -->
+        <div x-show="showDeposit" x-cloak @click.self="showDeposit = false" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+            <div class="glass-3d rounded-3xl max-w-md w-full p-6 fade-in">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-xl font-black">💰 ডিপোজিট</h2>
+                    <button @click="showDeposit = false" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 mb-5">
+                    <p class="text-[11px] font-bold text-emerald-300 mb-1">💚 বিকাশ নাম্বার:</p>
+                    <p class="text-lg font-black text-emerald-200 mono">01XXXXXXXXX</p>
+                    <p class="text-[10px] text-emerald-400/70 mt-1">টাকা পাঠিয়ে নিচের ফর্ম পূরণ করুন</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="premium-input">
+                        <input type="number" x-model="depositForm.amount" placeholder="পরিমাণ (৫০-২৫০০)" min="50" max="2500">
+                    </div>
+                    <div class="premium-input">
+                        <input type="text" x-model="depositForm.senderNumber" placeholder="আপনার বিকাশ নাম্বার">
+                    </div>
+                    <div class="premium-input">
+                        <input type="text" x-model="depositForm.transactionId" placeholder="ট্রানজেকশন আইডি">
+                    </div>
+                    <select x-model="depositForm.method" class="premium-input w-full text-sm text-white px-4 py-3 outline-none">
+                        <option value="bKash" class="bg-slate-900">বিকাশ</option>
+                        <option value="Nagad" class="bg-slate-900">নগদ</option>
+                    </select>
+                    <button @click="submitDeposit()" :disabled="depositing" class="btn-3d w-full py-4 rounded-2xl font-black text-sm disabled:opacity-50">
+                        <span x-show="!depositing">🚀 রিকোয়েস্ট পাঠান</span>
+                        <span x-show="depositing">⏳ পাঠানো হচ্ছে...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOAST -->
+        <div x-show="showToast" x-cloak
+             x-transition:enter="transform transition ease-out duration-300"
+             x-transition:enter-start="translate-y-20 opacity-0"
+             x-transition:enter-end="translate-y-0 opacity-100"
+             class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 glass-3d px-5 py-3 rounded-2xl flex items-center gap-3 max-w-sm">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                 :class="toastType === 'error' ? 'bg-red-500' : 'bg-emerald-500'">
+                <i class="fa-solid text-sm text-white" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs font-bold text-white" x-text="toastMessage"></p>
+                <p class="text-[10px] text-gray-400 truncate" x-text="toastSubtext"></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function accountApp() {
+            return {
+                user: null,
+                mode: 'login',
+                form: { name: '', phone: '', password: '' },
+                showPass: false,
+                loading: false,
+                error: '',
+                tab: 'hosts',
+                hosts: [],
+                deposits: [],
+                orders: [],
+                showDeposit: false,
+                depositing: false,
+                depositForm: { amount: '', senderNumber: '', transactionId: '', method: 'bKash' },
+                showToast: false,
+                toastMessage: '',
+                toastSubtext: '',
+                toastType: 'success',
+
+                get hostCount() { return this.hosts.length; },
+
+                init() {
+                    const stored = localStorage.getItem('user');
+                    const token = localStorage.getItem('token');
+                    if (stored && token) {
+                        try { this.user = JSON.parse(stored); this.loadData(); } catch(e) {}
+                    }
+
+                    window.addEventListener('open-deposit', () => { this.showDeposit = true; });
+                },
+
+                async submit() {
+                    this.error = '';
+                    if (this.mode === 'register' && !this.form.name.trim()) return this.error = 'নাম দিন';
+                    if (!this.form.phone.trim()) return this.error = 'মোবাইল নাম্বার দিন';
+                    if (!this.form.password || this.form.password.length < 4) return this.error = 'পাসওয়ার্ড কমপক্ষে ৪ অক্ষর';
+
+                    this.loading = true;
+                    try {
+                        const url = this.mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'ব্যর্থ');
+
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        this.user = data.user;
+                        this.showToastMsg('সফল! 🎉', this.mode === 'login' ? 'লগইন হয়েছে' : 'একাউন্ট তৈরি হয়েছে');
+                        this.loadData();
+                    } catch (err) {
+                        this.error = err.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                logout() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    this.user = null;
+                    this.hosts = []; this.deposits = []; this.orders = [];
+                },
+
+                async loadData() {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+                    try {
+                        const [h, d, o] = await Promise.all([
+                            fetch('/api/host/my', { headers: { 'Authorization': 'Bearer ' + token } }).then(r => r.json()).catch(() => []),
+                            fetch('/api/shop/deposits/my', { headers: { 'Authorization': 'Bearer ' + token } }).then(r => r.json()).catch(() => []),
+                            fetch('/api/shop/orders/my', { headers: { 'Authorization': 'Bearer ' + token } }).then(r => r.json()).catch(() => [])
+                        ]);
+                        this.hosts = Array.isArray(h) ? h : (h.hosts || []);
+                        this.deposits = Array.isArray(d) ? d : (d.deposits || []);
+                        this.orders = Array.isArray(o) ? o : (o.orders || []);
+                    } catch(e) {}
+                },
+
+                async submitDeposit() {
+                    if (!this.depositForm.amount || !this.depositForm.senderNumber || !this.depositForm.transactionId) {
+                        return this.showToastMsg('তথ্য অসম্পূর্ণ', 'সব ফিল্ড পূরণ করুন', 'error');
+                    }
+                    const amt = Number(this.depositForm.amount);
+                    if (amt < 50 || amt > 2500) {
+                        return this.showToastMsg('ভুল পরিমাণ', '৫০ থেকে ২৫০০ টাকা', 'error');
+                    }
+                    this.depositing = true;
+                    try {
+                        const token = localStorage.getItem('token');
+                        const res = await fetch('/api/shop/deposit', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify(this.depositForm)
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'ব্যর্থ');
+                        this.showToastMsg('রিকোয়েস্ট পাঠানো হয়েছে! ⏳', 'অ্যাডমিন approve করলে যোগ হবে');
+                        this.depositForm = { amount: '', senderNumber: '', transactionId: '', method: 'bKash' };
+                        this.showDeposit = false;
+                        this.loadData();
+                    } catch (err) {
+                        this.showToastMsg('ব্যর্থ', err.message, 'error');
+                    } finally {
+                        this.depositing = false;
+                    }
+                },
+
+                showToastMsg(msg, sub, type = 'success') {
+                    this.toastMessage = msg;
+                    this.toastSubtext = sub;
+                    this.toastType = type;
+                    this.showToast = true;
+                    clearTimeout(this._t);
+                    this._t = setTimeout(() => { this.showToast = false; }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
