@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -17,43 +18,29 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ===== ANTI-DEBUG PROTECTION SCRIPT =====
-const protectionScript = `
-<script>
-(function(){
-  // Right-click block
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+// ===== AES SECRET =====
+const AES_SECRET = process.env.AES_SECRET || 'change-this-secret-key-in-env-2026';
 
-  // F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C block
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'F12') return e.preventDefault();
-    if (e.ctrlKey && e.shiftKey && ['I','J','C','i','j','c'].includes(e.key)) return e.preventDefault();
-    if (e.ctrlKey && ['u','U','s','S'].includes(e.key)) return e.preventDefault();
-  });
+// ===== HELPER: XSS ESCAPE =====
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-  // Drag & copy protection
-  document.addEventListener('dragstart', function(e){ e.preventDefault(); });
-  document.addEventListener('copy', function(e){
-    if (window.getSelection().toString().length > 80) e.preventDefault();
-  });
-
-  // Developer Tools Detection
-  var devtoolsOpen = false;
-  setInterval(function(){
-    var start = performance.now();
-    debugger;
-    if (performance.now() - start > 100) {
-      if (!devtoolsOpen) {
-        devtoolsOpen = true;
-        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#fff;font-family:sans-serif;text-align:center;padding:20px"><div><h1 style="color:#ef4444;font-size:48px;margin:0">⚠️</h1><h2 style="margin:16px 0">Developer Tools Detected</h2><p style="color:#94a3b8">Please close Developer Tools to view this page</p></div></div>';
-      }
-    } else {
-      devtoolsOpen = false;
-    }
-  }, 1500);
-})();
-</script>
-`;
+// ===== HELPER: AES ENCRYPT =====
+function encryptCode(text) {
+  const iv = crypto.randomBytes(16);
+  const key = crypto.createHash('sha256').update(AES_SECRET).digest();
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return iv.toString('base64') + ':' + encrypted;
+}
 
 // ===== HEALTH CHECK (UptimeRobot) =====
 app.get('/api/health', (req, res) => {
@@ -64,22 +51,14 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE HOSTED HTML (with protection + anti-bot) =====
+// ===== SERVE HOSTED HTML — WRAPPER PAGE (iframe protection) =====
 app.get('/s/:slug', async (req, res) => {
   try {
-    // ১. চেক করা হচ্ছে রিকোয়েস্টটি কোনো ব্রাউজার থেকে আসছে কি না (Anti-Bot)
-    const userAgent = req.headers['user-agent'] || '';
-    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
-    
-    if (!isBrowser) {
-      return res.status(403).send('<h1>Access Denied</h1><p>Bot access is not allowed.</p>');
-    }
-
     const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
-    // Password check
+    // পাসওয়ার্ড চেক
     if (host.password) {
       const provided = req.query.pw;
       if (provided !== host.password) {
@@ -87,6 +66,7 @@ app.get('/s/:slug', async (req, res) => {
           <!DOCTYPE html>
           <html>
           <head><title>Protected</title>
+          <meta name="viewport" content="width=device-width,initial-scale=1">
           <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff}
           .box{background:#1e293b;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-width:90%}
           input{padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;width:100%;margin:16px 0;box-sizing:border-box}
@@ -102,20 +82,107 @@ app.get('/s/:slug', async (req, res) => {
       }
     }
 
-    // View count increment
+    // ভিউ কাউন্ট
     host.views = (host.views || 0) + 1;
     await host.save();
 
-    // Inject protection script into HTML
-    let finalCode = host.code;
-    if (finalCode.includes('</body>')) {
-      finalCode = finalCode.replace('</body>', protectionScript + '</body>');
-    } else {
-      finalCode = finalCode + protectionScript;
+    // 🔥 WRAPPER PAGE — View Source করলে শুধু iframe ট্যাগ দেখবে
+    const pwQuery = req.query.pw ? `?pw=${encodeURIComponent(req.query.pw)}` : '';
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(host.title || 'Site')}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden;background:#fff}iframe{width:100%;height:100vh;border:none;display:block}</style>
+</head>
+<body>
+<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
+</body>
+</html>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ===== EMBED ROUTE — AES ENCRYPTED CODE =====
+app.get('/embed/:slug', async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
+
+    // পাসওয়ার্ড চেক (double protection)
+    if (host.password) {
+      const provided = req.query.pw;
+      if (provided !== host.password) {
+        return res.status(403).send('<h1>403 - Access Denied</h1>');
+      }
     }
 
+    // ভিউ কাউন্ট
+    host.views = (host.views || 0) + 1;
+    await host.save();
+
+    // 🔐 AES এনক্রিপ্ট করুন
+    const encryptedPayload = encryptCode(host.code);
+
     res.setHeader('Content-Type', 'text/html');
-    res.send(finalCode);
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loading...</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style>
+body{margin:0;background:#030712;color:#fff;font-family:sans-serif}
+#loader{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}
+.spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.1);border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="loader">
+  <div class="spinner"></div>
+  <p style="color:#94a3b8">Unlocking content...</p>
+</div>
+
+<script>
+(function() {
+  try {
+    var payload = ${JSON.stringify(encryptedPayload)};
+    var secret = ${JSON.stringify(AES_SECRET)};
+    var parts = payload.split(':');
+    var iv = CryptoJS.enc.Base64.parse(parts[0]);
+    var encrypted = parts[1];
+    
+    var decrypted = CryptoJS.AES.decrypt(encrypted, CryptoJS.SHA256(secret), {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    
+    var html = decrypted.toString(CryptoJS.enc.Utf8);
+    
+    if (html && html.length > 0) {
+      document.open();
+      document.write(html);
+      document.close();
+    } else {
+      document.getElementById('loader').innerHTML = '<h2 style="color:#ef4444">⚠️ Decryption Failed</h2>';
+    }
+  } catch (e) {
+    console.error('Decrypt error:', e);
+    document.getElementById('loader').innerHTML = '<h2 style="color:#ef4444">⚠️ Error Loading Site</h2>';
+  }
+})();
+</script>
+</body>
+</html>`);
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -142,4 +209,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🌐 http://localhost:${PORT}`);
+  console.log(`🔐 AES Encryption: ${AES_SECRET ? 'Enabled' : 'Disabled'}`);
 });
