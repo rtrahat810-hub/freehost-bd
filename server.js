@@ -64,9 +64,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE HOSTED HTML (with protection) =====
+// ===== SERVE HOSTED HTML (with protection + anti-bot) =====
 app.get('/s/:slug', async (req, res) => {
   try {
+    // ১. চেক করা হচ্ছে রিকোয়েস্টটি কোনো ব্রাউজার থেকে আসছে কি না (Anti-Bot)
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    
+    if (!isBrowser) {
+      return res.status(403).send('<h1>Access Denied</h1><p>Bot access is not allowed.</p>');
+    }
+
     const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
@@ -120,7 +128,7 @@ app.use('/api/host', require('./routes/host'));
 app.use('/api/photo', require('./routes/photo'));
 app.use('/api/shop', require('./routes/shop'));
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api/setting', require('./routes/setting')); // 👈 নতুন যোগ করা হলো
+app.use('/api/setting', require('./routes/setting'));
 
 // ===== SERVE FRONTEND =====
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
