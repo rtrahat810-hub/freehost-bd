@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" x-data="photoApp()" class="scroll-smooth">
+<html lang="en" x-data="photoApp()" x-init="init()" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,18 +39,9 @@
         .orb-2 { width: 750px; height: 750px; background: linear-gradient(135deg, #ec4899, #f43f5e); top: 25%; right: -280px; animation: float2 24s ease-in-out infinite; }
         .orb-3 { width: 550px; height: 550px; background: linear-gradient(135deg, #8b5cf6, #6366f1); bottom: -180px; left: 15%; animation: float3 22s ease-in-out infinite; }
 
-        @keyframes float1 {
-            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(100px, -80px, 60px) scale(1.2); }
-        }
-        @keyframes float2 {
-            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(-130px, 100px, -70px) scale(1.15); }
-        }
-        @keyframes float3 {
-            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(90px, -100px, 50px) scale(1.25); }
-        }
+        @keyframes float1 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(100px, -80px, 60px) scale(1.2); } }
+        @keyframes float2 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-130px, 100px, -70px) scale(1.15); } }
+        @keyframes float3 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(90px, -100px, 50px) scale(1.25); } }
 
         .glass-3d {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
@@ -59,11 +50,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-top: 1px solid rgba(255, 255, 255, 0.22);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-            transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .glass-3d:hover {
-            border-color: rgba(168, 85, 247, 0.4);
-            box-shadow: 0 30px 80px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .text-gradient-2 {
@@ -71,7 +57,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 30px rgba(232, 121, 249, 0.5));
         }
 
         .btn-3d {
@@ -86,49 +71,24 @@
             box-shadow: 0 18px 45px -5px rgba(236, 72, 153, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.6);
             transform: translateY(-3px) scale(1.02);
         }
-        .btn-3d:active { transform: translateY(1px) scale(0.98); }
 
-        .pulse-glow {
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
-            animation: pulse-glow-anim 2s infinite;
-        }
+        .pulse-glow { animation: pulse-glow-anim 2s infinite; }
         @keyframes pulse-glow-anim {
             0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
             50% { box-shadow: 0 0 35px rgba(16, 185, 129, 0.9); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease; }
 
-        @keyframes float-y {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-12px) rotate(1deg); }
-        }
+        @keyframes float-y { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(1deg); } }
         .float-anim { animation: float-y 7s ease-in-out infinite; }
-
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #030712; }
-        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #a855f7, #ec4899); border-radius: 4px; }
 
         .nav-pill.active {
             background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%);
             border-color: rgba(236, 72, 153, 0.5);
-            box-shadow: 0 0 25px rgba(236, 72, 153, 0.35);
             color: white;
         }
-
-        .topbar-title {
-            background: linear-gradient(90deg, #e879f9 0%, #f472b6 50%, #c084fc 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: shine 4s linear infinite;
-            font-weight: 900;
-        }
-        @keyframes shine { to { background-position: 200% center; } }
     </style>
 </head>
 <body class="relative">
@@ -149,25 +109,20 @@
                             <i class="fa-solid fa-image text-white text-lg"></i>
                         </div>
                         <div class="hidden sm:block">
-                            <div class="text-xl font-black text-white">
-                                Photo<span class="text-gradient-2">Host</span>
-                            </div>
+                            <div class="text-xl font-black text-white">Photo<span class="text-gradient-2">Host</span></div>
                             <div class="text-[9px] text-purple-300 mono tracking-widest uppercase">Direct Image URL</div>
                         </div>
                     </a>
 
                     <div class="flex items-center gap-2">
                         <a href="/" class="nav-pill px-4 py-2.5 rounded-xl text-xs font-bold text-white/60 hover:text-white hover:bg-white/5 flex items-center gap-2 border border-transparent">
-                            <i class="fa-brands fa-html5 text-cyan-400"></i>
-                            <span class="hidden sm:inline">HTML Host</span>
+                            <i class="fa-brands fa-html5 text-cyan-400"></i> <span class="hidden sm:inline">HTML</span>
                         </a>
                         <a href="/shop" class="nav-pill px-4 py-2.5 rounded-xl text-xs font-bold text-white/60 hover:text-white hover:bg-white/5 flex items-center gap-2 border border-transparent">
-                            <i class="fa-solid fa-store text-orange-400"></i>
-                            <span class="hidden sm:inline">Shop</span>
+                            <i class="fa-solid fa-store text-orange-400"></i> <span class="hidden sm:inline">Shop</span>
                         </a>
                         <a href="/account" class="nav-pill px-4 py-2.5 rounded-xl text-xs font-bold text-white/60 hover:text-white hover:bg-white/5 flex items-center gap-2 border border-transparent">
-                            <i class="fa-solid fa-user text-emerald-400"></i>
-                            <span class="hidden sm:inline">Account</span>
+                            <i class="fa-solid fa-user text-emerald-400"></i> <span class="hidden sm:inline">Account</span>
                         </a>
                     </div>
                 </div>
@@ -175,9 +130,7 @@
         </div>
     </nav>
 
-    <!-- MAIN -->
     <main class="relative z-10 max-w-[1400px] mx-auto px-5 lg:px-10">
-        
         <div class="py-12 lg:py-16">
             
             <div class="text-center max-w-3xl mx-auto mb-12 lg:mb-16 float-anim">
@@ -185,13 +138,11 @@
                     <span class="w-2 h-2 bg-purple-400 rounded-full pulse-glow"></span>
                     <span class="text-purple-200 font-semibold mono">DIRECT IMAGE URL</span>
                 </div>
-
                 <h1 class="text-5xl lg:text-7xl font-black tracking-tight leading-[1.08] mb-6 text-white drop-shadow-lg">
                     Upload image.<br>
                     <span class="text-gradient-2">Get direct link.</span>
                 </h1>
-
-                <p class="text-gray-400 text-base max-w-xl mx-auto leading-relaxed">
+                <p class="text-gray-400 text-base max-w-xl mx-auto">
                     Upload your photo and get a live link that will run your photo in any browser.
                 </p>
             </div>
@@ -286,10 +237,10 @@
                 </div>
             </div>
 
+            <!-- Success Card -->
             <template x-if="lastUploaded">
                 <div class="max-w-3xl mx-auto mt-8 animate-[fadeIn_0.5s_ease]">
                     <div class="glass-3d p-8 lg:p-10 rounded-3xl border-purple-500/40 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 shadow-2xl">
-                        
                         <div class="flex items-center gap-5 mb-6">
                             <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shadow-xl shadow-purple-500/40">
                                 <i class="fa-solid fa-check text-white text-2xl"></i>
@@ -333,9 +284,6 @@
          x-transition:enter="transform transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
-         x-transition:leave="transform transition ease-in duration-200"
-         x-transition:leave-start="translate-y-0 opacity-100"
-         x-transition:leave-end="translate-y-20 opacity-0"
          class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full px-4">
         <div class="glass-3d p-5 rounded-3xl shadow-2xl flex items-center gap-4 bg-gray-900/90 border border-white/20">
             <div :class="toastType === 'error' ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'" 
@@ -362,6 +310,10 @@
                 photoPreview: null,
                 photoError: '',
                 lastUploaded: null,
+
+                init() {
+                    // Any init code
+                },
 
                 handleFileSelect(e) {
                     const file = e.target.files[0];
@@ -399,11 +351,13 @@
                         const formData = new FormData();
                         formData.append('photo', this.photoFile);
                         const token = localStorage.getItem('token');
+                        
                         const res = await fetch('/api/photo', {
                             method: 'POST',
                             headers: { 'Authorization': token ? 'Bearer ' + token : '' },
                             body: formData
                         });
+                        
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || 'Upload failed');
 
