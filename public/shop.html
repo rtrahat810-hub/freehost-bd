@@ -7,98 +7,70 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
-        * { font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; }
+        * { font-family: 'Roboto', 'Hind Siliguri', sans-serif; }
         [x-cloak] { display: none !important; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
-        body { background: #f8fafc; }
-
-        .card-hover { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-        .card-hover:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.25);
+        
+        body { 
+            background: #f5f5f5;
+            color: #212121;
         }
 
-        .hero-gradient {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            position: relative;
+        .daraz-orange { background: #f85606; }
+        .daraz-orange-text { color: #f85606; }
+        .daraz-orange-hover:hover { background: #e04e05; }
+
+        .product-card {
+            background: #ffffff;
+            border-radius: 4px;
             overflow: hidden;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
         }
-        .hero-gradient::before {
-            content: '';
-            position: absolute;
-            top: -50%; right: -10%;
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: float 8s ease-in-out infinite;
+        .product-card:hover {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+            border-color: #e0e0e0;
         }
-        .hero-gradient::after {
-            content: '';
-            position: absolute;
-            bottom: -30%; left: -5%;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: float 10s ease-in-out infinite reverse;
+        .product-card:hover .product-img {
+            transform: scale(1.05);
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-30px) scale(1.1); }
+        .product-img {
+            transition: transform 0.4s ease;
         }
 
-        .empty-icon { animation: bounce-slow 3s ease-in-out infinite; }
-        @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .cat-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #424242;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            border-radius: 4px;
+        }
+        .cat-item:hover {
+            background: #fff3ed;
+            color: #f85606;
+        }
+        .cat-item.active {
+            background: #fff3ed;
+            color: #f85606;
+            font-weight: 700;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in { animation: fadeIn 0.4s ease; }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .slide-up { animation: slideUp 0.5s ease; }
-
-        .product-image {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        .product-image img { transition: transform 0.5s ease; }
-        .card-hover:hover .product-image img { transform: scale(1.08); }
-
-        .badge-discount {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-        }
-
-        .modal-backdrop {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(8px);
-        }
-
-        .nav-fixed {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 50;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f5; }
+        ::-webkit-scrollbar-thumb { background: #bdbdbd; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9e9e9e; }
 
         .skeleton {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background: linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
@@ -106,51 +78,140 @@
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
+
+        .stars { color: #ffb300; }
+
+        .banner-gradient {
+            background: linear-gradient(135deg, #f85606 0%, #ff8a3d 50%, #ffb366 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .flash-timer {
+            background: linear-gradient(135deg, #ff6b00, #f85606);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.3s ease; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up { animation: slideUp 0.3s ease; }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ============ NAVBAR — ALWAYS VISIBLE ============ -->
-    <nav class="nav-fixed">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            
-            <!-- Top Row -->
-            <div class="flex items-center justify-between h-14 sm:h-16 gap-2">
+    <!-- ============ TOP BAR ============ -->
+    <div class="bg-[#2e2e2e] text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-8 text-[11px]">
+                <div class="flex items-center gap-4">
+                    <a href="#" class="hover:text-orange-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-phone text-[9px]"></i> হটলাইন
+                    </a>
+                    <a href="#" class="hover:text-orange-400 hidden sm:flex items-center gap-1.5">
+                        <i class="fa-solid fa-truck text-[9px]"></i> অর্ডার ট্র্যাক
+                    </a>
+                    <a href="#" class="hover:text-orange-400 hidden md:flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-question text-[9px]"></i> হেল্প
+                    </a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="/account" class="hover:text-orange-400">একাউন্ট</a>
+                    <a href="/account" class="hover:text-orange-400">রেজিস্ট্রেশন</a>
+                    <span class="text-gray-500">|</span>
+                    <button class="hover:text-orange-400 font-bold">বাংলা</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MAIN HEADER ============ -->
+    <header class="bg-[#f85606] sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4 h-16">
+                <!-- Logo -->
                 <a href="/" class="flex items-center gap-2 flex-shrink-0">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white text-base font-black shadow-lg shadow-orange-600/30">
-                        <i class="fa-solid fa-store"></i>
+                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-store text-[#f85606] text-xl"></i>
                     </div>
                     <div class="leading-none">
-                        <span class="text-sm sm:text-lg font-black tracking-tight text-gray-900 block">FreeHost<span class="text-orange-600"> BD</span></span>
-                        <span class="text-[8px] sm:text-[9px] text-gray-400 font-bold tracking-wider">SHOP</span>
+                        <span class="text-lg sm:text-xl font-black text-white block">FreeHost<span class="text-yellow-300"> BD</span></span>
+                        <span class="text-[9px] text-white/80 font-medium tracking-wider">CODE SHOP</span>
                     </div>
                 </a>
 
-                <div class="hidden md:flex flex-1 max-w-md relative mx-4">
-                    <input type="text" x-model="searchQuery" placeholder="🔍 কোড খুঁজুন..." class="w-full bg-gray-100 border-0 rounded-xl py-2 pl-9 pr-3 text-sm focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <!-- Search Bar -->
+                <div class="hidden md:flex flex-1 relative">
+                    <input type="text" x-model="searchQuery" placeholder="কোড, ল্যাঙ্গুয়েজ বা ফ্রেমওয়ার্ক খুঁজুন..." 
+                           class="w-full bg-white rounded-md py-2.5 pl-4 pr-12 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-300">
+                    <button class="absolute right-0 top-0 bottom-0 bg-[#2e2e2e] hover:bg-[#1a1a1a] rounded-r-md px-5 flex items-center justify-center transition">
+                        <i class="fa-solid fa-magnifying-glass text-white text-sm"></i>
+                    </button>
                 </div>
 
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <button @click="view = 'wishlist'" class="hidden sm:flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-red-50 hover:text-red-600 items-center justify-center relative transition">
-                        <i class="fa-regular fa-heart text-sm"></i>
-                        <span x-show="wishlist.length > 0" x-text="wishlist.length" x-cloak class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center"></span>
-                    </button>
-
-                    <template x-if="!user">
-                        <a href="/account" class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black shadow-lg shadow-orange-500/30 hover:scale-105 transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-right-to-bracket text-xs"></i>
-                            <span>লগইন</span>
+                <!-- Actions -->
+                <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
+                    <!-- ============ BALANCE (Wishlist ও Cart এর জায়গায়) ============ -->
+                    <template x-if="user">
+                        <a href="/account" class="flex items-center gap-2 bg-white/15 backdrop-blur border border-white/30 px-3 sm:px-4 py-2 rounded-md hover:bg-white/25 transition group">
+                            <i class="fa-solid fa-wallet text-white text-base"></i>
+                            <div class="leading-none">
+                                <p class="text-[9px] text-white/80 font-medium">ব্যালেন্স</p>
+                                <p class="text-sm sm:text-base font-black text-white">৳<span x-text="user.balance || 0"></span></p>
+                            </div>
                         </a>
                     </template>
 
-                    <template x-if="user">
-                        <a href="/account" class="flex items-center gap-2 hover:opacity-80 transition">
-                            <div class="hidden sm:block text-right leading-tight">
-                                <p class="text-[9px] text-gray-500 font-bold">ব্যালেন্স</p>
-                                <p class="text-xs font-black text-emerald-600">৳<span x-text="user.balance || 0"></span></p>
+                    <template x-if="!user">
+                        <a href="/account" class="flex items-center gap-2 bg-white/15 backdrop-blur border border-white/30 px-3 sm:px-4 py-2 rounded-md hover:bg-white/25 transition group">
+                            <i class="fa-solid fa-wallet text-white text-base"></i>
+                            <div class="leading-none">
+                                <p class="text-[9px] text-white/80 font-medium">ব্যালেন্স</p>
+                                <p class="text-sm sm:text-base font-black text-white">৳0</p>
                             </div>
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shadow-md">
+                        </a>
+                    </template>
+
+                    <!-- Login/User -->
+                    <template x-if="!user">
+                        <a href="/account" class="bg-white text-[#f85606] px-4 py-2 rounded-md text-xs font-bold hover:bg-yellow-50 transition hidden sm:block">
+                            লগইন
+                        </a>
+                    </template>
+                    <template x-if="user">
+                        <a href="/account" class="flex items-center gap-2 hover:opacity-90 transition">
+                            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#f85606] text-sm font-bold">
                                 <span x-text="user.name ? user.name.charAt(0).toUpperCase() : 'U'"></span>
                             </div>
                         </a>
@@ -158,372 +219,460 @@
                 </div>
             </div>
 
-            <!-- Menu Row -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-2.5 scrollbar-none">
-                <button @click="view = 'home'" :class="view === 'home' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" class="px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
-                    <i class="fa-solid fa-home text-[10px]"></i> হোম
-                </button>
-                <button @click="view = 'wishlist'" :class="view === 'wishlist' ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" class="px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 relative">
-                    <i class="fa-regular fa-heart text-[10px]"></i> উইশলিস্ট
-                    <span x-show="wishlist.length > 0" x-text="wishlist.length" x-cloak class="bg-red-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center"></span>
-                </button>
-                <button @click="view = 'deposit'" :class="view === 'deposit' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" class="px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
-                    <i class="fa-solid fa-wallet text-[10px]"></i> ডিপোজিট
-                </button>
-                <a href="/" class="px-3 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
-                    <i class="fa-solid fa-cloud text-[10px]"></i> হোস্টিং
-                </a>
-                <a href="/photo" class="px-3 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
-                    <i class="fa-solid fa-image text-[10px]"></i> ফটো
-                </a>
-                <a href="/account" class="px-3 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-700 hover:bg-gray-200 transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
-                    <i class="fa-solid fa-user text-[10px]"></i> একাউন্ট
-                </a>
-            </div>
-
+            <!-- Mobile Search -->
             <div class="md:hidden pb-2.5 relative">
-                <input type="text" x-model="searchQuery" placeholder="🔍 কোড খুঁজুন..." class="w-full bg-gray-100 border-0 rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <input type="text" x-model="searchQuery" placeholder="কোড খুঁজুন..." 
+                       class="w-full bg-white rounded-md py-2 pl-3 pr-10 text-sm placeholder-gray-400 outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[#f85606] text-sm"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============ CATEGORY NAV BAR ============ -->
+    <nav class="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto scrollbar-none py-1">
+                <button @click="selectedCategory = 'ALL'; scrollToProducts()" 
+                        :class="selectedCategory === 'ALL' ? 'bg-[#fff3ed] text-[#f85606] font-bold' : 'text-gray-600 hover:text-[#f85606] hover:bg-gray-50'"
+                        class="px-4 py-2.5 text-xs font-medium whitespace-nowrap rounded transition flex-shrink-0 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bars text-[10px]"></i> সব ক্যাটাগরি
+                </button>
+                <template x-for="cat in categories.filter(c => c.name !== 'ALL')" :key="cat.name">
+                    <button @click="selectedCategory = cat.name; scrollToProducts()" 
+                            :class="selectedCategory === cat.name ? 'bg-[#fff3ed] text-[#f85606] font-bold' : 'text-gray-600 hover:text-[#f85606] hover:bg-gray-50'"
+                            class="px-4 py-2.5 text-xs font-medium whitespace-nowrap rounded transition flex-shrink-0">
+                        <span x-text="cat.icon"></span> <span x-text="cat.name"></span>
+                    </button>
+                </template>
+                <div class="flex-1"></div>
+                <button class="px-4 py-2.5 text-xs font-bold text-[#f85606] hover:bg-[#fff3ed] rounded transition whitespace-nowrap flex-shrink-0 flex items-center gap-1.5">
+                    <i class="fa-solid fa-fire"></i> ফ্ল্যাশ সেল
+                </button>
             </div>
         </div>
     </nav>
 
-    <!-- SPACER -->
-    <div class="h-32 sm:h-36"></div>
+    <!-- ============ MAIN CONTENT ============ -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-28 md:pb-12">
 
-    <!-- ============ HOME VIEW ============ -->
-    <template x-if="view === 'home'">
-        <div class="fade-in">
-            
-            <!-- HERO -->
-            <section class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-5">
-                <div class="hero-gradient rounded-3xl p-6 sm:p-10 lg:p-14 min-h-[200px] sm:min-h-[280px] flex items-center shadow-2xl relative">
-                    <div class="relative z-10 max-w-2xl">
-                        <div class="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500/30 backdrop-blur px-3 py-1.5 rounded-full mb-4">
-                            <span class="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-                            <span class="text-orange-300 text-[10px] sm:text-xs font-black tracking-wider">প্রিমিয়াম কোড মার্কেটপ্লেস</span>
+        <!-- ============ HOME VIEW ============ -->
+        <template x-if="view === 'home'">
+            <div class="fade-in">
+
+                <!-- ============ HERO BANNER ============ -->
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-4">
+                    <aside class="hidden lg:block bg-white rounded-md border border-gray-200">
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider">ক্যাটাগরি</h3>
                         </div>
-                        <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-3">
-                            কোড কিনুন,<br>
-                            <span class="bg-gradient-to-r from-orange-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">তৈরি করুন</span>
-                        </h1>
-                        <p class="text-gray-300 text-xs sm:text-sm lg:text-base max-w-lg leading-relaxed mb-5">
-                            HTML, Python, JavaScript-এর রেডি-টু-ইউজ কোড স্নিপেট। কপি-পেস্ট করে সাথে সাথে ব্যবহার করুন।
-                        </p>
-                        <div class="flex flex-wrap gap-3">
-                            <button @click="scrollToProducts()" class="bg-white text-gray-900 px-5 py-3 rounded-xl font-black text-xs sm:text-sm shadow-xl hover:scale-105 transition flex items-center gap-2">
-                                <i class="fa-solid fa-bag-shopping"></i> শপিং শুরু
+                        <div class="py-2">
+                            <template x-for="cat in categories" :key="cat.name">
+                                <div @click="selectedCategory = cat.name; scrollToProducts()" 
+                                     :class="selectedCategory === cat.name ? 'active' : ''"
+                                     class="cat-item">
+                                    <span class="text-base" x-text="cat.icon"></span>
+                                    <span x-text="cat.name === 'ALL' ? 'সব কোড' : cat.name"></span>
+                                    <i class="fa-solid fa-chevron-right text-[8px] ml-auto text-gray-400"></i>
+                                </div>
+                            </template>
+                        </div>
+                    </aside>
+
+                    <div class="lg:col-span-3">
+                        <div class="banner-gradient rounded-md p-6 sm:p-10 min-h-[240px] sm:min-h-[280px] flex items-center relative overflow-hidden">
+                            <div class="relative z-10 max-w-lg">
+                                <div class="inline-block bg-white/20 backdrop-blur border border-white/30 px-3 py-1 rounded-full mb-3">
+                                    <span class="text-white text-[11px] font-bold tracking-wider">🔥 মেগা সেল ২০২৫</span>
+                                </div>
+                                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-3">
+                                    প্রিমিয়াম কোড<br>
+                                    <span class="text-yellow-300">৮০% পর্যন্ত ছাড়!</span>
+                                </h1>
+                                <p class="text-white/90 text-xs sm:text-sm mb-5 max-w-md">
+                                    HTML, Python, JavaScript — রেডি-টু-ইউজ প্রফেশনাল কোড। একবার কিনুন, সারাজীবন ব্যবহার করুন।
+                                </p>
+                                <button @click="scrollToProducts()" class="bg-white text-[#f85606] px-6 py-3 rounded-md font-black text-sm hover:bg-yellow-50 transition shadow-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-shopping-bag"></i> এখনই কিনুন
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ FEATURE STRIP ============ -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-bolt text-[#f85606]"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-gray-900">ইনস্ট্যান্ট ডেলিভারি</p>
+                            <p class="text-[10px] text-gray-500">সাথে সাথেই</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-shield-halved text-green-600"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-gray-900">সিকিউর পেমেন্ট</p>
+                            <p class="text-[10px] text-gray-500">১০০% নিরাপদ</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-code-branch text-blue-600"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-gray-900">সোর্স কোড সহ</p>
+                            <p class="text-[10px] text-gray-500">সম্পূর্ণ ফাইল</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-headset text-purple-600"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-gray-900">২৪/৭ সাপোর্ট</p>
+                            <p class="text-[10px] text-gray-500">লাইভ চ্যাট</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ CATEGORIES QUICK ACCESS ============ -->
+                <div class="bg-white rounded-md border border-gray-200 p-4 mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-gray-900">জনপ্রিয় ক্যাটাগরি</h3>
+                        <button class="text-[11px] font-bold text-[#f85606] hover:underline">সব দেখুন →</button>
+                    </div>
+                    <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                        <template x-for="cat in categories.filter(c => c.name !== 'ALL')" :key="cat.name">
+                            <button @click="selectedCategory = cat.name; scrollToProducts()" class="flex flex-col items-center gap-2 py-2 hover:bg-gray-50 rounded-md transition">
+                                <div class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-2xl">
+                                    <span x-text="cat.icon"></span>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-700" x-text="cat.name"></span>
                             </button>
-                            <a href="/" class="bg-white/10 backdrop-blur text-white border border-white/20 px-5 py-3 rounded-xl font-black text-xs sm:text-sm hover:bg-white/20 transition flex items-center gap-2">
-                                <i class="fa-solid fa-cloud"></i> হোস্টিং
-                            </a>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- ============ FLASH SALE STRIP ============ -->
+                <div class="bg-white rounded-md border border-gray-200 p-4 mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-base font-bold text-[#f85606] flex items-center gap-2">
+                                <i class="fa-solid fa-bolt"></i> ফ্ল্যাশ সেল
+                            </h3>
+                            <div class="flash-timer text-white text-[10px] font-bold px-2.5 py-1 rounded flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock"></i>
+                                <span>শেষ হচ্ছে: ০২:৩৪:৫৬</span>
+                            </div>
+                        </div>
+                        <button class="text-[11px] font-bold text-[#f85606] hover:underline">সব দেখুন →</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <template x-for="product in filteredProducts.slice(0, 6)" :key="product._id">
+                            <div @click="openProduct(product)" class="cursor-pointer group">
+                                <div class="aspect-square bg-gray-50 rounded-md overflow-hidden mb-2">
+                                    <template x-if="product.imageUrl">
+                                        <img :src="product.imageUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    </template>
+                                    <template x-if="!product.imageUrl">
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fa-solid fa-code text-3xl text-gray-300"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                                <p class="text-xs font-bold text-[#f85606]">৳<span x-text="product.discountPrice || product.price"></span></p>
+                                <p class="text-[10px] text-gray-600 line-clamp-2 leading-snug" x-text="product.name"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- ============ PRODUCTS SECTION ============ -->
+                <section id="products">
+                    <div class="bg-white rounded-t-md border border-gray-200 border-b-0 px-4 py-3 flex items-center justify-between">
+                        <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fa-solid fa-fire text-[#f85606]"></i>
+                            <span x-show="selectedCategory === 'ALL'">সব কোড স্নিপেট</span>
+                            <span x-show="selectedCategory !== 'ALL'" x-text="selectedCategory + ' কোড'"></span>
+                            <span class="text-xs text-gray-500 font-normal">(<span x-text="filteredProducts.length"></span> টি)</span>
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] text-gray-500 hidden sm:inline">সাজান:</span>
+                            <select x-model="sortBy" class="text-xs font-bold border border-gray-300 rounded py-1.5 px-2 outline-none focus:border-[#f85606] bg-white text-gray-700">
+                                <option value="new">নতুন আগে</option>
+                                <option value="low">দাম: কম → বেশি</option>
+                                <option value="high">দাম: বেশি → কম</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- CATEGORIES -->
-            <section class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    <template x-for="cat in categories" :key="cat.name">
-                        <button @click="selectedCategory = cat.name" 
-                                :class="selectedCategory === cat.name ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/30 border-transparent' : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300'"
-                                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-xs whitespace-nowrap border transition-all flex-shrink-0">
-                            <span x-text="cat.icon"></span>
-                            <span x-text="cat.name"></span>
-                        </button>
-                    </template>
-                </div>
-            </section>
+                    <div class="bg-white rounded-b-md border border-gray-200 border-t-0 p-3 sm:p-4">
+                        <template x-if="loading">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                <template x-for="i in 10" :key="i">
+                                    <div class="border border-gray-100 rounded-md overflow-hidden">
+                                        <div class="aspect-square skeleton"></div>
+                                        <div class="p-2.5 space-y-2">
+                                            <div class="h-3 skeleton rounded w-full"></div>
+                                            <div class="h-3 skeleton rounded w-3/4"></div>
+                                            <div class="h-4 skeleton rounded w-16"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
 
-            <!-- PRODUCTS -->
-            <section id="products" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-12">
-                <div class="flex items-center justify-between mb-5">
-                    <div>
-                        <h2 class="text-lg sm:text-2xl font-black text-gray-900">সব কোড স্নিপেট</h2>
-                        <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">
-                            <span x-text="filteredProducts.length"></span> টি প্রোডাক্ট
-                        </p>
-                    </div>
-                    <select x-model="sortBy" class="text-xs font-bold border border-gray-200 rounded-xl py-2 px-3 outline-none focus:border-orange-500 bg-white">
-                        <option value="new">নতুন</option>
-                        <option value="low">কম দাম</option>
-                        <option value="high">বেশি দাম</option>
-                    </select>
-                </div>
+                        <template x-if="!loading">
+                            <div>
+                                <div x-show="filteredProducts.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                    <template x-for="(product, index) in filteredProducts" :key="product._id">
+                                        <div @click="openProduct(product)" class="product-card border border-gray-100 rounded-md overflow-hidden group">
+                                            <div class="aspect-square bg-gray-50 relative overflow-hidden">
+                                                <template x-if="product.imageUrl">
+                                                    <img :src="product.imageUrl" :alt="product.name" class="product-img w-full h-full object-cover">
+                                                </template>
+                                                <template x-if="!product.imageUrl">
+                                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+                                                        <i class="fa-solid fa-code text-4xl text-orange-300"></i>
+                                                    </div>
+                                                </template>
 
-                <!-- Loading Skeleton -->
-                <template x-if="loading">
-                    <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                        <template x-for="i in 4" :key="i">
-                            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                                <div class="aspect-square skeleton"></div>
-                                <div class="p-4 space-y-2">
-                                    <div class="h-3 skeleton rounded w-16"></div>
-                                    <div class="h-4 skeleton rounded w-full"></div>
-                                    <div class="h-4 skeleton rounded w-3/4"></div>
+                                                <template x-if="product.discountPrice && product.discountPrice < product.price">
+                                                    <span class="absolute top-0 right-0 bg-[#f85606] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-md">
+                                                        -<span x-text="Math.round(((product.price - product.discountPrice) / product.price) * 100)"></span>%
+                                                    </span>
+                                                </template>
+
+                                                <template x-if="index < 3">
+                                                    <span class="absolute top-0 left-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-br-md">
+                                                        NEW
+                                                    </span>
+                                                </template>
+
+                                                <button @click.stop="toggleWishlist(product)" 
+                                                        :class="isWishlisted(product._id) ? 'bg-[#f85606] text-white' : 'bg-white/90 text-gray-500 hover:text-[#f85606]'"
+                                                        class="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition">
+                                                    <i :class="isWishlisted(product._id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" class="text-[11px]"></i>
+                                                </button>
+
+                                                <template x-if="product.stock <= 0">
+                                                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                        <span class="text-white font-bold text-xs bg-red-500 px-2 py-1 rounded">স্টক শেষ</span>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                            <div class="p-2.5">
+                                                <h3 class="text-xs sm:text-sm text-gray-800 line-clamp-2 leading-snug mb-1.5 min-h-[32px]" x-text="product.name"></h3>
+                                                
+                                                <div class="flex items-baseline gap-1.5 mb-1.5 flex-wrap">
+                                                    <p class="text-base sm:text-lg font-bold text-[#f85606]">
+                                                        <span x-show="(product.discountPrice || product.price) > 0">৳<span x-text="product.discountPrice || product.price"></span></span>
+                                                        <span x-show="(product.discountPrice || product.price) === 0" class="text-green-600">ফ্রি</span>
+                                                    </p>
+                                                    <template x-if="product.discountPrice && product.discountPrice < product.price">
+                                                        <p class="text-[11px] text-gray-400 line-through">৳<span x-text="product.price"></span></p>
+                                                    </template>
+                                                </div>
+
+                                                <div class="flex items-center gap-1 mb-1.5">
+                                                    <div class="stars text-[10px]">
+                                                        <i class="fa-solid fa-star"></i>
+                                                        <i class="fa-solid fa-star"></i>
+                                                        <i class="fa-solid fa-star"></i>
+                                                        <i class="fa-solid fa-star"></i>
+                                                        <i class="fa-solid fa-star-half-stroke"></i>
+                                                    </div>
+                                                    <span class="text-[10px] text-gray-500">(৪.৫)</span>
+                                                </div>
+
+                                                <div class="flex items-center gap-1 pt-1.5 border-t border-gray-100">
+                                                    <i class="fa-solid fa-bolt text-green-600 text-[9px]"></i>
+                                                    <span class="text-[9px] text-gray-500 font-semibold">ইনস্ট্যান্ট ডেলিভারি</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div x-show="filteredProducts.length === 0" class="py-16 px-6 text-center">
+                                    <div class="w-20 h-20 mx-auto rounded-full bg-orange-50 flex items-center justify-center mb-4">
+                                        <i class="fa-solid fa-box-open text-3xl text-orange-300"></i>
+                                    </div>
+                                    <h3 class="text-base font-bold text-gray-900 mb-1.5">কোনো প্রোডাক্ট পাওয়া যায়নি</h3>
+                                    <p class="text-sm text-gray-500 mb-4 max-w-md mx-auto">
+                                        <template x-if="products.length === 0">
+                                            <span>অ্যাডমিন এখনো কোনো প্রোডাক্ট আপলোড করেননি।</span>
+                                        </template>
+                                        <template x-if="products.length > 0">
+                                            <span>আপনার সার্চ বা ফিল্টারের সাথে মিলে এমন কিছু নেই।</span>
+                                        </template>
+                                    </p>
+                                    <button @click="searchQuery = ''; selectedCategory = 'ALL'" x-show="products.length > 0" class="daraz-orange text-white px-5 py-2.5 rounded-md font-bold text-xs hover:daraz-orange-hover transition">
+                                        <i class="fa-solid fa-rotate-left mr-1"></i> ফিল্টার রিসেট
+                                    </button>
                                 </div>
                             </div>
                         </template>
                     </div>
-                </template>
+                </section>
+            </div>
+        </template>
 
-                <!-- Products -->
-                <template x-if="!loading">
-                    <div>
-                        <div x-show="filteredProducts.length > 0" class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                            <template x-for="product in filteredProducts" :key="product._id">
-                                <div @click="openProduct(product)" class="card-hover bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer group flex flex-col">
-                                    <div class="product-image aspect-square relative">
-                                        <template x-if="product.imageUrl">
-                                            <img :src="product.imageUrl" :alt="product.name" class="w-full h-full object-cover">
-                                        </template>
-                                        <template x-if="!product.imageUrl">
-                                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                                <i class="fa-solid fa-code text-4xl text-gray-400"></i>
-                                            </div>
-                                        </template>
-                                        
-                                        <template x-if="product.discountPrice && product.discountPrice < product.price">
-                                            <span class="absolute top-2 left-2 badge-discount text-white text-[10px] font-black px-2 py-1 rounded-lg">
-                                                -<span x-text="Math.round(((product.price - product.discountPrice) / product.price) * 100)"></span>%
-                                            </span>
-                                        </template>
-                                        
-                                        <button @click.stop="toggleWishlist(product)" 
-                                                :class="isWishlisted(product._id) ? 'bg-red-500 text-white' : 'bg-white/95 text-gray-700 hover:bg-red-500 hover:text-white'"
-                                                class="absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg backdrop-blur transition">
-                                            <i :class="isWishlisted(product._id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" class="text-xs"></i>
-                                        </button>
-                                        
-                                        <template x-if="product.stock <= 0">
-                                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                <span class="text-white font-black text-sm bg-red-500 px-3 py-1 rounded-lg">স্টক শেষ</span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    
-                                    <div class="p-3 sm:p-4 flex-1 flex flex-col">
-                                        <span class="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md inline-block self-start mb-2" x-text="product.category"></span>
-                                        <h3 class="font-black text-gray-900 text-sm sm:text-base mb-1 line-clamp-2 leading-tight flex-1" x-text="product.name"></h3>
-                                        
-                                        <template x-if="product.description">
-                                            <p class="text-[10px] sm:text-xs text-gray-500 line-clamp-2 mb-2" x-text="product.description"></p>
-                                        </template>
-                                        
-                                        <div class="flex items-center justify-between mt-auto pt-2 border-t border-dashed border-gray-100">
-                                            <div>
-                                                <template x-if="product.discountPrice && product.discountPrice < product.price">
-                                                    <p class="text-[10px] text-gray-400 line-through">৳<span x-text="product.price"></span></p>
-                                                </template>
-                                                <p class="text-base sm:text-lg font-black text-gray-900">
-                                                    <span x-show="(product.discountPrice || product.price) > 0">৳<span x-text="product.discountPrice || product.price"></span></span>
-                                                    <span x-show="(product.discountPrice || product.price) === 0" class="text-emerald-600">ফ্রি</span>
-                                                </p>
-                                            </div>
-                                            <div class="w-8 h-8 rounded-lg bg-gray-900 text-white flex items-center justify-center shadow-lg">
-                                                <i class="fa-solid fa-arrow-right text-xs"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
+        <!-- ============ WISHLIST VIEW ============ -->
+        <template x-if="view === 'wishlist'">
+            <div class="fade-in">
+                <div class="bg-white rounded-md border border-gray-200 p-4 sm:p-6">
+                    <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                        <div class="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center">
+                            <i class="fa-solid fa-heart text-red-500"></i>
                         </div>
-
-                        <!-- EMPTY STATE -->
-                        <div x-show="filteredProducts.length === 0" class="bg-white rounded-3xl border border-gray-100 py-16 px-6 text-center slide-up">
-                            <div class="empty-icon w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center mb-5">
-                                <i class="fa-solid fa-box-open text-4xl text-orange-400"></i>
-                            </div>
-                            <h3 class="text-xl font-black text-gray-900 mb-2">এখনো কোনো প্রোডাক্ট নেই</h3>
-                            <p class="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                                <template x-if="products.length === 0">
-                                    <span>অ্যাডমিন এখনো কোনো প্রোডাক্ট আপলোড করেননি। শীঘ্রই আসছে!</span>
-                                </template>
-                                <template x-if="products.length > 0">
-                                    <span>আপনার সার্চের সাথে মিলে এমন কোনো প্রোডাক্ট পাওয়া যায়নি।</span>
-                                </template>
+                        <div>
+                            <h1 class="text-lg sm:text-xl font-bold text-gray-900">আমার উইশলিস্ট</h1>
+                            <p class="text-xs text-gray-500">
+                                <span x-text="wishlistProducts.length"></span> টি প্রোডাক্ট সেভ করা আছে
                             </p>
-                            <button @click="searchQuery = ''; selectedCategory = 'ALL'" x-show="products.length > 0" class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl font-black text-xs shadow-lg hover:scale-105 transition">
-                                <i class="fa-solid fa-rotate-left mr-1"></i> ফিল্টার রিসেট
-                            </button>
                         </div>
                     </div>
-                </template>
-            </section>
-        </div>
-    </template>
 
-    <!-- ============ WISHLIST VIEW ============ -->
-    <template x-if="view === 'wishlist'">
-        <section class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 fade-in">
-            <div class="mb-6">
-                <h1 class="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
-                    <i class="fa-solid fa-heart text-red-500"></i> আমার উইশলিস্ট
-                </h1>
-                <p class="text-xs text-gray-500 mt-1">আপনার পছন্দের কোড স্নিপেট</p>
-            </div>
+                    <template x-if="wishlistProducts.length === 0">
+                        <div class="py-14 text-center">
+                            <div class="w-20 h-20 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
+                                <i class="fa-regular fa-heart text-3xl text-red-300"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1.5">উইশলিস্ট খালি</h3>
+                            <p class="text-sm text-gray-500 mb-5">পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন</p>
+                            <button @click="view = 'home'" class="daraz-orange text-white px-5 py-2.5 rounded-md font-bold text-xs hover:daraz-orange-hover transition">
+                                <i class="fa-solid fa-store mr-1"></i> শপে ফিরে যান
+                            </button>
+                        </div>
+                    </template>
 
-            <template x-if="wishlistProducts.length === 0">
-                <div class="bg-white rounded-3xl border border-gray-100 py-16 px-6 text-center slide-up">
-                    <div class="empty-icon w-24 h-24 mx-auto rounded-3xl bg-red-50 flex items-center justify-center mb-5">
-                        <i class="fa-regular fa-heart text-4xl text-red-300"></i>
-                    </div>
-                    <h3 class="text-xl font-black text-gray-900 mb-2">উইশলিস্ট খালি</h3>
-                    <p class="text-sm text-gray-500 mb-6">পছন্দের কোড হার্ট আইকনে ট্যাপ করে সেভ করুন</p>
-                    <button @click="view = 'home'" class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl font-black text-xs shadow-lg hover:scale-105 transition">
-                        <i class="fa-solid fa-store mr-1"></i> শপে ফিরে যান
-                    </button>
-                </div>
-            </template>
-
-            <div x-show="wishlistProducts.length > 0" class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                <template x-for="product in wishlistProducts" :key="product._id">
-                    <div @click="openProduct(product)" class="card-hover bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer">
-                        <div class="product-image aspect-square relative">
-                            <template x-if="product.imageUrl">
-                                <img :src="product.imageUrl" class="w-full h-full object-cover">
-                            </template>
-                            <template x-if="!product.imageUrl">
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                    <i class="fa-solid fa-code text-4xl text-gray-400"></i>
+                    <div x-show="wishlistProducts.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                        <template x-for="product in wishlistProducts" :key="product._id">
+                            <div @click="openProduct(product)" class="product-card border border-gray-100 rounded-md overflow-hidden group">
+                                <div class="aspect-square bg-gray-50 relative overflow-hidden">
+                                    <template x-if="product.imageUrl">
+                                        <img :src="product.imageUrl" class="product-img w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!product.imageUrl">
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+                                            <i class="fa-solid fa-code text-4xl text-orange-300"></i>
+                                        </div>
+                                    </template>
+                                    <button @click.stop="toggleWishlist(product)" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                                        <i class="fa-solid fa-heart text-[11px]"></i>
+                                    </button>
                                 </div>
-                            </template>
-                            <button @click.stop="toggleWishlist(product)" class="absolute top-2 right-2 w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center shadow-lg">
-                                <i class="fa-solid fa-heart text-xs"></i>
-                            </button>
-                        </div>
-                        <div class="p-3 sm:p-4">
-                            <h3 class="font-black text-sm line-clamp-2 mb-2" x-text="product.name"></h3>
-                            <p class="text-lg font-black text-gray-900">৳<span x-text="product.discountPrice || product.price"></span></p>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </section>
-    </template>
-
-    <!-- ============ DEPOSIT VIEW ============ -->
-    <template x-if="view === 'deposit'">
-        <section class="max-w-2xl mx-auto px-3 sm:px-6 py-6 fade-in">
-            <div class="mb-6">
-                <h1 class="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
-                    <i class="fa-solid fa-wallet text-emerald-500"></i> ডিপোজিট
-                </h1>
-                <p class="text-xs text-gray-500 mt-1">সর্বনিম্ন ৳৫০ — সর্বোচ্চ ৳২৫০০</p>
-            </div>
-
-            <template x-if="!user">
-                <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 text-center">
-                    <i class="fa-solid fa-lock text-3xl text-amber-500 mb-3"></i>
-                    <h3 class="font-black text-lg mb-2">লগইন প্রয়োজন</h3>
-                    <p class="text-sm text-gray-600 mb-4">ডিপোজিট করতে আগে অ্যাকাউন্টে লগইন করুন</p>
-                    <a href="/account" class="inline-block bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl font-black text-xs shadow-lg">
-                        <i class="fa-solid fa-right-to-bracket mr-1"></i> লগইন করুন
-                    </a>
-                </div>
-            </template>
-
-            <template x-if="user">
-                <div class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-5">
-                        <p class="text-xs font-black text-emerald-700 mb-1 flex items-center gap-1">
-                            <i class="fa-solid fa-mobile-screen"></i> বিকাশ নাম্বার:
-                        </p>
-                        <p class="text-lg font-black text-emerald-900 mono">01XXXXXXXXX</p>
-                        <p class="text-[10px] text-emerald-600 mt-1">টাকা পাঠিয়ে নিচের ফর্ম পূরণ করুন</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-xs font-black text-gray-700 mb-2 block">পরিমাণ (৳) <span class="text-red-500">*</span></label>
-                            <input type="number" x-model="depositForm.amount" min="50" max="2500" placeholder="৫০ - ২৫০০" class="w-full border-2 border-gray-200 rounded-xl py-3 px-4 text-sm focus:border-emerald-500 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="text-xs font-black text-gray-700 mb-2 block">আপনার নাম্বার <span class="text-red-500">*</span></label>
-                            <input type="text" x-model="depositForm.senderNumber" placeholder="01XXXXXXXXX" class="w-full border-2 border-gray-200 rounded-xl py-3 px-4 text-sm focus:border-emerald-500 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="text-xs font-black text-gray-700 mb-2 block">ট্রানজেকশন আইডি <span class="text-red-500">*</span></label>
-                            <input type="text" x-model="depositForm.transactionId" placeholder="TrxID" class="w-full border-2 border-gray-200 rounded-xl py-3 px-4 text-sm focus:border-emerald-500 outline-none transition mono">
-                        </div>
-                        <div>
-                            <label class="text-xs font-black text-gray-700 mb-2 block">মেথড</label>
-                            <select x-model="depositForm.method" class="w-full border-2 border-gray-200 rounded-xl py-3 px-4 text-sm focus:border-emerald-500 outline-none transition bg-white">
-                                <option value="bKash">📱 বিকাশ</option>
-                                <option value="Nagad">📱 নগদ</option>
-                            </select>
-                        </div>
-                        <button @click="submitDeposit()" :disabled="depositing" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-2xl font-black text-sm shadow-xl hover:scale-[1.02] transition disabled:opacity-50">
-                            <span x-show="!depositing"><i class="fa-solid fa-paper-plane mr-2"></i>রিকোয়েস্ট পাঠান</span>
-                            <span x-show="depositing"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>পাঠানো হচ্ছে...</span>
-                        </button>
+                                <div class="p-2.5">
+                                    <h3 class="text-xs sm:text-sm text-gray-800 line-clamp-2 leading-snug mb-1.5" x-text="product.name"></h3>
+                                    <p class="text-base font-bold text-[#f85606]">৳<span x-text="product.discountPrice || product.price"></span></p>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
-            </template>
-        </section>
-    </template>
+            </div>
+        </template>
+    </main>
 
     <!-- ============ PRODUCT MODAL ============ -->
-    <div x-show="selectedProduct" x-cloak @click.self="selectedProduct = null" class="fixed inset-0 z-[60] flex items-center justify-center p-3 modal-backdrop">
-        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl slide-up">
+    <div x-show="selectedProduct" x-cloak @click.self="selectedProduct = null" 
+         class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center modal-backdrop sm:p-3">
+        <div class="bg-white sm:rounded-md rounded-t-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl slide-up">
             <template x-if="selectedProduct">
                 <div>
-                    <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-gray-100 px-5 py-3 flex items-center justify-between z-10">
-                        <span class="text-xs font-black text-orange-600 bg-orange-50 px-3 py-1 rounded-full" x-text="selectedProduct.category"></span>
-                        <button @click="selectedProduct = null" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition">
+                    <div class="sticky top-0 bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between z-10">
+                        <span class="text-[10px] font-bold text-[#f85606] bg-orange-50 border border-orange-200 px-2.5 py-1 rounded uppercase" x-text="selectedProduct.category"></span>
+                        <button @click="selectedProduct = null" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-600">
                             <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
                     </div>
 
-                    <div class="grid md:grid-cols-2 gap-0">
-                        <div class="product-image aspect-square">
+                    <div class="grid md:grid-cols-2">
+                        <div class="aspect-square bg-gray-50 relative overflow-hidden">
                             <template x-if="selectedProduct.imageUrl">
                                 <img :src="selectedProduct.imageUrl" class="w-full h-full object-cover">
                             </template>
                             <template x-if="!selectedProduct.imageUrl">
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                    <i class="fa-solid fa-code text-6xl text-gray-400"></i>
+                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+                                    <i class="fa-solid fa-code text-6xl text-orange-300"></i>
                                 </div>
                             </template>
                         </div>
 
-                        <div class="p-5 sm:p-6 flex flex-col">
-                            <h2 class="text-xl sm:text-2xl font-black text-gray-900 mb-2" x-text="selectedProduct.name"></h2>
+                        <div class="p-4 sm:p-6 flex flex-col">
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2" x-text="selectedProduct.name"></h2>
+                            
+                            <div class="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+                                <div class="stars text-sm">
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star"></i>
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                </div>
+                                <span class="text-xs font-bold text-gray-700">৪.৫</span>
+                                <span class="text-xs text-gray-500">|</span>
+                                <span class="text-xs text-gray-500">২৩৪ রিভিউ</span>
+                            </div>
+
                             <template x-if="selectedProduct.description">
                                 <p class="text-sm text-gray-600 mb-4 leading-relaxed" x-text="selectedProduct.description"></p>
                             </template>
 
-                            <div class="bg-gray-50 rounded-2xl p-4 mb-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs text-gray-500 font-bold">মূল্য</span>
-                                    <div class="text-right">
-                                        <template x-if="selectedProduct.discountPrice && selectedProduct.discountPrice < selectedProduct.price">
-                                            <p class="text-xs text-gray-400 line-through">৳<span x-text="selectedProduct.price"></span></p>
-                                        </template>
-                                        <p class="text-2xl font-black text-orange-600">৳<span x-text="selectedProduct.discountPrice || selectedProduct.price"></span></p>
-                                    </div>
+                            <div class="bg-orange-50 rounded-md p-4 mb-4 border border-orange-100">
+                                <div class="flex items-baseline gap-2 mb-2">
+                                    <p class="text-3xl font-black text-[#f85606]">৳<span x-text="selectedProduct.discountPrice || selectedProduct.price"></span></p>
+                                    <template x-if="selectedProduct.discountPrice && selectedProduct.discountPrice < selectedProduct.price">
+                                        <p class="text-sm text-gray-400 line-through">৳<span x-text="selectedProduct.price"></span></p>
+                                    </template>
+                                    <template x-if="selectedProduct.discountPrice && selectedProduct.discountPrice < selectedProduct.price">
+                                        <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                                            -<span x-text="Math.round(((selectedProduct.price - selectedProduct.discountPrice) / selectedProduct.price) * 100)"></span>% ছাড়
+                                        </span>
+                                    </template>
                                 </div>
-                                <div class="flex items-center justify-between pt-2 border-t border-gray-200">
-                                    <span class="text-xs text-gray-500 font-bold">স্টক</span>
-                                    <span class="text-sm font-black" :class="selectedProduct.stock > 0 ? 'text-emerald-600' : 'text-red-600'">
-                                        <span x-text="selectedProduct.stock"></span> টি
+                                <div class="flex items-center gap-2 text-xs">
+                                    <i class="fa-solid fa-circle-check text-green-600"></i>
+                                    <span :class="selectedProduct.stock > 0 ? 'text-green-700' : 'text-red-700'" class="font-bold">
+                                        <span x-text="selectedProduct.stock"></span> টি স্টকে আছে
                                     </span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center gap-2 text-xs text-gray-700">
+                                    <i class="fa-solid fa-check text-green-600"></i>
+                                    <span>সম্পূর্ণ সোর্স কোড সহ ডেলিভারি</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-700">
+                                    <i class="fa-solid fa-check text-green-600"></i>
+                                    <span>লাইফটাইম অ্যাক্সেস ও ফ্রি আপডেট</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-700">
+                                    <i class="fa-solid fa-check text-green-600"></i>
+                                    <span>ইনস্ট্যান্ট ডাউনলোড লিংক</span>
                                 </div>
                             </div>
 
                             <button @click="buyProduct(selectedProduct)" 
                                     :disabled="selectedProduct.stock <= 0"
-                                    class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-black shadow-xl hover:scale-[1.02] transition disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100">
-                                <i class="fa-solid fa-bag-shopping mr-2"></i>
+                                    class="w-full daraz-orange hover:daraz-orange-hover text-white py-3.5 rounded-md font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md">
+                                <i class="fa-solid fa-shopping-bag mr-2"></i>
                                 <span x-show="selectedProduct.stock > 0">এখনই কিনুন</span>
                                 <span x-show="selectedProduct.stock <= 0">স্টক শেষ</span>
                             </button>
 
-                            <p class="text-[10px] text-gray-400 text-center mt-3">
-                                <i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i>
-                                নিরাপদ পেমেন্ট • তাৎক্ষণিক ডেলিভারি
-                            </p>
+                            <div class="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-500">
+                                <span><i class="fa-solid fa-shield-halved text-green-500 mr-1"></i>সিকিউর</span>
+                                <span><i class="fa-solid fa-bolt text-orange-500 mr-1"></i>ইনস্ট্যান্ট</span>
+                                <span><i class="fa-solid fa-headset text-blue-500 mr-1"></i>সাপোর্ট</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -531,14 +680,43 @@
         </div>
     </div>
 
+    <!-- ============ MOBILE BOTTOM NAV ============ -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg" style="padding-bottom: env(safe-area-inset-bottom);">
+        <div class="grid grid-cols-4 h-16">
+            <button @click="view = 'home'; window.scrollTo({top:0, behavior:'smooth'})" 
+                    :class="view === 'home' ? 'text-[#f85606]' : 'text-gray-500'"
+                    class="flex flex-col items-center justify-center gap-0.5 transition">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] font-bold">হোম</span>
+            </button>
+            <button @click="scrollToProducts(); view = 'home'" 
+                    class="flex flex-col items-center justify-center gap-0.5 text-gray-500 transition">
+                <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                <span class="text-[10px] font-bold">ব্রাউজ</span>
+            </button>
+            <button @click="view = 'wishlist'; window.scrollTo({top:0, behavior:'smooth'})" 
+                    :class="view === 'wishlist' ? 'text-red-500' : 'text-gray-500'"
+                    class="flex flex-col items-center justify-center gap-0.5 transition relative">
+                <i class="fa-solid fa-heart text-lg"></i>
+                <span class="text-[10px] font-bold">উইশলিস্ট</span>
+                <span x-show="wishlist.length > 0" x-text="wishlist.length" x-cloak 
+                      class="absolute top-1.5 right-1/2 translate-x-4 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"></span>
+            </button>
+            <a href="/account" class="flex flex-col items-center justify-center gap-0.5 text-gray-500 transition">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[10px] font-bold">একাউন্ট</span>
+            </a>
+        </div>
+    </nav>
+
     <!-- ============ TOAST ============ -->
     <div x-show="showToast" x-cloak
          x-transition:enter="transform transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
-         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" :class="toastType === 'error' ? 'bg-red-500' : 'bg-emerald-500'">
-            <i class="fa-solid text-sm" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i>
+         class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-gray-900 text-white px-4 py-3 rounded-md shadow-xl flex items-center gap-3 max-w-sm">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="toastType === 'error' ? 'bg-red-500' : 'bg-green-500'">
+            <i class="fa-solid text-xs" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i>
         </div>
         <div class="min-w-0">
             <p class="text-xs font-bold" x-text="toastMessage"></p>
@@ -560,11 +738,9 @@
                 toastSubtext: '',
                 toastType: 'success',
                 selectedProduct: null,
-                depositing: false,
                 loading: false,
                 user: null,
                 products: [],
-                depositForm: { amount: '', senderNumber: '', transactionId: '', method: 'bKash' },
 
                 categories: [
                     { name: 'ALL', icon: '🛍️' },
@@ -576,10 +752,10 @@
                 init() {
                     const savedUser = localStorage.getItem('user');
                     if (savedUser) { try { this.user = JSON.parse(savedUser); } catch(e) {} }
-                    
+
                     const savedWishlist = localStorage.getItem('shop_wishlist');
                     if (savedWishlist) { try { this.wishlist = JSON.parse(savedWishlist); } catch(e) {} }
-                    
+
                     this.loadProducts();
                 },
 
@@ -670,44 +846,6 @@
                         this.loadProducts();
                     } catch (err) {
                         this.showToastMsg('ব্যর্থ', err.message, 'error');
-                    }
-                },
-
-                async submitDeposit() {
-                    const token = localStorage.getItem('token');
-                    if (!token) {
-                        this.showToastMsg('লগইন প্রয়োজন', 'ডিপোজিট করতে লগইন করুন', 'error');
-                        setTimeout(() => window.location.href = '/account', 1500);
-                        return;
-                    }
-                    if (!this.depositForm.amount || !this.depositForm.senderNumber || !this.depositForm.transactionId) {
-                        return this.showToastMsg('তথ্য অসম্পূর্ণ', 'সব ফিল্ড পূরণ করুন', 'error');
-                    }
-                    const amt = Number(this.depositForm.amount);
-                    if (amt < 50 || amt > 2500) {
-                        return this.showToastMsg('ভুল পরিমাণ', '৫০ থেকে ২৫০০ টাকা', 'error');
-                    }
-
-                    this.depositing = true;
-                    try {
-                        const res = await fetch('/api/shop/deposit', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify(this.depositForm)
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data.error || 'ডিপোজিট ব্যর্থ');
-
-                        this.showToastMsg('রিকোয়েস্ট পাঠানো হয়েছে! ⏳', 'অ্যাডমিন approve করলে যোগ হবে');
-                        this.depositForm = { amount: '', senderNumber: '', transactionId: '', method: 'bKash' };
-                        this.view = 'home';
-                    } catch (err) {
-                        this.showToastMsg('ব্যর্থ', err.message, 'error');
-                    } finally {
-                        this.depositing = false;
                     }
                 },
 
