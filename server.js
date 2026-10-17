@@ -120,6 +120,7 @@ app.use('/api/host', require('./routes/host'));
 app.use('/api/photo', require('./routes/photo'));
 app.use('/api/shop', require('./routes/shop'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/setting', require('./routes/setting')); // 👈 নতুন যোগ করা হলো
 
 // ===== SERVE FRONTEND =====
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
