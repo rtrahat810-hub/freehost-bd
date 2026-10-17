@@ -42,52 +42,6 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
 
-        /* ============ নেভবার বাটন ============ */
-        .nav-link {
-            background: #ffffff;
-            color: #334155;
-            border: 1.5px solid #cbd5e1;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 800;
-            transition: all 0.25s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        .nav-link:hover {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            border-color: #6366f1;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
-        }
-        .nav-link i { font-size: 14px; }
-
-        .btn-logout {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1.5px solid #fecaca;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 800;
-            transition: all 0.25s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-logout:hover {
-            background: #dc2626;
-            color: white;
-            border-color: #dc2626;
-            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
-            transform: translateY(-2px);
-        }
-
-        /* ============ Tab বাটন ============ */
         .tab-btn {
             padding: 12px 22px;
             font-size: 13px;
@@ -107,17 +61,8 @@
             color: white;
             border-color: #6366f1;
             box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
-            transform: translateY(-1px);
-        }
-        .tab-btn:not(.active):hover {
-            background: #f8fafc;
-            color: #6366f1;
-            border-color: #a5b4fc;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
         }
 
-        /* ============ Action বাটন ============ */
         .action-btn {
             padding: 11px 14px;
             border-radius: 10px;
@@ -129,86 +74,15 @@
             justify-content: center;
             gap: 6px;
             border: 1.5px solid transparent;
-            letter-spacing: 0.2px;
             cursor: pointer;
         }
 
-        .btn-copy {
-            background: #f1f5f9;
-            color: #334155;
-            border-color: #cbd5e1;
-        }
-        .btn-copy:hover {
-            background: #e2e8f0;
-            border-color: #94a3b8;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+        .btn-copy { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+        .btn-copy:hover { background: #e2e8f0; }
+        .btn-open { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+        .btn-delete { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+        .btn-delete:hover { background: #dc2626; color: white; }
 
-        .btn-open {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            border-color: #6366f1;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-        }
-        .btn-open:hover {
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
-            transform: translateY(-1px);
-        }
-
-        .btn-delete {
-            background: #fee2e2;
-            color: #dc2626;
-            border-color: #fecaca;
-        }
-        .btn-delete:hover {
-            background: #dc2626;
-            color: white;
-            border-color: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-        }
-
-        .btn-details {
-            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-            color: #475569;
-            border-color: #cbd5e1;
-            width: 100%;
-            padding: 11px;
-        }
-        .btn-details:hover {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            border-color: #6366f1;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
-            transform: translateY(-1px);
-        }
-
-        /* ============ Login/Register টগল বাটন ============ */
-        .btn-toggle-auth {
-            background: linear-gradient(135deg, #eff6ff, #f5f3ff);
-            color: #6366f1;
-            border: 2px solid #a5b4fc;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 800;
-            transition: all 0.25s ease;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-toggle-auth:hover {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            border-color: #6366f1;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-            transform: translateY(-2px);
-        }
-
-        /* ============ মূল সাবমিট বাটন ============ */
         .btn-submit {
             width: 100%;
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -227,73 +101,10 @@
             cursor: pointer;
         }
         .btn-submit:hover:not(:disabled) {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
             box-shadow: 0 10px 28px rgba(99, 102, 241, 0.55);
             transform: translateY(-2px);
         }
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
 
-        /* ============ Empty State বাটন ============ */
-        .btn-empty-action {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 900;
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
-            transition: all 0.25s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-empty-action:hover {
-            box-shadow: 0 10px 24px rgba(99, 102, 241, 0.5);
-            transform: translateY(-2px) scale(1.02);
-        }
-        .btn-empty-action.orange {
-            background: linear-gradient(135deg, #f97316, #ef4444);
-            box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
-        }
-        .btn-empty-action.orange:hover {
-            box-shadow: 0 10px 24px rgba(249, 115, 22, 0.5);
-        }
-        .btn-empty-action.green {
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
-        }
-        .btn-empty-action.green:hover {
-            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.5);
-        }
-
-        /* ============ Deposit বাটন (ব্যালেন্স কার্ডে) ============ */
-        .btn-balance-deposit {
-            margin-top: 8px;
-            background: rgba(255, 255, 255, 0.25);
-            color: white;
-            border: 1.5px solid rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-            padding: 7px 14px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 900;
-            transition: all 0.25s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
-        .btn-balance-deposit:hover {
-            background: white;
-            color: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
-        }
-
-        /* ============ Stat কার্ড ============ */
         .stat-card {
             border-radius: 16px;
             padding: 20px;
@@ -314,13 +125,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.3s ease; }
 
-        .skeleton {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
         .badge {
             font-size: 10px;
             font-weight: 800;
@@ -331,35 +135,7 @@
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-
-        /* ============ Modal এর সাবমিট বাটন ============ */
-        .btn-modal-submit {
-            width: 100%;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 900;
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-            transition: all 0.25s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-modal-submit:hover:not(:disabled) {
-            box-shadow: 0 10px 28px rgba(16, 185, 129, 0.55);
-            transform: translateY(-2px);
-        }
-        .btn-modal-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
@@ -378,15 +154,15 @@
                     </div>
                 </a>
                 <div class="flex items-center gap-2 flex-wrap justify-end">
-                    <a href="/" class="nav-link">
-                        <i class="fa-solid fa-house"></i> <span class="hidden xs:inline">হোস্টিং</span>
+                    <a href="/" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">
+                        <i class="fa-solid fa-house"></i> <span class="hidden sm:inline">হোস্টিং</span>
                     </a>
-                    <a href="/shop" class="nav-link">
-                        <i class="fa-solid fa-store"></i> <span class="hidden xs:inline">শপ</span>
+                    <a href="/shop" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">
+                        <i class="fa-solid fa-store"></i> <span class="hidden sm:inline">শপ</span>
                     </a>
                     <template x-if="user">
-                        <button @click="logout()" class="btn-logout">
-                            <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">লগআউট</span>
+                        <button @click="logout()" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition">
+                            <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </template>
                 </div>
@@ -443,10 +219,8 @@
                         </button>
 
                         <div class="pt-2">
-                            <button @click="mode = mode === 'login' ? 'register' : 'login'; error = ''" class="btn-toggle-auth">
-                                <i class="fa-solid" :class="mode === 'login' ? 'fa-user-plus' : 'fa-right-to-bracket'"></i>
-                                <span x-text="mode === 'login' ? 'নতুন একাউন্ট খুলুন' : 'আগের একাউন্টে লগইন করুন'"></span>
-                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            <button @click="mode = mode === 'login' ? 'register' : 'login'; error = ''" class="w-full bg-indigo-50 text-indigo-700 border-2 border-indigo-200 py-3 rounded-xl text-xs font-bold hover:bg-indigo-100 transition">
+                                <span x-text="mode === 'login' ? 'নতুন একাউন্ট খুলুন →' : '← আগের একাউন্টে লগইন'"></span>
                             </button>
                         </div>
 
@@ -489,18 +263,18 @@
                             <i class="fa-solid fa-wallet text-lg opacity-80"></i>
                         </div>
                         <div class="text-3xl font-black relative z-10">৳ <span x-text="user.balance || 0"></span></div>
-                        <button @click="showDeposit = true" class="btn-balance-deposit relative z-10">
-                            <i class="fa-solid fa-plus"></i> ডিপোজিট
+                        <button @click="showDeposit = true" class="mt-2 bg-white/25 text-white border border-white/50 backdrop-blur px-3 py-1.5 rounded-lg text-[11px] font-bold relative z-10">
+                            <i class="fa-solid fa-plus mr-1"></i> ডিপোজিট
                         </button>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
                         <div class="flex items-center justify-between mb-2 relative z-10">
-                            <span class="text-[10px] font-bold tracking-wider opacity-90">হোস্টেড সাইট</span>
+                            <span class="text-[10px] font-bold tracking-wider opacity-90">হোস্ট</span>
                             <i class="fa-solid fa-cloud text-lg opacity-80"></i>
                         </div>
                         <div class="text-3xl font-black relative z-10" x-text="hosts.length"></div>
-                        <a href="/" class="btn-balance-deposit relative z-10">
-                            <i class="fa-solid fa-plus"></i> নতুন হোস্ট
+                        <a href="/" class="mt-2 bg-white/25 text-white border border-white/50 backdrop-blur px-3 py-1.5 rounded-lg text-[11px] font-bold inline-block relative z-10">
+                            <i class="fa-solid fa-plus mr-1"></i> নতুন
                         </a>
                     </div>
                 </div>
@@ -525,9 +299,7 @@
                             <div class="glass-card p-10 text-center">
                                 <i class="fa-solid fa-cloud text-4xl text-gray-300 mb-3 block"></i>
                                 <p class="text-sm text-gray-500 mb-4">এখনো কোনো হোস্ট নেই</p>
-                                <a href="/" class="btn-empty-action">
-                                    <i class="fa-solid fa-plus"></i> হোস্ট করুন
-                                </a>
+                                <a href="/" class="inline-block bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold">হোস্ট করুন</a>
                             </div>
                         </template>
                         <template x-for="h in hosts" :key="h._id">
@@ -568,9 +340,7 @@
                             <div class="glass-card p-10 text-center">
                                 <i class="fa-solid fa-money-bill-transfer text-4xl text-gray-300 mb-3 block"></i>
                                 <p class="text-sm text-gray-500 mb-4">এখনো কোনো ডিপোজিট নেই</p>
-                                <button @click="showDeposit = true" class="btn-empty-action green">
-                                    <i class="fa-solid fa-plus"></i> ডিপোজিট করুন
-                                </button>
+                                <button @click="showDeposit = true" class="inline-block bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold">ডিপোজিট করুন</button>
                             </div>
                         </template>
                         <template x-for="d in deposits" :key="d._id">
@@ -597,9 +367,7 @@
                             <div class="glass-card p-10 text-center">
                                 <i class="fa-solid fa-bag-shopping text-4xl text-gray-300 mb-3 block"></i>
                                 <p class="text-sm text-gray-500 mb-4">এখনো কোনো অর্ডার নেই</p>
-                                <a href="/shop" class="btn-empty-action orange">
-                                    <i class="fa-solid fa-store"></i> শপে যান
-                                </a>
+                                <a href="/shop" class="inline-block bg-orange-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold">শপে যান</a>
                             </div>
                         </template>
                         <template x-for="o in orders" :key="o._id">
@@ -613,8 +381,8 @@
                                         <p class="text-[10px] mono text-gray-500">৳<span x-text="o.price"></span> • <span x-text="new Date(o.createdAt).toLocaleDateString('en-GB')"></span></p>
                                     </div>
                                 </div>
-                                <button @click="viewOrderDetails(o._id)" class="action-btn btn-details">
-                                    <i class="fa-solid fa-eye"></i> বিস্তারিত দেখুন
+                                <button @click="viewOrderDetails(o._id)" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-[10px] font-bold transition">
+                                    <i class="fa-solid fa-eye mr-1"></i> বিস্তারিত দেখুন
                                 </button>
                             </div>
                         </template>
@@ -638,7 +406,7 @@
 
             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
                 <p class="text-[11px] font-bold text-emerald-700 mb-1">💚 বিকাশ নাম্বার:</p>
-                <p class="text-lg font-black text-emerald-900 mono">01XXXXXXXXX</p>
+                <p class="text-lg font-black text-emerald-900 mono" x-text="settings.bkashNumber"></p>
                 <p class="text-[10px] text-emerald-600 mt-1">টাকা পাঠিয়ে নিচের ফর্ম পূরণ করুন</p>
             </div>
 
@@ -662,13 +430,9 @@
                         <option value="Nagad">নগদ</option>
                     </select>
                 </div>
-                <button @click="submitDeposit()" :disabled="depositing" class="btn-modal-submit">
-                    <span x-show="!depositing" class="flex items-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> রিকোয়েস্ট পাঠান
-                    </span>
-                    <span x-show="depositing" class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i> পাঠানো হচ্ছে...
-                    </span>
+                <button @click="submitDeposit()" :disabled="depositing" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3.5 rounded-xl font-black text-sm shadow-lg disabled:opacity-50 transition">
+                    <span x-show="!depositing">🚀 রিকোয়েস্ট পাঠান</span>
+                    <span x-show="depositing">⏳ পাঠানো হচ্ছে...</span>
                 </button>
             </div>
         </div>
@@ -711,26 +475,13 @@
                             <div class="bg-gray-900 text-green-400 rounded-xl p-3 mono text-[10px] max-h-40 overflow-y-auto whitespace-pre-wrap" x-text="orderDetails.mainCode"></div>
                         </div>
                     </template>
-                    
-                    <template x-if="orderDetails.howToUse">
-                        <div>
-                            <p class="text-[10px] font-bold text-gray-600 mb-1">📖 ব্যবহারের নিয়ম</p>
-                            <a :href="orderDetails.howToUse" target="_blank" class="block bg-blue-50 rounded-xl p-3 text-[11px] text-blue-600 font-bold break-all hover:bg-blue-100 transition">
-                                <i class="fa-solid fa-external-link-alt mr-1"></i> <span x-text="orderDetails.howToUse"></span>
-                            </a>
-                        </div>
-                    </template>
                 </div>
             </template>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div x-show="showToast" x-cloak
-         x-transition:enter="transform transition ease-out duration-300"
-         x-transition:enter-start="translate-y-20 opacity-0"
-         x-transition:enter-end="translate-y-0 opacity-100"
-         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-sm">
+    <div x-show="showToast" x-cloak class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-sm">
         <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" :class="toastType === 'error' ? 'bg-red-500' : 'bg-emerald-500'">
             <i class="fa-solid text-sm" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i>
         </div>
@@ -740,7 +491,6 @@
         </div>
     </div>
 
-    <!-- ALPINE APP -->
     <script>
         function accountApp() {
             return {
@@ -763,6 +513,7 @@
                 toastMessage: '',
                 toastSubtext: '',
                 toastType: 'success',
+                settings: { bkashNumber: '01XXXXXXXXX', nagadNumber: '01XXXXXXXXX' },
 
                 init() {
                     const stored = localStorage.getItem('user');
@@ -773,6 +524,16 @@
                             this.loadData();
                         } catch(e) {}
                     }
+                    this.loadPublicSettings();
+                },
+
+                async loadPublicSettings() {
+                    try {
+                        const res = await fetch('/api/setting/public');
+                        const data = await res.json();
+                        if (data.bkashNumber) this.settings.bkashNumber = data.bkashNumber;
+                        if (data.nagadNumber) this.settings.nagadNumber = data.nagadNumber;
+                    } catch(e) {}
                 },
 
                 async submit() {
