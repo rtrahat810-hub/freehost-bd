@@ -36,18 +36,15 @@ router.post('/', optionalAuth, async (req, res) => {
             finalSlug = 'site-' + Math.random().toString(36).substring(2, 10);
         }
 
-        // Slug ভ্যালিডেশন
         if (!/^[a-z0-9-]+$/.test(finalSlug)) {
-            return res.status(400).json({ error: 'Slug-এ শুধু lowercase, সংখ্যা, হাইফেন থাকতে পারে' });
+            return res.status(400).json({ error: 'Slug-এ শুধু lowercase, সংখ্যা, হাইফেন' });
         }
 
-        // Duplicate slug চেক
         const existing = await Hosted.findOne({ slug: finalSlug });
         if (existing) {
             return res.status(400).json({ error: 'এই slug আগেই ব্যবহার হয়েছে, অন্যটা দিন' });
         }
 
-        // Title auto-generate (যদি না দেওয়া হয়)
         const finalTitle = (title || '').trim() || ('Untitled ' + finalSlug.substring(0, 6));
 
         const host = await Hosted.create({
@@ -70,7 +67,7 @@ router.get('/my', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.json([]); // খালি লিস্ট
+            return res.json([]);
         }
         const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
         const hosts = await Hosted.find({ userId: decoded.userId }).sort({ createdAt: -1 });
@@ -98,7 +95,6 @@ router.put('/:id', optionalAuth, async (req, res) => {
         const host = await Hosted.findById(req.params.id);
         if (!host) return res.status(404).json({ error: 'পাওয়া যায়নি' });
 
-        // Owner check
         if (host.userId && req.userId && host.userId.toString() !== req.userId) {
             return res.status(403).json({ error: 'অনুমতি নেই' });
         }
@@ -136,7 +132,6 @@ router.delete('/:id', async (req, res) => {
         const host = await Hosted.findById(req.params.id);
         if (!host) return res.status(404).json({ error: 'পাওয়া যায়নি' });
 
-        // Owner check
         if (host.userId && userId && host.userId.toString() !== userId) {
             return res.status(403).json({ error: 'অনুমতি নেই' });
         }
