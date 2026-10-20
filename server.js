@@ -51,7 +51,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE HOSTED HTML — WRAPPER PAGE (iframe protection) =====
+// ===== SERVE HOSTED HTML (AES Encrypted — No Iframe) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -86,47 +86,6 @@ app.get('/s/:slug', async (req, res) => {
     host.views = (host.views || 0) + 1;
     await host.save();
 
-    // 🔥 WRAPPER PAGE — View Source করলে শুধু iframe ট্যাগ দেখবে
-    const pwQuery = req.query.pw ? `?pw=${encodeURIComponent(req.query.pw)}` : '';
-    
-    res.setHeader('Content-Type', 'text/html');
-    res.send(`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(host.title || 'Site')}</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;overflow:hidden;background:#fff}iframe{width:100%;height:100vh;border:none;display:block}</style>
-</head>
-<body>
-<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
-</body>
-</html>`);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
-});
-
-// ===== EMBED ROUTE — AES ENCRYPTED CODE =====
-app.get('/embed/:slug', async (req, res) => {
-  try {
-    const Hosted = require('./models/Hosted');
-    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
-    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
-
-    // পাসওয়ার্ড চেক (double protection)
-    if (host.password) {
-      const provided = req.query.pw;
-      if (provided !== host.password) {
-        return res.status(403).send('<h1>403 - Access Denied</h1>');
-      }
-    }
-
-    // ভিউ কাউন্ট
-    host.views = (host.views || 0) + 1;
-    await host.save();
-
     // 🔐 AES এনক্রিপ্ট করুন
     const encryptedPayload = encryptCode(host.code);
 
@@ -136,20 +95,17 @@ app.get('/embed/:slug', async (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Loading...</title>
+<title>${escapeHtml(host.title || 'Loading...')}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
-body{margin:0;background:#030712;color:#fff;font-family:sans-serif}
-#loader{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}
-.spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.1);border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+body { margin: 0; padding: 0; overflow-x: hidden; }
+#loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #030712; color: #fff; z-index: 9999; font-family: sans-serif; flex-direction: column; gap: 16px; }
+.spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-<div id="loader">
-  <div class="spinner"></div>
-  <p style="color:#94a3b8">Unlocking content...</p>
-</div>
+<div id="loader"><div class="spinner"></div><p style="color:#94a3b8;font-size:14px">Unlocking content...</p></div>
 
 <script>
 (function() {
@@ -169,6 +125,7 @@ body{margin:0;background:#030712;color:#fff;font-family:sans-serif}
     var html = decrypted.toString(CryptoJS.enc.Utf8);
     
     if (html && html.length > 0) {
+      // পুরো পেজের HTML রিপ্লেস করা
       document.open();
       document.write(html);
       document.close();
