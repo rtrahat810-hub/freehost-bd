@@ -51,7 +51,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE HOSTED HTML (AES Encrypted — No Iframe) =====
+// ===== SERVE HOSTED HTML — SAFE BLOB METHOD (No Iframe, No Stuck Loader) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -98,10 +98,23 @@ app.get('/s/:slug', async (req, res) => {
 <title>${escapeHtml(host.title || 'Loading...')}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
-body { margin: 0; padding: 0; overflow-x: hidden; }
-#loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #030712; color: #fff; z-index: 9999; font-family: sans-serif; flex-direction: column; gap: 16px; }
-.spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #030712; }
+  #loader {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #030712; color: #fff; z-index: 9999;
+    font-family: sans-serif; flex-direction: column; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  iframe { width: 100%; height: 100vh; border: none; display: block; }
 </style>
 </head>
 <body>
@@ -125,10 +138,21 @@ body { margin: 0; padding: 0; overflow-x: hidden; }
     var html = decrypted.toString(CryptoJS.enc.Utf8);
     
     if (html && html.length > 0) {
-      // পুরো পেজের HTML রিপ্লেস করা
-      document.open();
-      document.write(html);
-      document.close();
+      // 🔥 Blob URL তৈরি করে সেটি iframe-এ লোড করা (সবচেয়ে নিরাপদ)
+      var blob = new Blob([html], { type: 'text/html' });
+      var blobUrl = URL.createObjectURL(blob);
+      
+      var iframe = document.createElement('iframe');
+      iframe.src = blobUrl;
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-modals allow-same-origin');
+      iframe.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;z-index:9998';
+      
+      document.body.appendChild(iframe);
+      
+      // লোডার সরিয়ে ফেলা
+      var loader = document.getElementById('loader');
+      if (loader) loader.style.display = 'none';
+      
     } else {
       document.getElementById('loader').innerHTML = '<h2 style="color:#ef4444">⚠️ Decryption Failed</h2>';
     }
