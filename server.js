@@ -51,9 +51,37 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE HOSTED HTML (Direct AES Decryption - No iframe, No stuck loader) =====
+// ===== SERVE HOSTED HTML (Anti-Bot + AES Encryption) =====
 app.get('/s/:slug', async (req, res) => {
   try {
+    // 🔥 ১. Anti-Bot Protection
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    
+    if (!isBrowser) {
+      return res.status(403).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Access Denied</title>
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <style>
+            body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff;text-align:center;padding:20px}
+            h1{font-size:64px;margin:0;color:#ef4444}
+            p{color:#94a3b8;margin-top:16px}
+          </style>
+        </head>
+        <body>
+          <div>
+            <h1>403</h1>
+            <p>Access Denied - Bot Detected</p>
+            <p style="font-size:12px;margin-top:24px">Please use a browser to access this site.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
     const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
@@ -119,7 +147,6 @@ app.get('/s/:slug', async (req, res) => {
     var iv = CryptoJS.enc.Base64.parse(parts[0]);
     var encrypted = parts[1];
     
-    // AES ডিক্রিপ্ট
     var decrypted = CryptoJS.AES.decrypt(encrypted, CryptoJS.SHA256(secret), {
       iv: iv,
       mode: CryptoJS.mode.CBC,
@@ -129,11 +156,10 @@ app.get('/s/:slug', async (req, res) => {
     var html = decrypted.toString(CryptoJS.enc.Utf8);
     
     if (html && html.length > 0) {
-      // সরাসরি DOM-এ ইনজেক্ট করা (কোনো document.write বা iframe ছাড়া)
       var container = document.getElementById('app-container');
       container.innerHTML = html;
       
-      // স্ক্রিপ্ট ট্যাগগুলো আলাদা করে রি-এক্সিকিউট করা (কারণ innerHTML স্ক্রিপ্ট রান করে না)
+      // স্ক্রিপ্ট ট্যাগগুলো রি-এক্সিকিউট করা
       var scripts = container.querySelectorAll('script');
       scripts.forEach(function(oldScript) {
         var newScript = document.createElement('script');
@@ -144,7 +170,6 @@ app.get('/s/:slug', async (req, res) => {
         oldScript.parentNode.replaceChild(newScript, oldScript);
       });
       
-      // লোডার সরিয়ে ফেলা
       var loader = document.getElementById('loader');
       if (loader) loader.style.display = 'none';
       
@@ -186,4 +211,5 @@ app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🌐 http://localhost:${PORT}`);
   console.log(`🔐 AES Encryption: ${AES_SECRET ? 'Enabled' : 'Disabled'}`);
+  console.log(`🤖 Anti-Bot Protection: Enabled`);
 });
