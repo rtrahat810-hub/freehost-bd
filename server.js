@@ -51,7 +51,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===== SERVE HOSTED HTML — SAFE BLOB METHOD (No Iframe, No Stuck Loader) =====
+// ===== SERVE HOSTED HTML (Direct AES Decryption - No iframe, No stuck loader) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -99,26 +99,16 @@ app.get('/s/:slug', async (req, res) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #030712; }
-  #loader {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    background: #030712; color: #fff; z-index: 9999;
-    font-family: sans-serif; flex-direction: column; gap: 16px;
-  }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 4px solid rgba(255,255,255,0.1);
-    border-top-color: #6366f1;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
+  html, body { width: 100%; min-height: 100vh; overflow-x: hidden; background: #030712; }
+  #app-container { width: 100%; min-height: 100vh; }
+  #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #030712; color: #fff; z-index: 9999; font-family: sans-serif; flex-direction: column; gap: 16px; }
+  .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  iframe { width: 100%; height: 100vh; border: none; display: block; }
 </style>
 </head>
 <body>
 <div id="loader"><div class="spinner"></div><p style="color:#94a3b8;font-size:14px">Unlocking content...</p></div>
+<div id="app-container"></div>
 
 <script>
 (function() {
@@ -129,6 +119,7 @@ app.get('/s/:slug', async (req, res) => {
     var iv = CryptoJS.enc.Base64.parse(parts[0]);
     var encrypted = parts[1];
     
+    // AES ডিক্রিপ্ট
     var decrypted = CryptoJS.AES.decrypt(encrypted, CryptoJS.SHA256(secret), {
       iv: iv,
       mode: CryptoJS.mode.CBC,
@@ -138,16 +129,20 @@ app.get('/s/:slug', async (req, res) => {
     var html = decrypted.toString(CryptoJS.enc.Utf8);
     
     if (html && html.length > 0) {
-      // 🔥 Blob URL তৈরি করে সেটি iframe-এ লোড করা (সবচেয়ে নিরাপদ)
-      var blob = new Blob([html], { type: 'text/html' });
-      var blobUrl = URL.createObjectURL(blob);
+      // সরাসরি DOM-এ ইনজেক্ট করা (কোনো document.write বা iframe ছাড়া)
+      var container = document.getElementById('app-container');
+      container.innerHTML = html;
       
-      var iframe = document.createElement('iframe');
-      iframe.src = blobUrl;
-      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-modals allow-same-origin');
-      iframe.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;z-index:9998';
-      
-      document.body.appendChild(iframe);
+      // স্ক্রিপ্ট ট্যাগগুলো আলাদা করে রি-এক্সিকিউট করা (কারণ innerHTML স্ক্রিপ্ট রান করে না)
+      var scripts = container.querySelectorAll('script');
+      scripts.forEach(function(oldScript) {
+        var newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(function(attr) {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
       
       // লোডার সরিয়ে ফেলা
       var loader = document.getElementById('loader');
