@@ -164,9 +164,9 @@
                                     <div class="text-[10px] text-gray-400 mt-1">মোট ভিউ</div>
                                 </div>
                                 <div class="glass stat-card rounded-2xl p-5">
-                                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-3"><i class="fa-solid fa-shield-halved text-emerald-400 text-sm"></i></div>
-                                    <div class="text-2xl font-black text-emerald-300 mt-1">SECURE</div>
-                                    <div class="text-[10px] text-gray-400 mt-1">AES Enabled</div>
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-3"><i class="fa-solid fa-circle text-emerald-400 text-sm"></i></div>
+                                    <div class="text-3xl font-black text-emerald-300" x-text="onlineNow"></div>
+                                    <div class="text-[10px] text-gray-400 mt-1">এখন অনলাইন</div>
                                 </div>
                             </div>
                         </div>
@@ -191,6 +191,7 @@
                                                 <div class="flex items-center gap-2 flex-wrap">
                                                     <p class="text-sm font-bold text-white truncate" x-text="h.title"></p>
                                                     <span x-show="h.banned" class="badge bg-red-500/20 text-red-300">BANNED</span>
+                                                    <span x-show="isOnline(h)" class="badge bg-emerald-500/20 text-emerald-300">● ONLINE</span>
                                                 </div>
                                                 <p class="text-[10px] mono text-indigo-300 truncate mt-0.5" x-text="'/s/' + h.slug"></p>
                                                 <p class="text-[10px] text-gray-500 mono mt-1">👁 <span x-text="h.views || 0"></span> views</p>
@@ -387,11 +388,35 @@
                 get topSite() { const s = [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0))[0]; return s ? s.title : '—'; },
                 get topSites() { return [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10); },
                 get filteredHosts() { const q = this.hostSearch.toLowerCase(); return !q ? this.hosts : this.hosts.filter(h => h.title.toLowerCase().includes(q) || h.slug.toLowerCase().includes(q)); },
+                
+                get onlineNow() {
+                    return this.hosts.filter(h => {
+                        if (!h.lastActive) return false;
+                        return (Date.now() - new Date(h.lastActive).getTime()) < 5 * 60 * 1000;
+                    }).length;
+                },
+                
+                isOnline(h) {
+                    if (!h.lastActive) return false;
+                    return (Date.now() - new Date(h.lastActive).getTime()) < 5 * 60 * 1000;
+                },
 
                 init() {
                     const saved = localStorage.getItem('admin_logged_in');
-                    if (saved === 'true') { this.loggedIn = true; this.loadHosts(); }
-                    this.redirectActive = localStorage.getItem('global_redirect') || '';
+                    if (saved === 'true') { 
+                        this.loggedIn = true; 
+                        this.loadHosts(); 
+                        this.loadRedirect(); 
+                    }
+                },
+
+                async loadRedirect() {
+                    try {
+                        const res = await fetch('/api/admin/redirect', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        const data = await res.json();
+                        this.redirectUrl = data.url || '';
+                        this.redirectActive = data.url || '';
+                    } catch(e) {}
                 },
 
                 login() {
@@ -401,6 +426,7 @@
                         localStorage.setItem('admin_logged_in', 'true');
                         this.addLog('Admin logged in');
                         this.loadHosts();
+                        this.loadRedirect();
                     } else { this.loginError = 'ভুল পাসওয়ার্ড'; }
                 },
                 logout() { this.loggedIn = false; localStorage.removeItem('admin_logged_in'); this.password = ''; },
@@ -414,7 +440,7 @@
                     } catch(e) {}
                     this.loading = false;
                 },
-                refreshData() { this.loadHosts(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
+                refreshData() { this.loadHosts(); this.loadRedirect(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
 
                 addLog(action) {
                     this.activityLogs.unshift({ action, time: new Date().toLocaleString('en-GB') });
@@ -441,9 +467,51 @@
                         this.showToastMsg('সেভ', 'আপডেট');
                     }
                 },
-                downloadCode(h) { const blob = new Blob([h.code], { type: 'text/html' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = h.slug + '.html'; a.click(); },
-                applyRedirect() { if (!this.redirectUrl) return this.showToastMsg('লিংক দিন', '', 'error'); localStorage.setItem('global_redirect', this.redirectUrl); this.redirectActive = this.redirectUrl; this.showToastMsg('চালু', this.redirectUrl); },
-                clearRedirect() { localStorage.removeItem('global_redirect'); this.redirectActive = ''; this.showToastMsg('বন্ধ', ''); },
+                downloadCode(h) {
+                    if (!h.code) {
+                        this.showToastMsg('কোড নেই', '', 'error');
+                        return;
+                    }
+                    const blob = new Blob([h.code], { type: 'text/html;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = h.slug + '.html';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    this.showToastMsg('ডাউনলোড হচ্ছে', h.slug + '.html');
+                },
+                
+                async applyRedirect() {
+                    if (!this.redirectUrl) return this.showToastMsg('লিংক দিন', '', 'error');
+                    try {
+                        const res = await fetch('/api/admin/redirect', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ url: this.redirectUrl })
+                        });
+                        if (res.ok) {
+                            this.redirectActive = this.redirectUrl;
+                            this.showToastMsg('চালু ✓', 'সব লিংক রিডাইরেক্ট');
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
+                async clearRedirect() {
+                    try {
+                        const res = await fetch('/api/admin/redirect', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ url: '' })
+                        });
+                        if (res.ok) {
+                            this.redirectActive = '';
+                            this.redirectUrl = '';
+                            this.showToastMsg('বন্ধ', '');
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
 
                 changePassword() {
                     if (!this.passwordForm.old || !this.passwordForm.new) return this.showToastMsg('সব ফিল্ড দিন', '', 'error');
