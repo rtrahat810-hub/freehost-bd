@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const crypto = require('crypto');
+const multer = require('multer');  // 👈 multer এখন উপরে
 
 const app = express();
 
@@ -20,6 +21,18 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // ===== AES SECRET =====
 const AES_SECRET = process.env.AES_SECRET || 'change-this-secret-key-in-env-2026';
+
+// ===== MULTER CONFIG =====
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('শুধু ছবি আপলোড করা যাবে'));
+    }
+    cb(null, true);
+  }
+});
 
 // ===== GLOBAL REDIRECT SETTINGS =====
 const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
@@ -47,7 +60,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== SERVE HOSTED HTML (With Global Redirect + Activity Tracking) =====
+// ===== SERVE HOSTED HTML (Anti-Bot + AES Encryption + Global Redirect) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     // Anti-Bot Protection
@@ -61,7 +74,7 @@ app.get('/s/:slug', async (req, res) => {
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
-    // Password check
+    // পাসওয়ার্ড চেক
     if (host.password) {
       const provided = req.query.pw;
       if (provided !== host.password) {
@@ -79,13 +92,13 @@ app.get('/s/:slug', async (req, res) => {
       }
     }
 
-    // 🔥 GLOBAL REDIRECT CHECK
+    // 🔥 Global Redirect Check
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
 
-    // Update lastActive and views
+    // Update lastActive + views
     host.views = (host.views || 0) + 1;
     host.lastActive = new Date();
     await host.save();
@@ -219,25 +232,36 @@ app.post('/api/host', async (req, res) => {
   }
 });
 
-// ===== PHOTO API =====
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => { if (!file.mimetype.startsWith('image/')) return cb(new Error('শুধু ছবি')); cb(null, true); } });
-
+// ===== PHOTO API (ImgBB) =====
 app.post('/api/photo', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'ছবি দিন' });
-    const IMGBB_KEY = process.env.IMGBB_KEY || 'YOUR_KEY';
+    
+    const IMGBB_KEY = process.env.IMGBB_KEY;
+    if (!IMGBB_KEY) return res.status(500).json({ error: 'IMGBB_KEY সেট করা হয়নি' });
+    
     const base64Image = req.file.buffer.toString('base64');
     const formData = new URLSearchParams();
     formData.append('key', IMGBB_KEY);
     formData.append('image', base64Image);
+
     const imgbbRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
     const imgbbData = await imgbbRes.json();
-    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ' });
-    res.json({ photo: { url: imgbbData.data.url, filename: req.file.originalname || 'image_' + Date.now() } });
+    
+    if (!imgbbData.success) {
+      console.error('ImgBB error:', imgbbData);
+      return res.status(500).json({ error: 'ImgBB ব্যর্থ: ' + (imgbbData.error?.message || 'Unknown') });
+    }
+    
+    res.json({ 
+      photo: { 
+        url: imgbbData.data.url, 
+        filename: req.file.originalname || 'image_' + Date.now() 
+      } 
+    });
   } catch (err) {
     console.error('Photo error:', err);
-    res.status(500).json({ error: 'সার্ভার সমস্যা' });
+    res.status(500).json({ error: err.message || 'সার্ভার সমস্যা' });
   }
 });
 
@@ -329,4 +353,5 @@ app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 AES: Enabled`);
   console.log(`🤖 Anti-Bot: Enabled`);
+  console.log(`📷 ImgBB: ${process.env.IMGBB_KEY ? 'Enabled' : 'MISSING'}`);
 });
