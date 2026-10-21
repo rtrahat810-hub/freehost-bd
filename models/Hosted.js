@@ -8,6 +8,7 @@ const hostedSchema = new mongoose.Schema({
     password: { type: String, default: null },
     banned: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
+    lastActive: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
