@@ -42,51 +42,20 @@ function encryptCode(text) {
   return iv.toString('base64') + ':' + encrypted;
 }
 
-// ===== HEALTH CHECK (UptimeRobot) =====
+// ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    time: new Date().toISOString(),
-    service: 'FreeHost BD'
-  });
+  res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== SERVE HOSTED HTML (Anti-Bot + AES Encryption) =====
+// ===== WRAPPER ROUTE (BOT PROTECTION) =====
+// এটি শুধু iframe রিটার্ন করবে। বট কিছুই পাবে না।
 app.get('/s/:slug', async (req, res) => {
   try {
-    // 🔥 ১. Anti-Bot Protection
-    const userAgent = req.headers['user-agent'] || '';
-    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
-    
-    if (!isBrowser) {
-      return res.status(403).send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Access Denied</title>
-          <meta name="viewport" content="width=device-width,initial-scale=1">
-          <style>
-            body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff;text-align:center;padding:20px}
-            h1{font-size:64px;margin:0;color:#ef4444}
-            p{color:#94a3b8;margin-top:16px}
-          </style>
-        </head>
-        <body>
-          <div>
-            <h1>403</h1>
-            <p>Access Denied - Bot Detected</p>
-            <p style="font-size:12px;margin-top:24px">Please use a browser to access this site.</p>
-          </div>
-        </body>
-        </html>
-      `);
-    }
-
     const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
-    // পাসওয়ার্ড চেক
+    // পাসওয়ার্ড চেক (Wrapper লেভেলে)
     if (host.password) {
       const provided = req.query.pw;
       if (provided !== host.password) {
@@ -110,9 +79,54 @@ app.get('/s/:slug', async (req, res) => {
       }
     }
 
-    // ভিউ কাউন্ট
+    // ভিউ কাউন্ট (wrapper এ)
     host.views = (host.views || 0) + 1;
     await host.save();
+
+    const pwQuery = req.query.pw ? `?pw=${encodeURIComponent(req.query.pw)}` : '';
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(host.title || 'Loading...')}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #030712; }
+  iframe { width: 100%; height: 100vh; border: none; display: block; }
+  .loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #030712; color: #fff; font-family: sans-serif; flex-direction: column; gap: 16px; }
+  .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="loader" id="loader"><div class="spinner"></div><p style="color:#94a3b8;font-size:14px">Loading...</p></div>
+<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin" onload="document.getElementById('loader').style.display='none'"></iframe>
+</body>
+</html>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ===== EMBED ROUTE (AES ENCRYPTED) =====
+// এটি iframe-এর ভেতরে লোড হবে। এখানে AES এনক্রিপ্টেড কোড পাঠানো হয়।
+app.get('/embed/:slug', async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
+
+    // পাসওয়ার্ড চেক (Double Protection)
+    if (host.password) {
+      const provided = req.query.pw;
+      if (provided !== host.password) {
+        return res.status(403).send('<h1>403 - Access Denied</h1>');
+      }
+    }
 
     // 🔐 AES এনক্রিপ্ট করুন
     const encryptedPayload = encryptCode(host.code);
@@ -159,7 +173,6 @@ app.get('/s/:slug', async (req, res) => {
       var container = document.getElementById('app-container');
       container.innerHTML = html;
       
-      // স্ক্রিপ্ট ট্যাগগুলো রি-এক্সিকিউট করা
       var scripts = container.querySelectorAll('script');
       scripts.forEach(function(oldScript) {
         var newScript = document.createElement('script');
@@ -172,7 +185,6 @@ app.get('/s/:slug', async (req, res) => {
       
       var loader = document.getElementById('loader');
       if (loader) loader.style.display = 'none';
-      
     } else {
       document.getElementById('loader').innerHTML = '<h2 style="color:#ef4444">⚠️ Decryption Failed</h2>';
     }
@@ -190,19 +202,136 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== API ROUTES =====
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/host', require('./routes/host'));
-app.use('/api/photo', require('./routes/photo'));
-app.use('/api/shop', require('./routes/shop'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/setting', require('./routes/setting'));
+// ===== HOST API (No Auth Required) =====
+app.post('/api/host', async (req, res) => {
+  try {
+    const { code, title, slug, password } = req.body;
+    if (!code || !code.trim()) return res.status(400).json({ error: 'HTML কোড দিন' });
+
+    let finalSlug = (slug || '').trim().toLowerCase();
+    if (!finalSlug) finalSlug = 'site-' + Math.random().toString(36).substring(2, 10);
+    if (!/^[a-z0-9-]+$/.test(finalSlug)) return res.status(400).json({ error: 'Slug-এ শুধু lowercase, সংখ্যা, হাইফেন' });
+
+    const Hosted = require('./models/Hosted');
+    const existing = await Hosted.findOne({ slug: finalSlug });
+    if (existing) return res.status(400).json({ error: 'এই slug আগেই ব্যবহার হয়েছে' });
+
+    const finalTitle = (title || '').trim() || ('Untitled ' + finalSlug.substring(0, 6));
+
+    const host = await Hosted.create({
+      userId: null,
+      title: finalTitle,
+      slug: finalSlug,
+      code,
+      password: (password || '').trim() || null
+    });
+
+    res.json({ host });
+  } catch (err) {
+    console.error('Create host error:', err);
+    res.status(500).json({ error: 'সার্ভার সমস্যা' });
+  }
+});
+
+// ===== PHOTO API =====
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) return cb(new Error('শুধু ছবি'));
+    cb(null, true);
+  }
+});
+
+app.post('/api/photo', upload.single('photo'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'ছবি দিন' });
+    const IMGBB_KEY = process.env.IMGBB_KEY || 'YOUR_KEY';
+    const base64Image = req.file.buffer.toString('base64');
+    const formData = new URLSearchParams();
+    formData.append('key', IMGBB_KEY);
+    formData.append('image', base64Image);
+
+    const imgbbRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+    const imgbbData = await imgbbRes.json();
+    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ' });
+
+    res.json({
+      photo: {
+        url: imgbbData.data.url,
+        filename: req.file.originalname || 'image_' + Date.now()
+      }
+    });
+  } catch (err) {
+    console.error('Photo error:', err);
+    res.status(500).json({ error: 'সার্ভার সমস্যা' });
+  }
+});
+
+// ===== ADMIN API =====
+function authAdmin(req, res, next) {
+  const adminPass = req.headers['x-admin-pass'] || req.query.adminPass;
+  const expectedPass = process.env.ADMIN_PASSWORD || 'NOBITA_VIP';
+  if (adminPass !== expectedPass) return res.status(403).json({ error: 'অ্যাডমিন অ্যাক্সেস নেই' });
+  next();
+}
+
+app.get('/api/admin/hosts', authAdmin, async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const hosts = await Hosted.find().sort({ createdAt: -1 });
+    res.json(hosts);
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
+app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const { banned } = req.body;
+    const host = await Hosted.findByIdAndUpdate(req.params.id, { banned: !!banned }, { new: true });
+    if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
+    res.json(host);
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
+app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const { code, title, slug, password } = req.body;
+    const update = { updatedAt: Date.now() };
+    if (code !== undefined) update.code = code;
+    if (title) update.title = title;
+    if (slug) update.slug = slug;
+    if (password !== undefined) update.password = password || null;
+    const host = await Hosted.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
+    res.json(host);
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
+app.delete('/api/admin/hosts/:id', authAdmin, async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const host = await Hosted.findByIdAndDelete(req.params.id);
+    if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
+app.get('/api/admin/stats', authAdmin, async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const totalHosts = await Hosted.countDocuments();
+    const bannedHosts = await Hosted.countDocuments({ banned: true });
+    const totalViews = await Hosted.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]);
+    res.json({ totalHosts, bannedHosts, totalViews: totalViews[0]?.total || 0 });
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
 
 // ===== SERVE FRONTEND =====
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/photo', (req, res) => res.sendFile(path.join(__dirname, 'public', 'photo.html')));
-app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
-app.get('/account', (req, res) => res.sendFile(path.join(__dirname, 'public', 'account.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 // ===== START =====
@@ -210,6 +339,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🌐 http://localhost:${PORT}`);
-  console.log(`🔐 AES Encryption: ${AES_SECRET ? 'Enabled' : 'Disabled'}`);
-  console.log(`🤖 Anti-Bot Protection: Enabled`);
+  console.log(`🔐 AES: Enabled`);
+  console.log(`🤖 Anti-Bot: Enabled`);
+  console.log(`🛡️ Wrapper: iframe`);
 });
