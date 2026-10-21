@@ -518,6 +518,40 @@
                                 Uploading...
                             </span>
                         </button>
+
+                        <!-- Photo Success Card -->
+                        <template x-if="lastUploaded">
+                            <div class="animate-fade-in">
+                                <div class="glass p-6 rounded-3xl border-pink-500/30 bg-gradient-to-br from-pink-500/8 to-purple-500/8">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-500 flex items-center justify-center shadow-lg">
+                                            <i class="fa-solid fa-check text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-black text-lg text-white">Upload Successful! 🎉</h3>
+                                            <p class="text-xs text-gray-300">Your image is live</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-3 bg-black/50 border border-white/10 rounded-xl p-3 mb-4">
+                                        <i class="fa-solid fa-link text-pink-400"></i>
+                                        <span class="flex-1 text-xs mono text-pink-200 truncate" x-text="lastUploaded.url"></span>
+                                        <button @click="copyLink(lastUploaded.url)" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                            <i class="fa-regular fa-copy"></i> COPY
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <a :href="lastUploaded.url" target="_blank" class="bg-white text-black text-center py-3 rounded-xl text-xs font-extrabold hover:bg-gray-100 transition flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Open Image
+                                        </a>
+                                        <button @click="lastUploaded = null" class="glass hover:bg-white/10 py-3 rounded-xl text-xs font-bold text-white transition flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-plus text-[10px]"></i> Upload Another
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -558,6 +592,7 @@
                 photoPreview: null,
                 photoError: '',
                 lastDeployed: null,
+                lastUploaded: null,
 
                 init() {},
 
@@ -622,6 +657,8 @@
                         const res = await fetch('/api/photo', { method: 'POST', body: formData });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || 'Upload failed');
+                        
+                        this.lastUploaded = { url: data.photo.url };
                         this.showToastMsg('Uploaded! 🎉', data.photo.url, 'success');
                         this.photoFile = null; this.photoPreview = null;
                     } catch (err) {
