@@ -48,35 +48,12 @@
         @keyframes aurora-float-2 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-150px, 120px) scale(1.15); } }
         @keyframes aurora-float-3 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(100px, -120px) scale(1.25); } }
 
-        .noise-overlay {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        }
-
-        .grid-lines {
-            position: fixed; inset: 0; z-index: 1;
-            background-image: 
-                linear-gradient(rgba(139, 92, 246, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
-            background-size: 80px 80px;
-            mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
-            pointer-events: none;
-        }
-
         .glass {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-hover { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-        .glass-hover:hover {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
-            border-color: rgba(168, 85, 247, 0.3);
-            transform: translateY(-2px);
         }
 
         .text-gradient {
@@ -89,29 +66,12 @@
         }
         @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        .btn-primary {
-            position: relative;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-            background-size: 200% auto;
-            color: white;
-            box-shadow: 0 12px 35px -10px rgba(99, 102, 241, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
-        }
-        .btn-primary::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-            transition: left 0.7s ease;
-        }
-        .btn-primary:hover::before { left: 100%; }
-        .btn-primary:hover { transform: translateY(-2px); background-position: right center; }
-
         .btn-deploy {
             position: relative;
             background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #f59e0b 100%);
             background-size: 200% auto;
             color: white;
-            box-shadow: 0 20px 50px -10px rgba(239, 68, 68, 0.6), 0 0 0 1px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 50px -10px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
         }
@@ -124,7 +84,7 @@
         .btn-deploy:hover {
             transform: translateY(-3px) scale(1.01);
             background-position: right center;
-            box-shadow: 0 30px 65px -10px rgba(239, 68, 68, 0.8), 0 0 0 6px rgba(249, 115, 22, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            box-shadow: 0 30px 65px -10px rgba(239, 68, 68, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
         .btn-deploy:active { transform: translateY(-1px) scale(1); }
         .btn-deploy:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
@@ -135,11 +95,11 @@
             border-radius: 20px;
             overflow: hidden;
             transition: all 0.35s ease;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(168, 85, 247, 0.1);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
         .editor-wrap:focus-within {
             border-color: rgba(168, 85, 247, 0.6);
-            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15), 0 0 40px rgba(168, 85, 247, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15), 0 0 40px rgba(168, 85, 247, 0.3);
         }
         .editor-wrap textarea {
             background: transparent; color: #e9d5ff; font-family: 'JetBrains Mono', monospace;
@@ -148,35 +108,15 @@
         }
         .editor-wrap textarea::placeholder { color: rgba(168, 85, 247, 0.3); }
 
-        .num-badge {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 36px; height: 36px; border-radius: 12px; color: white;
-            font-size: 14px; font-weight: 800; flex-shrink: 0;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
-        .num-purple { background: linear-gradient(135deg, #8b5cf6, #a855f7); box-shadow: 0 6px 16px -4px rgba(139, 92, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-        .num-blue   { background: linear-gradient(135deg, #3b82f6, #06b6d4); box-shadow: 0 6px 16px -4px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-        .num-emerald{ background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-        .num-rose   { background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 6px 16px -4px rgba(244, 63, 94, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-
         .field-icon {
             width: 44px; height: 44px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
             font-size: 16px; flex-shrink: 0; color: #fff;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
-        .icon-indigo { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-        .icon-cyan   { background: linear-gradient(135deg, #06b6d4, #3b82f6); box-shadow: 0 8px 20px -6px rgba(6, 182, 212, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-        .icon-amber  { background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 8px 20px -6px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-
-        .field-title { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .field-subtitle { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-        .req-star { color: #f472b6; font-size: 12px; font-weight: 900; }
-        .optional-badge {
-            font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 6px;
-            background: rgba(245, 158, 11, 0.15); color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.3); letter-spacing: 0.5px;
-        }
+        .icon-indigo { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .icon-cyan   { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+        .icon-amber  { background: linear-gradient(135deg, #f59e0b, #ef4444); }
 
         .premium-input {
             display: flex; align-items: center;
@@ -188,7 +128,7 @@
         }
         .premium-input:focus-within {
             border-color: #6366f1; background: rgba(15, 10, 30, 0.9);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 0 25px rgba(99, 102, 241, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 0 25px rgba(99, 102, 241, 0.3);
         }
         .premium-input .p-icon {
             width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
@@ -211,7 +151,7 @@
         }
         .slug-wrap:focus-within {
             border-color: #22d3ee; background: rgba(6, 20, 30, 0.9);
-            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 0 25px rgba(34, 211, 238, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 0 25px rgba(34, 211, 238, 0.3);
         }
         .slug-prefix {
             padding: 0 18px; display: flex; align-items: center;
@@ -237,7 +177,7 @@
         }
         .password-input:focus-within {
             border-color: #f59e0b; background: rgba(30, 20, 5, 0.9);
-            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 0 25px rgba(245, 158, 11, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 0 25px rgba(245, 158, 11, 0.3);
         }
         .password-input .p-icon {
             width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
@@ -249,15 +189,6 @@
             font-size: 14px; padding: 15px 16px; font-weight: 500;
         }
         .password-input input::placeholder { color: rgba(148, 163, 184, 0.4); }
-
-        .live-preview {
-            margin-top: 12px; display: flex; align-items: center; gap: 10px;
-            background: linear-gradient(90deg, rgba(34, 211, 238, 0.1), rgba(59, 130, 246, 0.08));
-            border: 1px dashed rgba(34, 211, 238, 0.4);
-            border-radius: 12px; padding: 12px 16px;
-            font-family: 'JetBrains Mono', monospace; font-size: 12px;
-            color: #a5f3fc; word-break: break-all;
-        }
 
         .char-counter {
             font-size: 10px; font-family: 'JetBrains Mono', monospace;
@@ -279,26 +210,13 @@
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #05060a; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #6366f1, #a855f7); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #818cf8, #c084fc); }
 
         .nav-pill { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
         .nav-pill.active {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25));
             border-color: rgba(168, 85, 247, 0.5);
             color: white;
-            box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        }
-
-        .hero-badge {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
-            border: 1px solid rgba(168, 85, 247, 0.3);
-            box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .security-card {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.08));
-            border: 1.5px solid rgba(16, 185, 129, 0.3);
-            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.4);
         }
     </style>
 </head>
@@ -309,22 +227,19 @@
         <div class="aurora-orb aurora-2"></div>
         <div class="aurora-orb aurora-3"></div>
     </div>
-    <div class="grid-lines"></div>
-    <div class="noise-overlay"></div>
 
-    <!-- ============ NAVBAR ============ -->
+    <!-- NAVBAR -->
     <nav class="relative z-30 sticky top-0">
         <div class="glass border-x-0 border-t-0 rounded-none px-4 lg:px-8">
             <div class="max-w-[1400px] mx-auto">
                 <div class="flex items-center justify-between h-20">
                     <a href="/" class="flex items-center gap-3 group">
                         <div class="relative flex-shrink-0">
-                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-indigo-500/50 group-hover:scale-105 transition-transform">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-indigo-500/50">
                                 <i class="fa-solid fa-cube text-white text-lg"></i>
                             </div>
-                            <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-400 opacity-50 blur-lg -z-10"></div>
                         </div>
-                        <div class="block">
+                        <div>
                             <div class="text-xl font-black text-white leading-none whitespace-nowrap">
                                 FreeHost<span class="text-gradient"> BD</span>
                             </div>
@@ -333,67 +248,38 @@
                     </a>
 
                     <div class="hidden lg:flex items-center gap-1 p-1.5 rounded-2xl bg-black/40 border border-white/10">
-                        <button @click="currentTab = 'html'; isDashboard = false" 
-                           :class="currentTab === 'html' && !isDashboard ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
+                        <button @click="currentTab = 'html'" 
+                           :class="currentTab === 'html' ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
                            class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent">
-                            <i class="fa-brands fa-html5 text-cyan-400"></i> HTML
+                            <i class="fa-brands fa-html5 text-cyan-400"></i> HTML Host
                         </button>
-                        <button @click="currentTab = 'photo'; isDashboard = false" 
-                           :class="currentTab === 'photo' && !isDashboard ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
+                        <button @click="currentTab = 'photo'" 
+                           :class="currentTab === 'photo' ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
                            class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent">
-                            <i class="fa-solid fa-image text-purple-400"></i> Photo
+                            <i class="fa-solid fa-image text-purple-400"></i> Photo Host
                         </button>
-                        <a href="/shop" class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent text-white/60 hover:text-white hover:bg-white/5">
-                            <i class="fa-solid fa-store text-orange-400"></i> Shop
-                        </a>
-                        <button @click="isDashboard = true" 
-                           :class="isDashboard ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
-                           class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent">
-                            <i class="fa-solid fa-chart-pie text-indigo-400"></i> Dashboard
-                        </button>
-                        <a href="/account" class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent text-white/60 hover:text-white hover:bg-white/5">
-                            <i class="fa-solid fa-user text-emerald-400"></i> Account
+                        <a href="/admin" class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent text-white/60 hover:text-white hover:bg-white/5">
+                            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Admin
                         </a>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <template x-if="user">
-                            <a href="/account" class="flex items-center gap-2.5 glass px-3 py-2 rounded-2xl hover:border-purple-500/40 transition">
-                                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shadow-md">
-                                    <span x-text="user.name ? user.name.charAt(0).toUpperCase() : 'U'"></span>
-                                </div>
-                                <div class="hidden sm:block leading-tight">
-                                    <p class="text-[9px] text-gray-400">Welcome</p>
-                                    <p class="text-xs font-bold text-white" x-text="user.name"></p>
-                                </div>
-                            </a>
-                        </template>
-                        <template x-if="!user">
-                            <a href="/account" class="btn-primary px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                                <i class="fa-solid fa-right-to-bracket text-[10px]"></i> Login
-                            </a>
-                        </template>
+                        <a href="/admin" class="btn-deploy px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 lg:hidden">
+                            <i class="fa-solid fa-shield-halved text-[10px]"></i> Admin
+                        </a>
                     </div>
                 </div>
 
                 <div class="lg:hidden pb-3 flex gap-2 overflow-x-auto scrollbar-none">
-                    <button @click="currentTab = 'html'; isDashboard = false" 
-                            :class="currentTab === 'html' && !isDashboard ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
+                    <button @click="currentTab = 'html'" 
+                            :class="currentTab === 'html' ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
                             class="nav-pill flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border whitespace-nowrap px-3">
                         <i class="fa-brands fa-html5 text-cyan-400 text-xs"></i> HTML
                     </button>
-                    <button @click="currentTab = 'photo'; isDashboard = false" 
-                            :class="currentTab === 'photo' && !isDashboard ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
+                    <button @click="currentTab = 'photo'" 
+                            :class="currentTab === 'photo' ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
                             class="nav-pill flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border whitespace-nowrap px-3">
                         <i class="fa-solid fa-image text-purple-400 text-xs"></i> Photo
-                    </button>
-                    <a href="/shop" class="nav-pill flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-white/5 text-white/60 bg-black/30 whitespace-nowrap px-3">
-                        <i class="fa-solid fa-store text-orange-400 text-xs"></i> Shop
-                    </a>
-                    <button @click="isDashboard = true" 
-                            :class="isDashboard ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
-                            class="nav-pill flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border whitespace-nowrap px-3">
-                        <i class="fa-solid fa-chart-pie text-indigo-400 text-xs"></i> Dash
                     </button>
                 </div>
             </div>
@@ -402,99 +288,10 @@
 
     <main class="relative z-10 max-w-[1400px] mx-auto px-4 lg:px-8">
 
-        <!-- ============ DASHBOARD ============ -->
-        <div x-show="isDashboard" x-cloak class="py-12 lg:py-20 animate-fade-in">
-            <div class="mb-10">
-                <div class="inline-flex items-center gap-2 hero-badge px-3.5 py-1.5 rounded-full mb-4">
-                    <i class="fa-solid fa-chart-pie text-indigo-400 text-xs"></i>
-                    <span class="text-indigo-200 text-[10px] font-bold tracking-widest uppercase">Dashboard</span>
-                </div>
-                <h1 class="text-4xl lg:text-6xl font-black tracking-tight mb-3">
-                    Your <span class="text-gradient">Deployments</span>
-                </h1>
-                <p class="text-gray-400 text-sm">Manage your active live links.</p>
-            </div>
-
-            <template x-if="!user">
-                <div class="glass p-12 rounded-3xl text-center">
-                    <div class="w-20 h-20 mx-auto rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mb-5">
-                        <i class="fa-solid fa-lock text-3xl text-indigo-400"></i>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">Login Required</h3>
-                    <p class="text-sm text-gray-400 mb-5">ড্যাশবোর্ড দেখতে লগইন করুন</p>
-                    <a href="/account" class="btn-primary inline-block px-6 py-3 rounded-xl text-sm font-bold">
-                        <i class="fa-solid fa-right-to-bracket mr-2"></i> Login
-                    </a>
-                </div>
-            </template>
-
-            <template x-if="user">
-                <div class="space-y-4">
-                    <template x-if="hosted.length === 0">
-                        <div class="glass p-16 text-center rounded-3xl">
-                            <div class="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center mb-6 float-y">
-                                <i class="fa-solid fa-box-open text-4xl text-indigo-400"></i>
-                            </div>
-                            <h3 class="font-bold text-xl mb-2 text-white">No deployments yet</h3>
-                            <p class="text-xs text-gray-400 mb-6 max-w-xs mx-auto">Deploy your first HTML page now and see it live in seconds.</p>
-                            <button @click="isDashboard = false; currentTab = 'html'" class="btn-primary px-8 py-3 rounded-xl text-xs font-bold">
-                                <i class="fa-solid fa-rocket mr-2"></i> Deploy Now
-                            </button>
-                        </div>
-                    </template>
-
-                    <template x-for="host in hosted" :key="host.id">
-                        <div class="glass glass-hover p-5 rounded-2xl">
-                            <div class="flex items-start gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-brands fa-html5 text-2xl text-cyan-400"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-start justify-between gap-4 flex-wrap">
-                                        <div>
-                                            <h4 class="font-bold text-base text-white mono" x-text="host.title"></h4>
-                                            <div class="flex items-center gap-2.5 mt-2 flex-wrap">
-                                                <span class="text-[11px] text-gray-400 mono" x-text="host.date"></span>
-                                                <template x-if="host.password">
-                                                    <span class="text-[10px] text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                                                        <i class="fa-solid fa-lock text-[8px]"></i> Locked
-                                                    </span>
-                                                </template>
-                                                <span class="text-[11px] text-emerald-400 font-semibold flex items-center gap-1.5">
-                                                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-glow"></span>
-                                                    Live
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button @click="copyLink(host.url)" class="w-9 h-9 rounded-xl glass hover:bg-white/10 flex items-center justify-center text-gray-300 transition" title="Copy">
-                                                <i class="fa-regular fa-copy text-xs"></i>
-                                            </button>
-                                            <a :href="host.url" target="_blank" class="w-9 h-9 rounded-xl glass hover:bg-white/10 flex items-center justify-center text-gray-300 transition" title="Open">
-                                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                                            </a>
-                                            <button @click="deleteHost(host.id)" class="w-9 h-9 rounded-xl glass hover:bg-red-500/20 hover:border-red-500/40 flex items-center justify-center text-gray-300 hover:text-red-400 transition" title="Delete">
-                                                <i class="fa-regular fa-trash-can text-xs"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 flex items-center gap-3">
-                                        <i class="fa-solid fa-link text-indigo-400 text-xs"></i>
-                                        <span class="text-xs mono text-indigo-200 truncate flex-1" x-text="host.url"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </template>
-        </div>
-
-        <!-- ============ HTML HOST ============ -->
-        <div x-show="!isDashboard && currentTab === 'html'" x-cloak class="py-10 lg:py-14 animate-fade-in">
-            
+        <!-- HTML HOST -->
+        <div x-show="currentTab === 'html'" class="py-10 lg:py-14 animate-fade-in">
             <div class="text-center max-w-3xl mx-auto mb-10">
-                <div class="inline-flex items-center gap-2.5 hero-badge px-4 py-2 rounded-full mb-6 text-xs">
+                <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-6 text-xs" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15)); border: 1px solid rgba(168,85,247,0.3);">
                     <span class="w-2 h-2 bg-emerald-400 rounded-full pulse-glow"></span>
                     <span class="text-indigo-200 font-bold mono text-[10px] tracking-widest">INSTANT HTML CLOUD ENGINE</span>
                 </div>
@@ -503,13 +300,12 @@
                     <span class="text-gradient">in Seconds</span>
                 </h1>
                 <p class="text-gray-400 text-base max-w-xl mx-auto leading-relaxed">
-                    Paste your HTML code and get a live link instantly. No login required — just pure, fast deployment.
+                    Paste your HTML code and get a live link instantly. No login required.
                 </p>
             </div>
 
             <div class="max-w-3xl mx-auto">
                 <div class="glass p-6 lg:p-10 rounded-3xl">
-                    
                     <div class="flex items-center gap-4 mb-8 pb-6 border-b border-white/10">
                         <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/40">
                             <i class="fa-solid fa-bolt text-white text-xl"></i>
@@ -521,14 +317,14 @@
                     </div>
 
                     <div class="space-y-7">
-
+                        <!-- 1. Code -->
                         <div>
                             <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="num-badge num-purple">1</span>
+                                    <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-sm font-black">1</span>
                                     <div>
-                                        <div class="field-title">HTML Source Code <span class="req-star">*</span></div>
-                                        <div class="field-subtitle">Paste your raw HTML document here</div>
+                                        <div class="text-sm font-bold text-white">HTML Source Code <span class="text-pink-400">*</span></div>
+                                        <div class="text-[11px] text-gray-400">Paste your raw HTML document here</div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -538,7 +334,6 @@
                                     </button>
                                 </div>
                             </div>
-                            
                             <div class="editor-wrap">
                                 <div class="flex items-center justify-between px-5 py-3 border-b border-purple-500/20 bg-black/40">
                                     <div class="flex items-center gap-3">
@@ -550,12 +345,10 @@
                                         <span class="text-xs mono text-purple-300">index.html</span>
                                     </div>
                                     <span class="text-[10px] mono text-emerald-300 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-1.5">
-                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-glow"></span>
-                                        LIVE
+                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-glow"></span> LIVE
                                     </span>
                                 </div>
-                                <textarea x-model="htmlForm.code" 
-                                          placeholder="<!DOCTYPE html>
+                                <textarea x-model="htmlForm.code" placeholder="<!DOCTYPE html>
 <html>
 <head>
     <title>My App</title>
@@ -567,17 +360,13 @@
                             </div>
                         </div>
 
+                        <!-- 2. Title -->
                         <div>
                             <div class="flex items-center gap-3 mb-4">
-                                <div class="field-icon icon-indigo">
-                                    <i class="fa-solid fa-tag"></i>
-                                </div>
+                                <div class="field-icon icon-indigo"><i class="fa-solid fa-tag"></i></div>
                                 <div class="flex-1">
-                                    <div class="field-title">
-                                        Project Title
-                                        <span class="optional-badge">OPTIONAL</span>
-                                    </div>
-                                    <div class="field-subtitle">Empty হলে auto-generate হবে</div>
+                                    <div class="text-sm font-bold text-white flex items-center gap-2">Project Title <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5">Empty হলে auto-generate হবে</div>
                                 </div>
                             </div>
                             <div class="premium-input">
@@ -586,47 +375,35 @@
                             </div>
                         </div>
 
+                        <!-- 3. Slug -->
                         <div>
                             <div class="flex items-center gap-3 mb-4">
-                                <div class="field-icon icon-cyan">
-                                    <i class="fa-solid fa-globe"></i>
-                                </div>
+                                <div class="field-icon icon-cyan"><i class="fa-solid fa-globe"></i></div>
                                 <div class="flex-1">
-                                    <div class="field-title">
-                                        Custom URL
-                                        <span class="optional-badge">OPTIONAL</span>
-                                    </div>
-                                    <div class="field-subtitle">Empty হলে random slug হবে</div>
+                                    <div class="text-sm font-bold text-white flex items-center gap-2">Custom URL <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5">Empty হলে random slug হবে</div>
                                 </div>
                             </div>
                             <div class="slug-wrap">
-                                <div class="slug-prefix">
-                                    <i class="fa-solid fa-link text-[10px] mr-2 opacity-70"></i>
-                                    /s/
-                                </div>
+                                <div class="slug-prefix"><i class="fa-solid fa-link text-[10px] mr-2 opacity-70"></i>/s/</div>
                                 <input type="text" x-model="htmlForm.name" placeholder="my-app (optional)">
                             </div>
-
                             <template x-if="htmlForm.name.length > 0">
-                                <div class="live-preview">
+                                <div class="mt-3 flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-xl px-4 py-2.5 text-xs mono text-cyan-200">
                                     <i class="fa-solid fa-circle-check text-emerald-400"></i>
-                                    <span class="opacity-60">Live URL →</span>
-                                    <span class="font-bold text-cyan-200" x-text="window.location.origin + '/s/' + htmlForm.name"></span>
+                                    <span class="opacity-60">URL:</span>
+                                    <span class="font-bold" x-text="window.location.origin + '/s/' + htmlForm.name"></span>
                                 </div>
                             </template>
                         </div>
 
+                        <!-- 4. Password -->
                         <div>
                             <div class="flex items-center gap-3 mb-4">
-                                <div class="field-icon icon-amber">
-                                    <i class="fa-solid fa-lock"></i>
-                                </div>
+                                <div class="field-icon icon-amber"><i class="fa-solid fa-lock"></i></div>
                                 <div class="flex-1">
-                                    <div class="field-title">
-                                        Access Password
-                                        <span class="optional-badge">OPTIONAL</span>
-                                    </div>
-                                    <div class="field-subtitle">Empty রাখলে পাসওয়ার্ড ছাড়াই খুলবে</div>
+                                    <div class="text-sm font-bold text-white flex items-center gap-2">Access Password <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5">Empty রাখলে পাসওয়ার্ড ছাড়াই খুলবে</div>
                                 </div>
                             </div>
                             <div class="password-input">
@@ -638,6 +415,7 @@
                             </div>
                         </div>
 
+                        <!-- Deploy Button -->
                         <button @click="deployHtml()" :disabled="deploying" class="btn-deploy w-full font-black py-6 rounded-2xl text-lg sm:text-xl tracking-wide flex items-center justify-center gap-3 mt-2">
                             <template x-if="!deploying">
                                 <span class="flex items-center gap-3">
@@ -653,26 +431,11 @@
                                 </span>
                             </template>
                         </button>
-
-                        <div class="security-card rounded-2xl p-4 flex gap-3">
-                            <div class="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-shield-halved text-emerald-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-emerald-300 mb-1 flex items-center gap-2">
-                                    <i class="fa-solid fa-circle-check text-xs"></i>
-                                    Security Shield Enabled
-                                </p>
-                                <p class="text-xs text-emerald-200/70 leading-relaxed">
-                                    Anti-devtools protection, SSL certificate, and DDoS shield are automatically applied.
-                                </p>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
 
+            <!-- Success Card -->
             <template x-if="lastDeployed">
                 <div class="max-w-3xl mx-auto mt-8 animate-fade-in">
                     <div class="glass p-6 lg:p-8 rounded-3xl border-emerald-500/30 bg-gradient-to-br from-emerald-500/8 to-cyan-500/8">
@@ -685,23 +448,19 @@
                                 <p class="text-sm text-gray-300 mt-0.5">Your site is now live</p>
                             </div>
                         </div>
-
                         <div class="bg-black/50 border border-white/10 rounded-2xl p-4 flex items-center gap-3 mb-5">
                             <i class="fa-solid fa-globe text-cyan-400"></i>
                             <span class="flex-1 text-sm mono text-cyan-200 truncate font-bold" x-text="lastDeployed.url"></span>
-                            <button @click="copyLink(lastDeployed.url)" class="btn-primary px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                            <button @click="copyLink(lastDeployed.url)" class="bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-1.5">
                                 <i class="fa-regular fa-copy text-[10px]"></i> COPY
                             </button>
                         </div>
-
                         <div class="grid grid-cols-2 gap-3">
                             <a :href="lastDeployed.url" target="_blank" class="bg-white text-black text-center py-3.5 rounded-xl text-sm font-extrabold hover:bg-gray-100 transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                                Open URL
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Open URL
                             </a>
                             <button @click="lastDeployed = null; htmlForm = { title: '', name: '', password: '', code: '' }" class="glass hover:bg-white/10 py-3.5 rounded-xl text-sm font-bold text-white transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                                Deploy Another
+                                <i class="fa-solid fa-plus text-xs"></i> Deploy Another
                             </button>
                         </div>
                     </div>
@@ -709,11 +468,10 @@
             </template>
         </div>
 
-        <!-- ============ PHOTO HOST ============ -->
-        <div x-show="!isDashboard && currentTab === 'photo'" x-cloak class="py-10 lg:py-14 animate-fade-in">
+        <!-- PHOTO HOST -->
+        <div x-show="currentTab === 'photo'" x-cloak class="py-10 lg:py-14 animate-fade-in">
             <div class="text-center max-w-3xl mx-auto mb-10">
-                <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-6 text-xs"
-                     style="background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(168,85,247,0.15)); border: 1px solid rgba(236,72,153,0.3);">
+                <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-6 text-xs" style="background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(168,85,247,0.15)); border: 1px solid rgba(236,72,153,0.3);">
                     <span class="w-2 h-2 bg-pink-400 rounded-full pulse-glow"></span>
                     <span class="text-pink-200 font-bold mono text-[10px] tracking-widest">INSTANT PHOTO HOSTING</span>
                 </div>
@@ -733,7 +491,6 @@
                              @click="$refs.photoInput.click()"
                              :class="isDragging ? 'border-pink-400 bg-pink-500/20 scale-[1.02]' : 'border-pink-500/20 hover:border-pink-400/60 hover:bg-pink-500/5'"
                              class="rounded-3xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-300">
-                            
                             <template x-if="!photoPreview">
                                 <div>
                                     <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/40 flex items-center justify-center mx-auto mb-5 float-y">
@@ -743,7 +500,6 @@
                                     <p class="text-xs text-gray-400">JPG, PNG, WEBP • Max 5MB</p>
                                 </div>
                             </template>
-
                             <template x-if="photoPreview">
                                 <div class="relative">
                                     <img :src="photoPreview" class="max-h-80 mx-auto rounded-2xl shadow-2xl">
@@ -752,7 +508,6 @@
                                     </button>
                                 </div>
                             </template>
-                            
                             <input type="file" x-ref="photoInput" @change="handleFileSelect($event)" accept="image/*" class="hidden">
                         </div>
 
@@ -775,7 +530,7 @@
 
     </main>
 
-    <!-- ============ TOAST ============ -->
+    <!-- TOAST -->
     <div x-show="showToast" x-cloak
          x-transition:enter="transform transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
@@ -791,12 +546,10 @@
         </div>
     </div>
 
-    <!-- ============ ALPINE APP ============ -->
     <script>
         function hostingApp() {
             return {
                 currentTab: 'html',
-                isDashboard: false,
                 deploying: false,
                 showPass: false,
                 isDragging: false,
@@ -805,54 +558,23 @@
                 toastSubtext: '',
                 toastType: 'success',
                 
-                user: null,
                 htmlForm: { title: '', name: '', password: '', code: '' },
                 photoFile: null,
                 photoPreview: null,
                 photoError: '',
                 lastDeployed: null,
-                hosted: [],
 
-                init() {
-                    const savedUser = localStorage.getItem('user');
-                    if (savedUser) { try { this.user = JSON.parse(savedUser); } catch(e) {} }
-                    if (this.user) this.loadMyHosts();
-                },
-
-                async loadMyHosts() {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const res = await fetch('/api/host/my', {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        const data = await res.json();
-                        this.hosted = (Array.isArray(data) ? data : []).map(h => ({
-                            id: h._id,
-                            type: 'html',
-                            title: h.title,
-                            name: h.slug,
-                            url: window.location.origin + '/s/' + h.slug,
-                            password: h.password,
-                            code: h.code,
-                            date: new Date(h.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                        }));
-                    } catch(e) { console.error(e); }
-                },
+                init() {},
 
                 async deployHtml() {
                     if (!this.htmlForm.code.trim()) {
                         return this.showToastMsg('HTML কোড দিন', 'কোড ছাড়া হোস্ট করা যাবে না', 'error');
                     }
-
                     this.deploying = true;
                     try {
-                        const token = localStorage.getItem('token');
                         const res = await fetch('/api/host', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': token ? 'Bearer ' + token : ''
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 code: this.htmlForm.code,
                                 title: this.htmlForm.title || '',
@@ -864,16 +586,10 @@
                         if (!res.ok) throw new Error(data.error || 'Deploy failed');
 
                         const entry = {
-                            id: data.host._id,
-                            type: 'html',
                             title: data.host.title,
-                            name: data.host.slug,
-                            url: window.location.origin + '/s/' + data.host.slug,
-                            password: data.host.password,
-                            date: new Date(data.host.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            slug: data.host.slug,
+                            url: window.location.origin + '/s/' + data.host.slug
                         };
-                        
-                        if (this.user) this.hosted.unshift(entry);
                         this.lastDeployed = entry;
                         this.htmlForm = { title: '', name: '', password: '', code: '' };
                         this.showToastMsg('Success! 🎉', entry.url, 'success');
@@ -888,38 +604,29 @@
                     const file = e.target.files[0];
                     if (file) this.processPhoto(file);
                 },
-
                 handleDrop(e) {
                     this.isDragging = false;
                     const file = e.dataTransfer.files[0];
                     if (file) this.processPhoto(file);
                 },
-
                 processPhoto(file) {
                     this.photoError = '';
-                    if (!file.type.startsWith('image/')) return this.photoError = 'শুধু ছবি';
-                    if (file.size > 5 * 1024 * 1024) return this.photoError = '৫MB এর বেশি না';
+                    if (!file.type.startsWith('image/')) return this.showToastMsg('শুধু ছবি', '', 'error');
+                    if (file.size > 5 * 1024 * 1024) return this.showToastMsg('৫MB এর বেশি না', '', 'error');
                     this.photoFile = file;
                     const reader = new FileReader();
                     reader.onload = (ev) => { this.photoPreview = ev.target.result; };
                     reader.readAsDataURL(file);
                 },
-
                 async deployPhoto() {
                     if (!this.photoFile) return this.showToastMsg('ছবি সিলেক্ট করুন', '', 'error');
                     this.deploying = true;
                     try {
                         const formData = new FormData();
                         formData.append('photo', this.photoFile);
-                        const token = localStorage.getItem('token');
-                        const res = await fetch('/api/photo', {
-                            method: 'POST',
-                            headers: { 'Authorization': token ? 'Bearer ' + token : '' },
-                            body: formData
-                        });
+                        const res = await fetch('/api/photo', { method: 'POST', body: formData });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || 'Upload failed');
-
                         this.showToastMsg('Uploaded! 🎉', data.photo.url, 'success');
                         this.photoFile = null; this.photoPreview = null;
                     } catch (err) {
@@ -937,28 +644,9 @@
                     });
                 },
 
-                async deleteHost(id) {
-                    if (!confirm('নিশ্চিত?')) return;
-                    try {
-                        const token = localStorage.getItem('token');
-                        const res = await fetch('/api/host/' + id, {
-                            method: 'DELETE',
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        if (res.ok) {
-                            this.hosted = this.hosted.filter(h => h.id !== id);
-                            this.showToastMsg('Deleted', '', 'success');
-                        }
-                    } catch(e) { this.showToastMsg('Failed', e.message, 'error'); }
-                },
-
                 showToastMsg(msg, sub, type = 'success') {
-                    this.toastMessage = msg;
-                    this.toastSubtext = sub;
-                    this.toastType = type;
-                    this.showToast = true;
-                    clearTimeout(this._t);
-                    this._t = setTimeout(() => { this.showToast = false; }, 3000);
+                    this.toastMessage = msg; this.toastSubtext = sub; this.toastType = type; this.showToast = true;
+                    clearTimeout(this._t); this._t = setTimeout(() => { this.showToast = false; }, 3000);
                 }
             }
         }
