@@ -19,8 +19,8 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ===== AES SECRET =====
-const AES_SECRET = process.env.AES_SECRET || 'change-this-secret-key-in-env-2026';
+// ===== RC4 SECRET =====
+const RC4_SECRET = process.env.AES_SECRET || 'change-this-secret-key-in-env-2026';
 
 // ===== MULTER CONFIG =====
 const upload = multer({
@@ -38,19 +38,153 @@ const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
   value: { type: String, default: '' }
 }), 'globalsettings');
 
-// ===== HELPERS =====
+// ===== HELPERS: SCRIPT MASKING =====
+function maskScripts(htmlCode) {
+  return htmlCode.replace(/(<script[^>]*>)([\s\S]*?)(<\/script>)/gi, (match, openTag, content, closeTag) => {
+    if (openTag.toLowerCase().includes('src=') || !content.trim()) return match;
+    try {
+      const b64 = Buffer.from(content, 'utf8').toString('base64');
+      return `${openTag}\neval(decodeURIComponent(escape(atob('${b64}'))));\n${closeTag}`;
+    } catch (e) {
+      return match;
+    }
+  });
+}
+
+// ===== HELPERS: RC4 ENCRYPT =====
+function rc4Crypt(data, key) {
+  const S = Array.from({ length: 256 }, (_, i) => i);
+  let j = 0;
+  for (let i = 0; i < 256; i++) {
+    j = (j + S[i] + key.charCodeAt(i % key.length)) % 256;
+    [S[i], S[j]] = [S[j], S[i]];
+  }
+  let i = 0;
+  j = 0;
+  const out = [];
+  for (let y = 0; y < data.length; y++) {
+    i = (i + 1) % 256;
+    j = (j + S[i]) % 256;
+    [S[i], S[j]] = [S[j], S[i]];
+    out.push(data[y] ^ S[(S[i] + S[j]) % 256]);
+  }
+  return Buffer.from(out);
+}
+
+// ===== HELPERS: GENERATE RANDOM KEY =====
+function generateRandomKey(len = 16) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const bytes = crypto.randomBytes(len);
+  for (let i = 0; i < len; i++) {
+    result += chars[bytes[i] % chars.length];
+  }
+  return result;
+}
+
+// ===== HELPERS: ESCAPE HTML =====
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function encryptCode(text) {
-  const iv = crypto.randomBytes(16);
-  const key = crypto.createHash('sha256').update(AES_SECRET).digest();
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  let encrypted = cipher.update(text, 'utf8', 'base64');
-  encrypted += cipher.final('base64');
-  return iv.toString('base64') + ':' + encrypted;
+// ===== OBFUSCATOR (RC4 + Hex + Tamper) =====
+function hardcoreObfuscate(htmlCode) {
+  // Step 1: Script Masking
+  let masked = maskScripts(htmlCode);
+
+  // Step 2: URL-encode + Base64
+  const urlEncoded = encodeURIComponent(masked);
+  const b64Bytes = Buffer.from(urlEncoded, 'utf8').toString('base64');
+  const b64Buffer = Buffer.from(b64Bytes, 'utf8');
+
+  // Step 3: Random RC4 Key
+  const rc4Key = generateRandomKey(16);
+
+  // Step 4: RC4 Encrypt
+  const rc4Cipher = rc4Crypt(b64Buffer, rc4Key);
+  const rc4Hex = rc4Cipher.toString('hex');
+
+  // Step 5: Hex to ASCII array
+  const arrStr = rc4Hex.split('').map(c => c.charCodeAt(0)).join(',');
+
+  // Step 6: Timestamp
+  const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+  // Step 7: Comment block
+  const commentInner = `╔══════════════════════════════════════════════════════════╗
+║  🔒 PROTECTED HTML - DO NOT MODIFY 🔒                    ║
+║══════════════════════════════════════════════════════════║
+║  Timestamp: ${timestamp}                    ║
+║  Signature: DXF PROTECTOR [TOKEN: ${rc4Key}]             ║
+╚══════════════════════════════════════════════════════════╝`;
+
+  const headerComment = `<!--${commentInner}\n-->`;
+  const expectedStripped = commentInner.replace(/\s+/g, '');
+
+  // Step 8: Decoder JS
+  const decoderJs = `
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.onkeydown = function(e) {
+  if (e.keyCode == 123) return false;
+  if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+  if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+  if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+  if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+};
+setInterval(function() { debugger; }, 50);
+console.clear();
+var _safe = false; var _k = "";
+var _iter = document.createTreeWalker(document, 128, null, false);
+var _node; var _expected = ${JSON.stringify(expectedStripped)};
+while ((_node = _iter.nextNode())) {
+  var _val = _node.nodeValue;
+  if (_val.indexOf('PROTECTED HTML') !== -1) {
+    var _actual = _val.replace(/\\s+/g, '');
+    if (_actual === _expected) {
+      var _idx = _val.indexOf('[TOKEN: ');
+      if (_idx !== -1) { _k = _val.substring(_idx + 8, _idx + 24); _safe = true; break; }
+    }
+  }
+}
+if (!_safe || _k.length !== 16) {
+  document.write('<h1 style="color:red;text-align:center;">🚨 TAMPER DETECTED!</h1>');
+  while (true) { debugger; } return;
+}
+function _R(k, s) {
+  var _s = [], j = 0, x, res = '';
+  for (var i = 0; i < 256; i++) _s[i] = i;
+  for (i = 0; i < 256; i++) { j = (j + _s[i] + k.charCodeAt(i % k.length)) % 256; x = _s[i]; _s[i] = _s[j]; _s[j] = x; }
+  i = 0; j = 0;
+  for (var y = 0; y < s.length; y++) { i = (i + 1) % 256; j = (j + _s[i]) % 256; x = _s[i]; _s[i] = _s[j]; _s[j] = x; res += String.fromCharCode(s.charCodeAt(y) ^ _s[(_s[i] + _s[j]) % 256]); }
+  return res;
+}
+var _A = [${arrStr}]; var _h = '';
+for (var i = 0; i < _A.length; i++) _h += String.fromCharCode(_A[i]);
+var _c = ''; for (var i = 0; i < _h.length; i += 2) _c += String.fromCharCode(parseInt(_h.substr(i, 2), 16));
+var _b = _R(_k, _c);
+try { var _final = decodeURIComponent(atob(_b)); document.open(); document.write(_final); document.close(); } catch (e) { document.write('<h1 style="color:red;">🚨 ERROR!</h1>'); }
+`;
+
+  // Step 9: Encode decoder JS to Base64 (split into 2)
+  const encoded = Buffer.from(decoderJs, 'utf8').toString('base64');
+  const chunk = Math.floor(encoded.length / 2);
+  const p1 = encoded.substring(0, chunk);
+  const p2 = encoded.substring(chunk);
+
+  // Step 10: Final HTML
+  return `${headerComment}
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body oncontextmenu="return false;">
+<script>
+(function(){
+  var _p = decodeURIComponent(escape(atob('${p1}' + '${p2}')));
+  new Function(_p)();
+})();
+</script>
+<noscript>⚠️ Enable JavaScript.</noscript>
+</body></html>`;
 }
 
 // ===== HEALTH CHECK =====
@@ -58,9 +192,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== FIREBASE MODE (iframe wrapper — sandbox without allow-same-origin) =====
+// ===== FIREBASE MODE (/p/:slug) — RC4 Obfuscation, No iframe =====
 app.get('/p/:slug', async (req, res) => {
   try {
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    if (!isBrowser) {
+      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
+    }
+
     const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
@@ -77,7 +217,57 @@ app.get('/p/:slug', async (req, res) => {
           button{padding:12px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
           </style></head>
           <body><div class="box"><h2>🔒 Password Required</h2>
-          <form method="GET"><input type="password" name="pw" placeholder="Enter password" autofocus><button type="submit">Unlock</button></form></div></body></html>
+          <form method="GET"><input type="password" name="pw" placeholder="Enter password" autofocus><button type="submit">Unlock</button></form></body></html>
+        `);
+      }
+    }
+
+    const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
+    if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
+      return res.redirect(redirectSetting.value.trim());
+    }
+
+    host.views = (host.views || 0) + 1;
+    host.lastActive = new Date();
+    await host.save();
+
+    // RC4 Obfuscate
+    const obfuscated = hardcoreObfuscate(host.code);
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(obfuscated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// ===== PROTECTED MODE (/s/:slug) — iframe with RC4 in embed =====
+app.get('/s/:slug', async (req, res) => {
+  try {
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    if (!isBrowser) {
+      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
+    }
+
+    const Hosted = require('./models/Hosted');
+    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
+
+    if (host.password) {
+      const provided = req.query.pw;
+      if (provided !== host.password) {
+        return res.send(`
+          <!DOCTYPE html>
+          <html><head><title>Protected</title><meta name="viewport" content="width=device-width,initial-scale=1">
+          <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff}
+          .box{background:#1e293b;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-width:90%}
+          input{padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;width:100%;margin:16px 0;box-sizing:border-box}
+          button{padding:12px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
+          </style></head>
+          <body><div class="box"><h2>🔒 Password Required</h2>
+          <form method="GET"><input type="password" name="pw" placeholder="Enter password" autofocus><button type="submit">Unlock</button></form></body></html>
         `);
       }
     }
@@ -93,7 +283,6 @@ app.get('/p/:slug', async (req, res) => {
 
     const pwQuery = req.query.pw ? `?pw=${encodeURIComponent(req.query.pw)}` : '';
 
-    // ⚠️ sandbox এ allow-same-origin নেই — Firebase কাজ করবে
     res.setHeader('Content-Type', 'text/html');
     res.send(`<!DOCTYPE html>
 <html>
@@ -108,7 +297,7 @@ app.get('/p/:slug', async (req, res) => {
 </style>
 </head>
 <body>
-<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation allow-storage-access-by-user-activation allow-downloads"></iframe>
+<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
 </body>
 </html>`);
   } catch (err) {
@@ -117,7 +306,7 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE (AES Decryption) =====
+// ===== EMBED ROUTE (RC4 Obfuscation) =====
 app.get('/embed/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -135,61 +324,10 @@ app.get('/embed/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const encryptedPayload = encryptCode(host.code);
+    const obfuscated = hardcoreObfuscate(host.code);
 
     res.setHeader('Content-Type', 'text/html');
-    res.send(`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(host.title || 'Loading...')}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; min-height: 100vh; overflow-x: hidden; background: #030712; }
-  #app-container { width: 100%; min-height: 100vh; }
-  #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #030712; color: #fff; z-index: 9999; font-family: sans-serif; flex-direction: column; gap: 16px; }
-  .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-</head>
-<body>
-<div id="loader"><div class="spinner"></div><p style="color:#94a3b8;font-size:14px">Unlocking content...</p></div>
-<div id="app-container"></div>
-<script>
-(function() {
-  try {
-    var payload = ${JSON.stringify(encryptedPayload)};
-    var secret = ${JSON.stringify(AES_SECRET)};
-    var parts = payload.split(':');
-    var iv = CryptoJS.enc.Base64.parse(parts[0]);
-    var encrypted = parts[1];
-    var decrypted = CryptoJS.AES.decrypt(encrypted, CryptoJS.SHA256(secret), { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
-    var html = decrypted.toString(CryptoJS.enc.Utf8);
-    if (html && html.length > 0) {
-      var container = document.getElementById('app-container');
-      container.innerHTML = html;
-      var scripts = container.querySelectorAll('script');
-      scripts.forEach(function(oldScript) {
-        var newScript = document.createElement('script');
-        Array.from(oldScript.attributes).forEach(function(attr) { newScript.setAttribute(attr.name, attr.value); });
-        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-        oldScript.parentNode.replaceChild(newScript, oldScript);
-      });
-      var loader = document.getElementById('loader');
-      if (loader) loader.style.display = 'none';
-    } else {
-      document.getElementById('loader').innerHTML = '<h2 style="color:#ef4444">⚠️ Decryption Failed</h2>';
-    }
-  } catch (e) {
-    console.error('Decrypt error:', e);
-    document.getElementById('loader').innerHTML = '<h2 style="color:#ef4444">⚠️ Error Loading Site</h2>';
-  }
-})();
-</script>
-</body>
-</html>`);
+    res.send(obfuscated);
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -321,7 +459,8 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
-  console.log(`🔐 AES: Enabled`);
+  console.log(`🔐 RC4 + Hex Obfuscation: Enabled`);
   console.log(`🤖 Anti-Bot: Enabled`);
-  console.log(`🔥 Firebase Mode: /p/:slug (iframe without allow-same-origin)`);
+  console.log(`🔥 Firebase Mode: /p/:slug (Direct DOM, No iframe)`);
+  console.log(`🛡️ Protected Mode: /s/:slug (iframe + RC4)`);
 });
