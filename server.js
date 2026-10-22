@@ -110,16 +110,10 @@ app.get('/s/:slug', async (req, res) => {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #030712; }
   iframe { width: 100%; height: 100vh; border: none; display: block; }
-  .loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #030712; color: #fff; font-family: sans-serif; flex-direction: column; gap: 16px; }
-  .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-<div class="loader" id="loader"><div class="spinner"></div><p style="color:#94a3b8;font-size:14px">Loading...</p></div>
-<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" 
-        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
-        onload="document.getElementById('loader').style.display='none'"></iframe>
+<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
 </body>
 </html>`);
   } catch (err) {
@@ -334,5 +328,5 @@ app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 AES: Enabled`);
   console.log(`🤖 Anti-Bot: Enabled`);
-  console.log(`🔥 Firebase Compatible: Enabled`);
+  console.log(`🔥 Firebase Compatible: Enabled (exact old iframe)`);
 });
