@@ -58,7 +58,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== SERVE HOSTED HTML (With Firebase-friendly iframe) =====
+// ===== SERVE HOSTED HTML (Exactly like your old system) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
@@ -97,7 +97,6 @@ app.get('/s/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const encryptedPayload = encryptCode(host.code);
     const pwQuery = req.query.pw ? `?pw=${encodeURIComponent(req.query.pw)}` : '';
 
     res.setHeader('Content-Type', 'text/html');
@@ -119,8 +118,7 @@ app.get('/s/:slug', async (req, res) => {
 <body>
 <div class="loader" id="loader"><div class="spinner"></div><p style="color:#94a3b8;font-size:14px">Loading...</p></div>
 <iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" 
-        sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-same-origin allow-top-navigation-by-user-activation allow-storage-access-by-user-activation" 
-        allow="storage-access; clipboard-read; clipboard-write"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
         onload="document.getElementById('loader').style.display='none'"></iframe>
 </body>
 </html>`);
