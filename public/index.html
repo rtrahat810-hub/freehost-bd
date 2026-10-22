@@ -380,14 +380,14 @@
                                 </div>
                             </div>
                             <div class="slug-wrap">
-                                <div class="slug-prefix"><i class="fa-solid fa-link text-[10px] mr-2 opacity-70"></i>/s/</div>
+                                <div class="slug-prefix"><i class="fa-solid fa-link text-[10px] mr-2 opacity-70"></i>/p/</div>
                                 <input type="text" x-model="htmlForm.name" placeholder="my-app (optional)">
                             </div>
                             <template x-if="htmlForm.name.length > 0">
                                 <div class="mt-3 flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-xl px-4 py-2.5 text-xs mono text-cyan-200">
                                     <i class="fa-solid fa-circle-check text-emerald-400"></i>
                                     <span class="opacity-60">URL:</span>
-                                    <span class="font-bold" x-text="window.location.origin + '/s/' + htmlForm.name"></span>
+                                    <span class="font-bold" x-text="window.location.origin + '/p/' + htmlForm.name"></span>
                                 </div>
                             </template>
                         </div>
@@ -618,7 +618,7 @@
                         const entry = {
                             title: data.host.title,
                             slug: data.host.slug,
-                            url: window.location.origin + '/s/' + data.host.slug
+                            url: window.location.origin + '/p/' + data.host.slug
                         };
                         this.lastDeployed = entry;
                         this.htmlForm = { title: '', name: '', password: '', code: '' };
