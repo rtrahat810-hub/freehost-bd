@@ -58,7 +58,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== RAW ROUTE (Exactly like your old site — No iframe, No encryption) =====
+// ===== FIREBASE MODE (iframe wrapper — sandbox without allow-same-origin) =====
 app.get('/p/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -91,56 +91,9 @@ app.get('/p/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    // সরাসরি HTML কোড রিটার্ন (কোনো iframe নেই, কোনো AES নেই)
-    res.setHeader('Content-Type', 'text/html');
-    res.send(host.code);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
-  }
-});
-
-// ===== SERVE HOSTED HTML (Iframe with AES for protected sites) =====
-app.get('/s/:slug', async (req, res) => {
-  try {
-    const userAgent = req.headers['user-agent'] || '';
-    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
-    if (!isBrowser) {
-      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
-    }
-
-    const Hosted = require('./models/Hosted');
-    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
-    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
-
-    if (host.password) {
-      const provided = req.query.pw;
-      if (provided !== host.password) {
-        return res.send(`
-          <!DOCTYPE html>
-          <html><head><title>Protected</title><meta name="viewport" content="width=device-width,initial-scale=1">
-          <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff}
-          .box{background:#1e293b;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-width:90%}
-          input{padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;width:100%;margin:16px 0;box-sizing:border-box}
-          button{padding:12px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
-          </style></head>
-          <body><div class="box"><h2>🔒 Password Required</h2>
-          <form method="GET"><input type="password" name="pw" placeholder="Enter password" autofocus><button type="submit">Unlock</button></form></div></body></html>
-        `);
-      }
-    }
-
-    const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
-    if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
-      return res.redirect(redirectSetting.value.trim());
-    }
-
-    host.views = (host.views || 0) + 1;
-    host.lastActive = new Date();
-    await host.save();
-
     const pwQuery = req.query.pw ? `?pw=${encodeURIComponent(req.query.pw)}` : '';
 
+    // ⚠️ sandbox এ allow-same-origin নেই — Firebase কাজ করবে
     res.setHeader('Content-Type', 'text/html');
     res.send(`<!DOCTYPE html>
 <html>
@@ -155,7 +108,7 @@ app.get('/s/:slug', async (req, res) => {
 </style>
 </head>
 <body>
-<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
+<iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation allow-storage-access-by-user-activation allow-downloads"></iframe>
 </body>
 </html>`);
   } catch (err) {
@@ -164,7 +117,7 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE (AES for protected sites) =====
+// ===== EMBED ROUTE (AES Decryption) =====
 app.get('/embed/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -370,5 +323,5 @@ app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 AES: Enabled`);
   console.log(`🤖 Anti-Bot: Enabled`);
-  console.log(`🎯 Firebase Mode: /p/:slug (No iframe, No encryption)`);
+  console.log(`🔥 Firebase Mode: /p/:slug (iframe without allow-same-origin)`);
 });
