@@ -19,22 +19,8 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ===== DEFAULT SETTINGS =====
-const DEFAULT_SETTINGS = {
-  trapImage: 'https://i.ibb.co/hJTyZ0Lk/fa1cafb74e87.png',
-  trapMessage: 'YOUR DEVICE HAS BEEN COMPROMISED!',
-  siteTitle: 'FreeHost BD',
-  siteTagline: 'Premium HTML Deployment',
-  heroTitle: 'Deploy HTML in Seconds',
-  heroSubtitle: 'Paste your HTML code and get a live link instantly. No login required.',
-  footerText: 'FreeHost BD',
-  maintenanceMode: false,
-  maintenanceMessage: 'We are currently under maintenance. Please check back soon.'
-};
-
-// ===== MODELS =====
-const Setting = require('./models/Setting');
-const Hosted = require('./models/Hosted');
+// ===== TRAP SETTINGS =====
+const TRAP_IMAGE = 'https://i.ibb.co/hJTyZ0Lk/fa1cafb74e87.png';
 
 // ===== MULTER CONFIG =====
 const upload = multer({
@@ -56,22 +42,6 @@ const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-async function getSetting(key) {
-  try {
-    const s = await Setting.findOne({ key });
-    return s ? s.value : DEFAULT_SETTINGS[key] || '';
-  } catch (e) { return DEFAULT_SETTINGS[key] || ''; }
-}
-
-async function getAllSettings() {
-  try {
-    const settings = await Setting.find();
-    const data = { ...DEFAULT_SETTINGS };
-    settings.forEach(s => { data[s.key] = s.value; });
-    return data;
-  } catch (e) { return DEFAULT_SETTINGS; }
 }
 
 // ===== CRYPTO HELPERS =====
@@ -131,8 +101,8 @@ function maskScripts(html) {
   });
 }
 
-// ===== HARD OBFUSCATOR WITH DYNAMIC TRAP MESSAGE =====
-function hardObfuscate(htmlCode, trapImage, trapMessage) {
+// ===== HARD OBFUSCATOR WITH TRAP =====
+function hardObfuscate(htmlCode) {
   const htmlMasked = maskScripts(htmlCode);
   const urlEncoded = encodeURIComponent(htmlMasked);
   const step2 = Buffer.from(urlEncoded, 'utf8').toString('base64');
@@ -168,7 +138,7 @@ function hardObfuscate(htmlCode, trapImage, trapMessage) {
 'use strict';
 
 function showTrap() {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;overflow:hidden;flex-direction:column;gap:20px;"><img src="${trapImage}" style="max-width:100%;max-height:70vh;object-fit:contain;animation:zoomIn 0.3s ease;"><div style="color:#ff0000;font-size:24px;font-family:monospace;font-weight:bold;text-align:center;padding:0 20px;text-shadow:0 0 20px #ff0000;">${trapMessage}</div></div>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;overflow:hidden"><img src="${TRAP_IMAGE}" style="width:100%;height:100vh;object-fit:contain;animation:zoomIn 0.3s ease;"></div>';
     while(true) { debugger; }
 }
 
@@ -301,7 +271,7 @@ try {
   var _src = _p[${idxA}] + _p[${idxB}] + _p[${idxC}];
   var _js = decodeURIComponent(escape(atob(_src)));
   try { new Function(_js)(); } catch(e) {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${trapImage}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>';
   }
 })();
 </script>
@@ -314,48 +284,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== PUBLIC SETTINGS =====
-app.get('/api/public/settings', async (req, res) => {
-  try {
-    const settings = await getAllSettings();
-    res.json({
-      siteTitle: settings.siteTitle,
-      siteTagline: settings.siteTagline,
-      heroTitle: settings.heroTitle,
-      heroSubtitle: settings.heroSubtitle,
-      footerText: settings.footerText,
-      maintenanceMode: settings.maintenanceMode === 'true' || settings.maintenanceMode === true,
-      maintenanceMessage: settings.maintenanceMessage
-    });
-  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
-});
-
 // ===== FIREBASE MODE (/p/:slug) =====
 app.get('/p/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
-    const settings = await getAllSettings();
-    
     if (!isBrowser) {
-      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;flex-direction:column;gap:20px;"><img src="${settings.trapImage}" style="max-width:100%;max-height:70vh;object-fit:contain;"><div style="color:#ff0000;font-size:24px;font-family:monospace;font-weight:bold;text-align:center;padding:0 20px;text-shadow:0 0 20px #ff0000;">${settings.trapMessage}</div></div>`);
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
     }
 
+    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
-    if (!host) {
-      const settings = await getAllSettings();
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html><head><title>404 - Not Found</title><meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#030712;color:#fff;text-align:center;padding:20px}
-        .box{background:#1e293b;padding:40px;border-radius:16px;max-width:90%;border:1px solid rgba(255,255,255,0.1)}
-        h1{font-size:80px;margin:0;color:#6366f1;font-weight:900}
-        p{color:#94a3b8;margin:16px 0 24px}
-        a{color:#818cf8;text-decoration:none;font-weight:bold;padding:12px 24px;background:rgba(99,102,241,0.15);border-radius:8px;display:inline-block}
-        </style></head>
-        <body><div class="box"><h1>404</h1><p>এই লিংকটি খুঁজে পাওয়া যায়নি।</p><a href="/">← হোমপেজে ফিরে যান</a></div></body></html>
-      `);
-    }
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
     if (host.password) {
       const provided = req.query.pw;
@@ -374,11 +314,13 @@ app.get('/p/:slug', async (req, res) => {
       }
     }
 
+    // 🔥 Global Redirect
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
 
+    // 🔥 Specific Host Redirect
     if (host.redirectUrl && host.redirectUrl.trim() !== '') {
       return res.redirect(host.redirectUrl.trim());
     }
@@ -387,7 +329,7 @@ app.get('/p/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = hardObfuscate(host.code, settings.trapImage, settings.trapMessage);
+    const obfuscated = hardObfuscate(host.code);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -401,26 +343,13 @@ app.get('/s/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
-    const settings = await getAllSettings();
-    
     if (!isBrowser) {
-      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;flex-direction:column;gap:20px;"><img src="${settings.trapImage}" style="max-width:100%;max-height:70vh;object-fit:contain;"><div style="color:#ff0000;font-size:24px;font-family:monospace;font-weight:bold;text-align:center;padding:0 20px;text-shadow:0 0 20px #ff0000;">${settings.trapMessage}</div></div>`);
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
     }
 
+    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
-    if (!host) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html><head><title>404 - Not Found</title><meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#030712;color:#fff;text-align:center;padding:20px}
-        .box{background:#1e293b;padding:40px;border-radius:16px;max-width:90%;border:1px solid rgba(255,255,255,0.1)}
-        h1{font-size:80px;margin:0;color:#6366f1;font-weight:900}
-        p{color:#94a3b8;margin:16px 0 24px}
-        a{color:#818cf8;text-decoration:none;font-weight:bold;padding:12px 24px;background:rgba(99,102,241,0.15);border-radius:8px;display:inline-block}
-        </style></head>
-        <body><div class="box"><h1>404</h1><p>এই লিংকটি খুঁজে পাওয়া যায়নি।</p><a href="/">← হোমপেজে ফিরে যান</a></div></body></html>
-      `);
-    }
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
     if (host.password) {
       const provided = req.query.pw;
@@ -439,11 +368,13 @@ app.get('/s/:slug', async (req, res) => {
       }
     }
 
+    // 🔥 Global Redirect
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
 
+    // 🔥 Specific Host Redirect
     if (host.redirectUrl && host.redirectUrl.trim() !== '') {
       return res.redirect(host.redirectUrl.trim());
     }
@@ -477,9 +408,10 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE =====
+// ===== EMBED ROUTE (Multi-Layer Obfuscation) =====
 app.get('/embed/:slug', async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
@@ -494,8 +426,7 @@ app.get('/embed/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const settings = await getAllSettings();
-    const obfuscated = hardObfuscate(host.code, settings.trapImage, settings.trapMessage);
+    const obfuscated = hardObfuscate(host.code);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -512,6 +443,7 @@ app.post('/api/host', async (req, res) => {
     let finalSlug = (slug || '').trim().toLowerCase();
     if (!finalSlug) finalSlug = 'site-' + Math.random().toString(36).substring(2, 10);
     if (!/^[a-z0-9-]+$/.test(finalSlug)) return res.status(400).json({ error: 'Slug-এ শুধু lowercase, সংখ্যা, হাইফেন' });
+    const Hosted = require('./models/Hosted');
     const existing = await Hosted.findOne({ slug: finalSlug });
     if (existing) return res.status(400).json({ error: 'এই slug আগেই ব্যবহার হয়েছে' });
     const finalTitle = (title || '').trim() || ('Untitled ' + finalSlug.substring(0, 6));
@@ -523,7 +455,7 @@ app.post('/api/host', async (req, res) => {
   }
 });
 
-// ===== PHOTO API =====
+// ===== PHOTO API (ImgBB) =====
 app.post('/api/photo', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'ছবি দিন' });
@@ -535,10 +467,11 @@ app.post('/api/photo', upload.single('photo'), async (req, res) => {
     formData.append('image', base64Image);
     const imgbbRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
     const imgbbData = await imgbbRes.json();
-    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ' });
+    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ: ' + (imgbbData.error?.message || 'Unknown') });
     res.json({ photo: { url: imgbbData.data.url, filename: req.file.originalname || 'image_' + Date.now() } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Photo error:', err);
+    res.status(500).json({ error: err.message || 'সার্ভার সমস্যা' });
   }
 });
 
@@ -550,26 +483,9 @@ function authAdmin(req, res, next) {
   next();
 }
 
-// Settings API
-app.get('/api/admin/settings', authAdmin, async (req, res) => {
-  try {
-    const settings = await getAllSettings();
-    res.json(settings);
-  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
-});
-
-app.post('/api/admin/settings', authAdmin, async (req, res) => {
-  try {
-    const updates = req.body;
-    for (const key in updates) {
-      await Setting.findOneAndUpdate({ key }, { value: updates[key] }, { upsert: true });
-    }
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
-});
-
 app.get('/api/admin/hosts', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const hosts = await Hosted.find().sort({ createdAt: -1 });
     res.json(hosts);
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
@@ -577,6 +493,7 @@ app.get('/api/admin/hosts', authAdmin, async (req, res) => {
 
 app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const { banned } = req.body;
     const host = await Hosted.findByIdAndUpdate(req.params.id, { banned: !!banned }, { new: true });
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
@@ -586,6 +503,7 @@ app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
 
 app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const { code, title, slug, password, redirectUrl } = req.body;
     const update = { updatedAt: Date.now() };
     if (code !== undefined) update.code = code;
@@ -601,13 +519,13 @@ app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
 
 app.delete('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const host = await Hosted.findByIdAndDelete(req.params.id);
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// Global Redirect API
 app.get('/api/admin/redirect', authAdmin, async (req, res) => {
   try {
     const setting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
@@ -625,6 +543,7 @@ app.post('/api/admin/redirect', authAdmin, async (req, res) => {
 
 app.get('/api/admin/stats', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const totalHosts = await Hosted.countDocuments();
     const bannedHosts = await Hosted.countDocuments({ banned: true });
     const totalViews = await Hosted.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]);
@@ -633,60 +552,19 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// ===== MAINTENANCE MODE MIDDLEWARE =====
-app.use(async (req, res, next) => {
-  // API রাউট, অ্যাডমিন রাউট, হোস্টেড সাইট স্কিপ করবে
-  if (req.path.startsWith('/api') || req.path.startsWith('/admin') || req.path.startsWith('/s/') || req.path.startsWith('/p/') || req.path.startsWith('/embed/')) {
-    return next();
-  }
-  
-  try {
-    const settings = await getAllSettings();
-    if (settings.maintenanceMode === 'true' || settings.maintenanceMode === true) {
-      return res.status(503).send(`
-        <!DOCTYPE html>
-        <html><head><title>Under Maintenance</title><meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#030712;color:#fff;text-align:center;padding:20px}
-        .box{background:linear-gradient(135deg,#1e293b,#0f172a);padding:60px 40px;border-radius:24px;max-width:90%;border:1px solid rgba(99,102,241,0.3);box-shadow:0 20px 60px rgba(99,102,241,0.2)}
-        .icon{font-size:80px;margin-bottom:20px}
-        h1{font-size:32px;margin:0;color:#818cf8;font-weight:900}
-        p{color:#94a3b8;margin:16px 0;line-height:1.6}
-        </style></head>
-        <body><div class="box"><div class="icon">🔧</div><h1>Under Maintenance</h1><p>${escapeHtml(settings.maintenanceMessage)}</p></div></body></html>
-      `);
-    }
-  } catch(e) {}
-  next();
-});
-
 // ===== SERVE FRONTEND =====
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/photo', (req, res) => res.sendFile(path.join(__dirname, 'public', 'photo.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-
-// ===== 404 HANDLER =====
-app.use((req, res) => {
-  res.status(404).send(`
-    <!DOCTYPE html>
-    <html><head><title>404 - Page Not Found</title><meta name="viewport" content="width=device-width,initial-scale=1">
-    <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#030712;color:#fff;text-align:center;padding:20px}
-    .box{background:#1e293b;padding:40px;border-radius:16px;max-width:90%;border:1px solid rgba(255,255,255,0.1)}
-    h1{font-size:100px;margin:0;color:#6366f1;font-weight:900;text-shadow:0 0 40px rgba(99,102,241,0.5)}
-    p{color:#94a3b8;margin:16px 0 24px;font-size:18px}
-    a{color:#818cf8;text-decoration:none;font-weight:bold;padding:14px 28px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:10px;display:inline-block;transition:all 0.2s}
-    a:hover{background:rgba(99,102,241,0.25)}
-    </style></head>
-    <body><div class="box"><h1>404</h1><p>দুঃখিত! পেজটি খুঁজে পাওয়া যায়নি।</p><a href="/">🏠 হোমপেজে ফিরে যান</a></div></body></html>
-  `);
-});
 
 // ===== START =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 Multi-Layer Obfuscation: Enabled`);
-  console.log(`🎯 Dynamic Trap System: Enabled`);
-  console.log(`🔧 CMS + Maintenance Mode: Enabled`);
+  console.log(`🎯 Trap System: Enabled`);
+  console.log(`🔊 Sound: Removed`);
+  console.log(`🤖 Anti-Bot: Enabled`);
   console.log(`🔥 Firebase Mode: /p/:slug`);
   console.log(`🛡️ Protected Mode: /s/:slug`);
 });
