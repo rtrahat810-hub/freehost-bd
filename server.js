@@ -19,8 +19,8 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ===== MODELS =====
-const Hosted = require('./models/Hosted');
+// ===== RC4 SECRET =====
+const RC4_SECRET = process.env.AES_SECRET || 'change-this-secret-key-in-env-2026';
 
 // ===== MULTER CONFIG =====
 const upload = multer({
@@ -38,21 +38,29 @@ const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
   value: { type: String, default: '' }
 }), 'globalsettings');
 
-// ===== HELPERS =====
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+// ===== HELPERS: SCRIPT MASKING =====
+function maskScripts(htmlCode) {
+  return htmlCode.replace(/(<script[^>]*>)([\s\S]*?)(<\/script>)/gi, (match, openTag, content, closeTag) => {
+    if (openTag.toLowerCase().includes('src=') || !content.trim()) return match;
+    try {
+      const b64 = Buffer.from(content, 'utf8').toString('base64');
+      return `${openTag}\neval(decodeURIComponent(escape(atob('${b64}'))));\n${closeTag}`;
+    } catch (e) {
+      return match;
+    }
+  });
 }
 
-// ===== CRYPTO HELPERS =====
+// ===== HELPERS: RC4 ENCRYPT =====
 function rc4Crypt(data, key) {
   const S = Array.from({ length: 256 }, (_, i) => i);
   let j = 0;
   for (let i = 0; i < 256; i++) {
-    j = (j + S[i] + key[i % key.length]) % 256;
+    j = (j + S[i] + key.charCodeAt(i % key.length)) % 256;
     [S[i], S[j]] = [S[j], S[i]];
   }
-  let i = 0; j = 0;
+  let i = 0;
+  j = 0;
   const out = [];
   for (let y = 0; y < data.length; y++) {
     i = (i + 1) % 256;
@@ -63,178 +71,119 @@ function rc4Crypt(data, key) {
   return Buffer.from(out);
 }
 
-function xorBytes(data, key) {
-  const out = Buffer.alloc(data.length);
-  for (let i = 0; i < data.length; i++) {
-    out[i] = data[i] ^ key[i % key.length];
-  }
-  return out;
-}
-
-function randomString(len) {
+// ===== HELPERS: GENERATE RANDOM KEY =====
+function generateRandomKey(len = 16) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const bytes = crypto.randomBytes(len);
-  for (let i = 0; i < len; i++) result += chars[bytes[i] % chars.length];
+  for (let i = 0; i < len; i++) {
+    result += chars[bytes[i] % chars.length];
+  }
   return result;
 }
 
-function randomHex(len) {
-  const chars = '0123456789abcdef';
-  let result = '';
-  const bytes = crypto.randomBytes(len);
-  for (let i = 0; i < len; i++) result += chars[bytes[i] % chars.length];
-  return result;
+// ===== HELPERS: ESCAPE HTML =====
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function bytesToArr(data) {
-  return Array.from(data).join(',');
-}
+// ===== OBFUSCATOR (RC4 + Hex + Tamper) =====
+function hardcoreObfuscate(htmlCode) {
+  // Step 1: Script Masking
+  let masked = maskScripts(htmlCode);
 
-function maskScripts(html) {
-  return html.replace(/(<script[^>]*>)([\s\S]*?)(<\/script>)/gi, (match, openTag, body, closeTag) => {
-    if (openTag.toLowerCase().includes('src=') || !body.trim()) return match;
-    try {
-      const b64 = Buffer.from(body, 'utf8').toString('base64');
-      return `${openTag}\ntry{eval(atob('${b64}'))}catch(e){}\n${closeTag}`;
-    } catch (e) { return match; }
-  });
-}
+  // Step 2: URL-encode + Base64
+  const urlEncoded = encodeURIComponent(masked);
+  const b64Bytes = Buffer.from(urlEncoded, 'utf8').toString('base64');
+  const b64Buffer = Buffer.from(b64Bytes, 'utf8');
 
-// ===== STRONG OBFUSCATOR (5-Layer Encryption) =====
-function obfuscate(htmlCode) {
-  const htmlMasked = maskScripts(htmlCode);
-  const urlEncoded = encodeURIComponent(htmlMasked);
-  const step2 = Buffer.from(urlEncoded, 'utf8').toString('base64');
-  const step2Buf = Buffer.from(step2, 'utf8');
+  // Step 3: Random RC4 Key
+  const rc4Key = generateRandomKey(16);
 
-  const rc4Key = randomString(32);
-  const step3 = rc4Crypt(step2Buf, Buffer.from(rc4Key, 'utf8'));
+  // Step 4: RC4 Encrypt
+  const rc4Cipher = rc4Crypt(b64Buffer, rc4Key);
+  const rc4Hex = rc4Cipher.toString('hex');
 
-  const salt = randomHex(16);
-  const step4 = xorBytes(step3, Buffer.from(salt, 'utf8'));
+  // Step 5: Hex to ASCII array
+  const arrStr = rc4Hex.split('').map(c => c.charCodeAt(0)).join(',');
 
-  const derived = crypto.createHash('sha256').update(salt + rc4Key).digest('hex').substring(0, 32);
-  const step5 = rc4Crypt(step4, Buffer.from(derived, 'utf8'));
-
-  const n = step5.length;
-  const q = Math.floor(n / 4);
-  const chunks = [step5.slice(0, q), step5.slice(q, 2 * q), step5.slice(2 * q, 3 * q), step5.slice(3 * q)];
-  const order = [0, 1, 2, 3];
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  const chunkJs = order.map(idx => bytesToArr(chunks[idx]));
-  const reassemble = Array.from({ length: 4 }, (_, i) => order.indexOf(i));
-
-  // ডিকোডার জাভাস্ক্রিপ্ট (কোনো ট্র্যাপ বা বট ডিটেক্টর নেই)
-  const decoderJs = `
-(function(){
-'use strict';
-
-function _xor(d, k) {
-  var o = new Uint8Array(d.length);
-  for (var i = 0; i < d.length; i++) o[i] = d[i] ^ k[i % k.length];
-  return o;
-}
-function _rc4(key, data) {
-  var S = [], j = 0, x, res = [];
-  for (var i = 0; i < 256; i++) S[i] = i;
-  for (i = 0; i < 256; i++) {
-    j = (j + S[i] + key[i % key.length]) & 0xff;
-    x = S[i]; S[i] = S[j]; S[j] = x;
-  }
-  i = 0; j = 0;
-  for (var y = 0; y < data.length; y++) {
-    i = (i + 1) & 0xff; j = (j + S[i]) & 0xff;
-    x = S[i]; S[i] = S[j]; S[j] = x;
-    res.push(data[y] ^ S[(S[i] + S[j]) & 0xff]);
-  }
-  return res;
-}
-function _arr2str(a) {
-  var s = '';
-  for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]);
-  return s;
-}
-function _merge(a, b) {
-  var r = [];
-  for (var i = 0; i < a.length; i++) r.push(a[i]);
-  for (var i = 0; i < b.length; i++) r.push(b[i]);
-  return r;
-}
-
-var _chunks = [${chunkJs[0]}];
-var _chunkB = [${chunkJs[1]}];
-var _chunkC = [${chunkJs[2]}];
-var _chunkD = [${chunkJs[3]}];
-var _order  = [${reassemble.join(',')}];
-var _salt   = [${bytesToArr(Buffer.from(salt, 'utf8'))}];
-var _key    = [${bytesToArr(Buffer.from(rc4Key, 'utf8'))}];
-var _derive = [${bytesToArr(Buffer.from(derived, 'utf8'))}];
-
-var _all = [_chunks, _chunkB, _chunkC, _chunkD];
-var _step5 = [];
-for (var i = 0; i < 4; i++) { _step5 = _merge(_step5, _all[_order.indexOf(i)]); }
-
-var _step4 = _rc4(_derive, _step5);
-var _step3 = _xor(_step4, _salt);
-var _step2 = _rc4(_key, _step3);
-var _b64 = _arr2str(_step2);
-var _url = atob(_b64);
-var _html = decodeURIComponent(_url);
-
-try {
-  var _blob = new Blob([_html], {type: 'text/html'});
-  var _url2 = URL.createObjectURL(_blob);
-  var _frame = document.createElement('iframe');
-  _frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0';
-  _frame.sandbox = 'allow-scripts allow-forms allow-popups allow-modals allow-same-origin';
-  _frame.src = _url2;
-  document.body.innerHTML = '';
-  document.body.appendChild(_frame);
-} catch(err) {
-  document.body.innerHTML = '<h1 style="color:red;text-align:center">⚠️ Error</h1>';
-}
-
-})();
-`;
-
-  // ডিকোডারকে ৩ ভাগে ভাগ করা
-  const enc = Buffer.from(decoderJs, 'utf8').toString('base64');
-  const third = Math.floor(enc.length / 3);
-  const a = enc.substring(0, third);
-  const b = enc.substring(third, 2 * third);
-  const c = enc.substring(2 * third);
-
-  const parts = [a, b, c];
-  for (let i = parts.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [parts[i], parts[j]] = [parts[j], parts[i]];
-  }
-  const idxA = parts.indexOf(a);
-  const idxB = parts.indexOf(b);
-  const idxC = parts.indexOf(c);
-
+  // Step 6: Timestamp
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-  return `<!-- Protected | ${timestamp} -->
+  // Step 7: Comment block
+  const commentInner = `╔══════════════════════════════════════════════════════════╗
+║  🔒 PROTECTED HTML - DO NOT MODIFY 🔒                    ║
+║══════════════════════════════════════════════════════════║
+║  Timestamp: ${timestamp}                    ║
+║  Signature: DXF PROTECTOR [TOKEN: ${rc4Key}]             ║
+╚══════════════════════════════════════════════════════════╝`;
+
+  const headerComment = `<!--${commentInner}\n-->`;
+  const expectedStripped = commentInner.replace(/\s+/g, '');
+
+  // Step 8: Decoder JS
+  const decoderJs = `
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.onkeydown = function(e) {
+  if (e.keyCode == 123) return false;
+  if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+  if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+  if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+  if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+};
+setInterval(function() { debugger; }, 50);
+console.clear();
+var _safe = false; var _k = "";
+var _iter = document.createTreeWalker(document, 128, null, false);
+var _node; var _expected = ${JSON.stringify(expectedStripped)};
+while ((_node = _iter.nextNode())) {
+  var _val = _node.nodeValue;
+  if (_val.indexOf('PROTECTED HTML') !== -1) {
+    var _actual = _val.replace(/\\s+/g, '');
+    if (_actual === _expected) {
+      var _idx = _val.indexOf('[TOKEN: ');
+      if (_idx !== -1) { _k = _val.substring(_idx + 8, _idx + 24); _safe = true; break; }
+    }
+  }
+}
+if (!_safe || _k.length !== 16) {
+  document.write('<h1 style="color:red;text-align:center;">🚨 TAMPER DETECTED!</h1>');
+  while (true) { debugger; } return;
+}
+function _R(k, s) {
+  var _s = [], j = 0, x, res = '';
+  for (var i = 0; i < 256; i++) _s[i] = i;
+  for (i = 0; i < 256; i++) { j = (j + _s[i] + k.charCodeAt(i % k.length)) % 256; x = _s[i]; _s[i] = _s[j]; _s[j] = x; }
+  i = 0; j = 0;
+  for (var y = 0; y < s.length; y++) { i = (i + 1) % 256; j = (j + _s[i]) % 256; x = _s[i]; _s[i] = _s[j]; _s[j] = x; res += String.fromCharCode(s.charCodeAt(y) ^ _s[(_s[i] + _s[j]) % 256]); }
+  return res;
+}
+var _A = [${arrStr}]; var _h = '';
+for (var i = 0; i < _A.length; i++) _h += String.fromCharCode(_A[i]);
+var _c = ''; for (var i = 0; i < _h.length; i += 2) _c += String.fromCharCode(parseInt(_h.substr(i, 2), 16));
+var _b = _R(_k, _c);
+try { var _final = decodeURIComponent(atob(_b)); document.open(); document.write(_final); document.close(); } catch (e) { document.write('<h1 style="color:red;">🚨 ERROR!</h1>'); }
+`;
+
+  // Step 9: Encode decoder JS to Base64 (split into 2)
+  const encoded = Buffer.from(decoderJs, 'utf8').toString('base64');
+  const chunk = Math.floor(encoded.length / 2);
+  const p1 = encoded.substring(0, chunk);
+  const p2 = encoded.substring(chunk);
+
+  // Step 10: Final HTML
+  return `${headerComment}
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>·</title>
-</head>
-<body style="margin:0;overflow:hidden">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body oncontextmenu="return false;">
 <script>
 (function(){
-  var _p = ['${parts[0]}','${parts[1]}','${parts[2]}'];
-  var _src = _p[${idxA}] + _p[${idxB}] + _p[${idxC}];
-  var _js = decodeURIComponent(escape(atob(_src)));
-  try { new Function(_js)(); } catch(e) {
-    document.body.innerHTML = '<h1 style="color:red;text-align:center">⚠️ Error</h1>';
-  }
+  var _p = decodeURIComponent(escape(atob('${p1}' + '${p2}')));
+  new Function(_p)();
 })();
 </script>
-<noscript>JavaScript required</noscript>
+<noscript>⚠️ Enable JavaScript.</noscript>
 </body></html>`;
 }
 
@@ -243,23 +192,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== FIREBASE MODE (/p/:slug) — No Checks, Only Obfuscation =====
+// ===== FIREBASE MODE (/p/:slug) — RC4 Obfuscation, No iframe =====
 app.get('/p/:slug', async (req, res) => {
   try {
-    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
-    if (!host) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html><head><title>404 - Not Found</title><meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#030712;color:#fff;text-align:center;padding:20px}
-        .box{background:#1e293b;padding:40px;border-radius:16px;max-width:90%;border:1px solid rgba(255,255,255,0.1)}
-        h1{font-size:80px;margin:0;color:#6366f1;font-weight:900}
-        p{color:#94a3b8;margin:16px 0 24px}
-        a{color:#818cf8;text-decoration:none;font-weight:bold;padding:12px 24px;background:rgba(99,102,241,0.15);border-radius:8px;display:inline-block}
-        </style></head>
-        <body><div class="box"><h1>404</h1><p>এই লিংকটি খুঁজে পাওয়া যায়নি।</p><a href="/">← হোমপেজে ফিরে যান</a></div></body></html>
-      `);
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    if (!isBrowser) {
+      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
     }
+
+    const Hosted = require('./models/Hosted');
+    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
     if (host.password) {
       const provided = req.query.pw;
@@ -282,15 +226,14 @@ app.get('/p/:slug', async (req, res) => {
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
-    if (host.redirectUrl && host.redirectUrl.trim() !== '') {
-      return res.redirect(host.redirectUrl.trim());
-    }
 
     host.views = (host.views || 0) + 1;
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = obfuscate(host.code);
+    // RC4 Obfuscate
+    const obfuscated = hardcoreObfuscate(host.code);
+
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -299,23 +242,18 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== PROTECTED MODE (/s/:slug) — No Checks, Only Obfuscation =====
+// ===== PROTECTED MODE (/s/:slug) — iframe with RC4 in embed =====
 app.get('/s/:slug', async (req, res) => {
   try {
-    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
-    if (!host) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html><head><title>404 - Not Found</title><meta name="viewport" content="width=device-width,initial-scale=1">
-        <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#030712;color:#fff;text-align:center;padding:20px}
-        .box{background:#1e293b;padding:40px;border-radius:16px;max-width:90%;border:1px solid rgba(255,255,255,0.1)}
-        h1{font-size:80px;margin:0;color:#6366f1;font-weight:900}
-        p{color:#94a3b8;margin:16px 0 24px}
-        a{color:#818cf8;text-decoration:none;font-weight:bold;padding:12px 24px;background:rgba(99,102,241,0.15);border-radius:8px;display:inline-block}
-        </style></head>
-        <body><div class="box"><h1>404</h1><p>এই লিংকটি খুঁজে পাওয়া যায়নি।</p><a href="/">← হোমপেজে ফিরে যান</a></div></body></html>
-      `);
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    if (!isBrowser) {
+      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
     }
+
+    const Hosted = require('./models/Hosted');
+    const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
+    if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
     if (host.password) {
       const provided = req.query.pw;
@@ -337,9 +275,6 @@ app.get('/s/:slug', async (req, res) => {
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
-    }
-    if (host.redirectUrl && host.redirectUrl.trim() !== '') {
-      return res.redirect(host.redirectUrl.trim());
     }
 
     host.views = (host.views || 0) + 1;
@@ -371,9 +306,10 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE =====
+// ===== EMBED ROUTE (RC4 Obfuscation) =====
 app.get('/embed/:slug', async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
@@ -388,7 +324,8 @@ app.get('/embed/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = obfuscate(host.code);
+    const obfuscated = hardcoreObfuscate(host.code);
+
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -405,6 +342,7 @@ app.post('/api/host', async (req, res) => {
     let finalSlug = (slug || '').trim().toLowerCase();
     if (!finalSlug) finalSlug = 'site-' + Math.random().toString(36).substring(2, 10);
     if (!/^[a-z0-9-]+$/.test(finalSlug)) return res.status(400).json({ error: 'Slug-এ শুধু lowercase, সংখ্যা, হাইফেন' });
+    const Hosted = require('./models/Hosted');
     const existing = await Hosted.findOne({ slug: finalSlug });
     if (existing) return res.status(400).json({ error: 'এই slug আগেই ব্যবহার হয়েছে' });
     const finalTitle = (title || '').trim() || ('Untitled ' + finalSlug.substring(0, 6));
@@ -416,7 +354,7 @@ app.post('/api/host', async (req, res) => {
   }
 });
 
-// ===== PHOTO API =====
+// ===== PHOTO API (ImgBB) =====
 app.post('/api/photo', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'ছবি দিন' });
@@ -428,10 +366,11 @@ app.post('/api/photo', upload.single('photo'), async (req, res) => {
     formData.append('image', base64Image);
     const imgbbRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
     const imgbbData = await imgbbRes.json();
-    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ' });
+    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ: ' + (imgbbData.error?.message || 'Unknown') });
     res.json({ photo: { url: imgbbData.data.url, filename: req.file.originalname || 'image_' + Date.now() } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Photo error:', err);
+    res.status(500).json({ error: err.message || 'সার্ভার সমস্যা' });
   }
 });
 
@@ -445,6 +384,7 @@ function authAdmin(req, res, next) {
 
 app.get('/api/admin/hosts', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const hosts = await Hosted.find().sort({ createdAt: -1 });
     res.json(hosts);
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
@@ -452,6 +392,7 @@ app.get('/api/admin/hosts', authAdmin, async (req, res) => {
 
 app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const { banned } = req.body;
     const host = await Hosted.findByIdAndUpdate(req.params.id, { banned: !!banned }, { new: true });
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
@@ -461,13 +402,13 @@ app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
 
 app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
-    const { code, title, slug, password, redirectUrl } = req.body;
+    const Hosted = require('./models/Hosted');
+    const { code, title, slug, password } = req.body;
     const update = { updatedAt: Date.now() };
     if (code !== undefined) update.code = code;
     if (title) update.title = title;
     if (slug) update.slug = slug;
     if (password !== undefined) update.password = password || null;
-    if (redirectUrl !== undefined) update.redirectUrl = redirectUrl || null;
     const host = await Hosted.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
     res.json(host);
@@ -476,6 +417,7 @@ app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
 
 app.delete('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
+    const Hosted = require('./models/Hosted');
     const host = await Hosted.findByIdAndDelete(req.params.id);
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
     res.json({ success: true });
@@ -497,6 +439,17 @@ app.post('/api/admin/redirect', authAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
+app.get('/api/admin/stats', authAdmin, async (req, res) => {
+  try {
+    const Hosted = require('./models/Hosted');
+    const totalHosts = await Hosted.countDocuments();
+    const bannedHosts = await Hosted.countDocuments({ banned: true });
+    const totalViews = await Hosted.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]);
+    const onlineNow = await Hosted.countDocuments({ lastActive: { $gte: new Date(Date.now() - 5 * 60 * 1000) } });
+    res.json({ totalHosts, bannedHosts, totalViews: totalViews[0]?.total || 0, onlineNow });
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
 // ===== SERVE FRONTEND =====
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/photo', (req, res) => res.sendFile(path.join(__dirname, 'public', 'photo.html')));
@@ -506,8 +459,8 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
-  console.log(`🔐 Strong Obfuscation: Enabled`);
-  console.log(`🤖 Bot Detector: DISABLED`);
-  console.log(`🔥 Firebase Mode: /p/:slug`);
-  console.log(`🛡️ Protected Mode: /s/:slug`);
+  console.log(`🔐 RC4 + Hex Obfuscation: Enabled`);
+  console.log(`🤖 Anti-Bot: Enabled`);
+  console.log(`🔥 Firebase Mode: /p/:slug (Direct DOM, No iframe)`);
+  console.log(`🛡️ Protected Mode: /s/:slug (iframe + RC4)`);
 });
