@@ -122,7 +122,7 @@ function maskScripts(html) {
   });
 }
 
-// ===== OBFUSCATOR (No Trap) =====
+// ===== OBFUSCATOR (No Trap, No Bot Detector) =====
 function obfuscate(htmlCode) {
   const htmlMasked = maskScripts(htmlCode);
   const urlEncoded = encodeURIComponent(htmlMasked);
@@ -278,7 +278,7 @@ app.get('/api/public/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// ===== FIREBASE MODE (/p/:slug) =====
+// ===== FIREBASE MODE (/p/:slug) — No Bot Detector =====
 app.get('/p/:slug', async (req, res) => {
   try {
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
@@ -334,7 +334,7 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== PROTECTED MODE (/s/:slug) =====
+// ===== PROTECTED MODE (/s/:slug) — No Bot Detector =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
@@ -609,7 +609,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 Multi-Layer Obfuscation: Enabled`);
-  console.log(`🎯 Trap System: DISABLED`);
+  console.log(`🤖 Bot Detector: DISABLED`);
   console.log(`🔧 CMS + Maintenance Mode: Enabled`);
   console.log(`🔥 Firebase Mode: /p/:slug`);
   console.log(`🛡️ Protected Mode: /s/:slug`);
