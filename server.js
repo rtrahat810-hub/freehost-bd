@@ -19,8 +19,8 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ===== RC4 SECRET =====
-const RC4_SECRET = process.env.AES_SECRET || 'change-this-secret-key-in-env-2026';
+// ===== TRAP SETTINGS =====
+const TRAP_IMAGE = 'https://i.ibb.co/hJTyZ0Lk/fa1cafb74e87.png';
 
 // ===== MULTER CONFIG =====
 const upload = multer({
@@ -38,29 +38,21 @@ const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
   value: { type: String, default: '' }
 }), 'globalsettings');
 
-// ===== HELPERS: SCRIPT MASKING =====
-function maskScripts(htmlCode) {
-  return htmlCode.replace(/(<script[^>]*>)([\s\S]*?)(<\/script>)/gi, (match, openTag, content, closeTag) => {
-    if (openTag.toLowerCase().includes('src=') || !content.trim()) return match;
-    try {
-      const b64 = Buffer.from(content, 'utf8').toString('base64');
-      return `${openTag}\neval(decodeURIComponent(escape(atob('${b64}'))));\n${closeTag}`;
-    } catch (e) {
-      return match;
-    }
-  });
+// ===== HELPERS =====
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// ===== HELPERS: RC4 ENCRYPT =====
+// ===== CRYPTO HELPERS =====
 function rc4Crypt(data, key) {
   const S = Array.from({ length: 256 }, (_, i) => i);
   let j = 0;
   for (let i = 0; i < 256; i++) {
-    j = (j + S[i] + key.charCodeAt(i % key.length)) % 256;
+    j = (j + S[i] + key[i % key.length]) % 256;
     [S[i], S[j]] = [S[j], S[i]];
   }
-  let i = 0;
-  j = 0;
+  let i = 0; j = 0;
   const out = [];
   for (let y = 0; y < data.length; y++) {
     i = (i + 1) % 256;
@@ -71,119 +63,219 @@ function rc4Crypt(data, key) {
   return Buffer.from(out);
 }
 
-// ===== HELPERS: GENERATE RANDOM KEY =====
-function generateRandomKey(len = 16) {
+function xorBytes(data, key) {
+  const out = Buffer.alloc(data.length);
+  for (let i = 0; i < data.length; i++) {
+    out[i] = data[i] ^ key[i % key.length];
+  }
+  return out;
+}
+
+function randomString(len) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const bytes = crypto.randomBytes(len);
-  for (let i = 0; i < len; i++) {
-    result += chars[bytes[i] % chars.length];
-  }
+  for (let i = 0; i < len; i++) result += chars[bytes[i] % chars.length];
   return result;
 }
 
-// ===== HELPERS: ESCAPE HTML =====
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+function randomHex(len) {
+  const chars = '0123456789abcdef';
+  let result = '';
+  const bytes = crypto.randomBytes(len);
+  for (let i = 0; i < len; i++) result += chars[bytes[i] % chars.length];
+  return result;
 }
 
-// ===== OBFUSCATOR (RC4 + Hex + Tamper) =====
-function hardcoreObfuscate(htmlCode) {
-  // Step 1: Script Masking
-  let masked = maskScripts(htmlCode);
+function bytesToArr(data) {
+  return Array.from(data).join(',');
+}
 
-  // Step 2: URL-encode + Base64
-  const urlEncoded = encodeURIComponent(masked);
-  const b64Bytes = Buffer.from(urlEncoded, 'utf8').toString('base64');
-  const b64Buffer = Buffer.from(b64Bytes, 'utf8');
+function maskScripts(html) {
+  return html.replace(/(<script[^>]*>)([\s\S]*?)(<\/script>)/gi, (match, openTag, body, closeTag) => {
+    if (openTag.toLowerCase().includes('src=') || !body.trim()) return match;
+    try {
+      const b64 = Buffer.from(body, 'utf8').toString('base64');
+      return `${openTag}\ntry{eval(atob('${b64}'))}catch(e){}\n${closeTag}`;
+    } catch (e) { return match; }
+  });
+}
 
-  // Step 3: Random RC4 Key
-  const rc4Key = generateRandomKey(16);
+// ===== HARD OBFUSCATOR WITH TRAP =====
+function hardObfuscate(htmlCode) {
+  const htmlMasked = maskScripts(htmlCode);
+  const urlEncoded = encodeURIComponent(htmlMasked);
+  const step2 = Buffer.from(urlEncoded, 'utf8').toString('base64');
+  const step2Buf = Buffer.from(step2, 'utf8');
 
-  // Step 4: RC4 Encrypt
-  const rc4Cipher = rc4Crypt(b64Buffer, rc4Key);
-  const rc4Hex = rc4Cipher.toString('hex');
+  const rc4Key = randomString(32);
+  const step3 = rc4Crypt(step2Buf, Buffer.from(rc4Key, 'utf8'));
 
-  // Step 5: Hex to ASCII array
-  const arrStr = rc4Hex.split('').map(c => c.charCodeAt(0)).join(',');
+  const salt = randomHex(16);
+  const step4 = xorBytes(step3, Buffer.from(salt, 'utf8'));
 
-  // Step 6: Timestamp
-  const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  const derived = crypto.createHash('sha256').update(salt + rc4Key).digest('hex').substring(0, 32);
+  const step5 = rc4Crypt(step4, Buffer.from(derived, 'utf8'));
 
-  // Step 7: Comment block
-  const commentInner = `╔══════════════════════════════════════════════════════════╗
-║  🔒 PROTECTED HTML - DO NOT MODIFY 🔒                    ║
-║══════════════════════════════════════════════════════════║
-║  Timestamp: ${timestamp}                    ║
-║  Signature: DXF PROTECTOR [TOKEN: ${rc4Key}]             ║
-╚══════════════════════════════════════════════════════════╝`;
-
-  const headerComment = `<!--${commentInner}\n-->`;
-  const expectedStripped = commentInner.replace(/\s+/g, '');
-
-  // Step 8: Decoder JS
-  const decoderJs = `
-document.addEventListener('contextmenu', event => event.preventDefault());
-document.onkeydown = function(e) {
-  if (e.keyCode == 123) return false;
-  if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
-  if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
-  if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
-  if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-};
-setInterval(function() { debugger; }, 50);
-console.clear();
-var _safe = false; var _k = "";
-var _iter = document.createTreeWalker(document, 128, null, false);
-var _node; var _expected = ${JSON.stringify(expectedStripped)};
-while ((_node = _iter.nextNode())) {
-  var _val = _node.nodeValue;
-  if (_val.indexOf('PROTECTED HTML') !== -1) {
-    var _actual = _val.replace(/\\s+/g, '');
-    if (_actual === _expected) {
-      var _idx = _val.indexOf('[TOKEN: ');
-      if (_idx !== -1) { _k = _val.substring(_idx + 8, _idx + 24); _safe = true; break; }
-    }
+  const n = step5.length;
+  const q = Math.floor(n / 4);
+  const chunks = [
+    step5.slice(0, q),
+    step5.slice(q, 2 * q),
+    step5.slice(2 * q, 3 * q),
+    step5.slice(3 * q)
+  ];
+  const order = [0, 1, 2, 3];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
   }
+  const chunkJs = order.map(idx => bytesToArr(chunks[idx]));
+  const reassemble = Array.from({ length: 4 }, (_, i) => order.indexOf(i));
+
+  const decoderJs = `
+(function(){
+'use strict';
+
+function showTrap() {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;overflow:hidden"><img src="${TRAP_IMAGE}" style="width:100%;height:100vh;object-fit:contain;animation:zoomIn 0.3s ease;"></div>';
+    while(true) { debugger; }
 }
-if (!_safe || _k.length !== 16) {
-  document.write('<h1 style="color:red;text-align:center;">🚨 TAMPER DETECTED!</h1>');
-  while (true) { debugger; } return;
+
+(function(){
+  var t0 = performance.now();
+  var iterations = 0;
+  while (performance.now() - t0 < 1) iterations++;
+  if (iterations < 100) { showTrap(); throw new Error('sandbox'); }
+})();
+
+try {
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillStyle = '#f60';
+  ctx.fillText('fingerprint-check', 2, 2);
+  var fp = canvas.toDataURL();
+  if (!fp || fp.length < 100) throw new Error('canvas');
+} catch(e) { showTrap(); throw e; }
+
+setInterval(function(){
+  var w = window.outerWidth - window.innerWidth;
+  var h = window.outerHeight - window.innerHeight;
+  if (w > 160 || h > 160) { showTrap(); }
+}, 1000);
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.key === 'F12') { showTrap(); return e.preventDefault(); }
+  if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key)) { showTrap(); return e.preventDefault(); }
+  if (e.ctrlKey && e.key === 'U') { showTrap(); return e.preventDefault(); }
+  if (e.ctrlKey && e.key === 'S') { showTrap(); return e.preventDefault(); }
+});
+
+if (navigator.webdriver === true) { showTrap(); throw new Error('webdriver'); }
+
+function _xor(d, k) {
+  var o = new Uint8Array(d.length);
+  for (var i = 0; i < d.length; i++) o[i] = d[i] ^ k[i % k.length];
+  return o;
 }
-function _R(k, s) {
-  var _s = [], j = 0, x, res = '';
-  for (var i = 0; i < 256; i++) _s[i] = i;
-  for (i = 0; i < 256; i++) { j = (j + _s[i] + k.charCodeAt(i % k.length)) % 256; x = _s[i]; _s[i] = _s[j]; _s[j] = x; }
+function _rc4(key, data) {
+  var S = [], j = 0, x, res = [];
+  for (var i = 0; i < 256; i++) S[i] = i;
+  for (i = 0; i < 256; i++) {
+    j = (j + S[i] + key[i % key.length]) & 0xff;
+    x = S[i]; S[i] = S[j]; S[j] = x;
+  }
   i = 0; j = 0;
-  for (var y = 0; y < s.length; y++) { i = (i + 1) % 256; j = (j + _s[i]) % 256; x = _s[i]; _s[i] = _s[j]; _s[j] = x; res += String.fromCharCode(s.charCodeAt(y) ^ _s[(_s[i] + _s[j]) % 256]); }
+  for (var y = 0; y < data.length; y++) {
+    i = (i + 1) & 0xff; j = (j + S[i]) & 0xff;
+    x = S[i]; S[i] = S[j]; S[j] = x;
+    res.push(data[y] ^ S[(S[i] + S[j]) & 0xff]);
+  }
   return res;
 }
-var _A = [${arrStr}]; var _h = '';
-for (var i = 0; i < _A.length; i++) _h += String.fromCharCode(_A[i]);
-var _c = ''; for (var i = 0; i < _h.length; i += 2) _c += String.fromCharCode(parseInt(_h.substr(i, 2), 16));
-var _b = _R(_k, _c);
-try { var _final = decodeURIComponent(atob(_b)); document.open(); document.write(_final); document.close(); } catch (e) { document.write('<h1 style="color:red;">🚨 ERROR!</h1>'); }
+function _arr2str(a) {
+  var s = '';
+  for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]);
+  return s;
+}
+function _merge(a, b) {
+  var r = [];
+  for (var i = 0; i < a.length; i++) r.push(a[i]);
+  for (var i = 0; i < b.length; i++) r.push(b[i]);
+  return r;
+}
+
+var _chunks = [${chunkJs[0]}];
+var _chunkB = [${chunkJs[1]}];
+var _chunkC = [${chunkJs[2]}];
+var _chunkD = [${chunkJs[3]}];
+var _order  = [${reassemble.join(',')}];
+var _salt   = [${bytesToArr(Buffer.from(salt, 'utf8'))}];
+var _key    = [${bytesToArr(Buffer.from(rc4Key, 'utf8'))}];
+var _derive = [${bytesToArr(Buffer.from(derived, 'utf8'))}];
+
+var _all = [_chunks, _chunkB, _chunkC, _chunkD];
+var _step5 = [];
+for (var i = 0; i < 4; i++) { _step5 = _merge(_step5, _all[_order.indexOf(i)]); }
+
+var _step4 = _rc4(_derive, _step5);
+var _step3 = _xor(_step4, _salt);
+var _step2 = _rc4(_key, _step3);
+var _b64 = _arr2str(_step2);
+var _url = atob(_b64);
+var _html = decodeURIComponent(_url);
+
+try {
+  var _blob = new Blob([_html], {type: 'text/html'});
+  var _url2 = URL.createObjectURL(_blob);
+  var _frame = document.createElement('iframe');
+  _frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0';
+  _frame.sandbox = 'allow-scripts allow-forms allow-popups allow-modals allow-same-origin';
+  _frame.src = _url2;
+  document.body.innerHTML = '';
+  document.body.appendChild(_frame);
+} catch(err) { showTrap(); }
+
+})();
 `;
 
-  // Step 9: Encode decoder JS to Base64 (split into 2)
-  const encoded = Buffer.from(decoderJs, 'utf8').toString('base64');
-  const chunk = Math.floor(encoded.length / 2);
-  const p1 = encoded.substring(0, chunk);
-  const p2 = encoded.substring(chunk);
+  const enc = Buffer.from(decoderJs, 'utf8').toString('base64');
+  const third = Math.floor(enc.length / 3);
+  const a = enc.substring(0, third);
+  const b = enc.substring(third, 2 * third);
+  const c = enc.substring(2 * third);
 
-  // Step 10: Final HTML
-  return `${headerComment}
+  const parts = [a, b, c];
+  for (let i = parts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [parts[i], parts[j]] = [parts[j], parts[i]];
+  }
+  const idxA = parts.indexOf(a);
+  const idxB = parts.indexOf(b);
+  const idxC = parts.indexOf(c);
+
+  const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+  return `<!-- Protected | ${timestamp} -->
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body oncontextmenu="return false;">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>·</title>
+<style>@keyframes zoomIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}</style>
+</head>
+<body style="margin:0;overflow:hidden">
 <script>
 (function(){
-  var _p = decodeURIComponent(escape(atob('${p1}' + '${p2}')));
-  new Function(_p)();
+  var _p = ['${parts[0]}','${parts[1]}','${parts[2]}'];
+  var _src = _p[${idxA}] + _p[${idxB}] + _p[${idxC}];
+  var _js = decodeURIComponent(escape(atob(_src)));
+  try { new Function(_js)(); } catch(e) {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>';
+  }
 })();
 </script>
-<noscript>⚠️ Enable JavaScript.</noscript>
+<noscript>JavaScript required</noscript>
 </body></html>`;
 }
 
@@ -192,13 +284,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
 });
 
-// ===== FIREBASE MODE (/p/:slug) — RC4 Obfuscation, No iframe =====
+// ===== FIREBASE MODE (/p/:slug) =====
 app.get('/p/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
     if (!isBrowser) {
-      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
     }
 
     const Hosted = require('./models/Hosted');
@@ -222,18 +314,22 @@ app.get('/p/:slug', async (req, res) => {
       }
     }
 
+    // 🔥 Global Redirect
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
+    }
+
+    // 🔥 Specific Host Redirect
+    if (host.redirectUrl && host.redirectUrl.trim() !== '') {
+      return res.redirect(host.redirectUrl.trim());
     }
 
     host.views = (host.views || 0) + 1;
     host.lastActive = new Date();
     await host.save();
 
-    // RC4 Obfuscate
-    const obfuscated = hardcoreObfuscate(host.code);
-
+    const obfuscated = hardObfuscate(host.code);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -242,13 +338,13 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== PROTECTED MODE (/s/:slug) — iframe with RC4 in embed =====
+// ===== PROTECTED MODE (/s/:slug) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
     if (!isBrowser) {
-      return res.status(403).send('<h1>403 - Access Denied</h1><p>Bot access is not allowed.</p>');
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
     }
 
     const Hosted = require('./models/Hosted');
@@ -272,9 +368,15 @@ app.get('/s/:slug', async (req, res) => {
       }
     }
 
+    // 🔥 Global Redirect
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
+    }
+
+    // 🔥 Specific Host Redirect
+    if (host.redirectUrl && host.redirectUrl.trim() !== '') {
+      return res.redirect(host.redirectUrl.trim());
     }
 
     host.views = (host.views || 0) + 1;
@@ -306,7 +408,7 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE (RC4 Obfuscation) =====
+// ===== EMBED ROUTE (Multi-Layer Obfuscation) =====
 app.get('/embed/:slug', async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
@@ -324,8 +426,7 @@ app.get('/embed/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = hardcoreObfuscate(host.code);
-
+    const obfuscated = hardObfuscate(host.code);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -403,12 +504,13 @@ app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
 app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
     const Hosted = require('./models/Hosted');
-    const { code, title, slug, password } = req.body;
+    const { code, title, slug, password, redirectUrl } = req.body;
     const update = { updatedAt: Date.now() };
     if (code !== undefined) update.code = code;
     if (title) update.title = title;
     if (slug) update.slug = slug;
     if (password !== undefined) update.password = password || null;
+    if (redirectUrl !== undefined) update.redirectUrl = redirectUrl || null;
     const host = await Hosted.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
     res.json(host);
@@ -459,8 +561,10 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
-  console.log(`🔐 RC4 + Hex Obfuscation: Enabled`);
+  console.log(`🔐 Multi-Layer Obfuscation: Enabled`);
+  console.log(`🎯 Trap System: Enabled`);
+  console.log(`🔊 Sound: Removed`);
   console.log(`🤖 Anti-Bot: Enabled`);
-  console.log(`🔥 Firebase Mode: /p/:slug (Direct DOM, No iframe)`);
-  console.log(`🛡️ Protected Mode: /s/:slug (iframe + RC4)`);
+  console.log(`🔥 Firebase Mode: /p/:slug`);
+  console.log(`🛡️ Protected Mode: /s/:slug`);
 });
