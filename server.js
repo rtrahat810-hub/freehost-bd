@@ -19,8 +19,12 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ===== TRAP SETTINGS =====
-const TRAP_IMAGE = 'https://i.ibb.co/hJTyZ0Lk/fa1cafb74e87.png';
+// ===== TRAP IMAGE DEFAULT =====
+const DEFAULT_TRAP_IMAGE = 'https://i.ibb.co/hJTyZ0Lk/fa1cafb74e87.png';
+
+// ===== MODELS =====
+const Setting = require('./models/Setting');
+const Hosted = require('./models/Hosted');
 
 // ===== MULTER CONFIG =====
 const upload = multer({
@@ -42,6 +46,16 @@ const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function getTrapImage() {
+  try {
+    const setting = await Setting.findOne({ key: 'trap_image' });
+    if (setting && setting.value) return setting.value;
+    return DEFAULT_TRAP_IMAGE;
+  } catch (e) {
+    return DEFAULT_TRAP_IMAGE;
+  }
 }
 
 // ===== CRYPTO HELPERS =====
@@ -101,8 +115,8 @@ function maskScripts(html) {
   });
 }
 
-// ===== HARD OBFUSCATOR WITH TRAP =====
-function hardObfuscate(htmlCode) {
+// ===== HARD OBFUSCATOR WITH DYNAMIC TRAP =====
+function hardObfuscate(htmlCode, trapImage) {
   const htmlMasked = maskScripts(htmlCode);
   const urlEncoded = encodeURIComponent(htmlMasked);
   const step2 = Buffer.from(urlEncoded, 'utf8').toString('base64');
@@ -138,7 +152,7 @@ function hardObfuscate(htmlCode) {
 'use strict';
 
 function showTrap() {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;overflow:hidden"><img src="${TRAP_IMAGE}" style="width:100%;height:100vh;object-fit:contain;animation:zoomIn 0.3s ease;"></div>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;overflow:hidden"><img src="${trapImage}" style="width:100%;height:100vh;object-fit:contain;animation:zoomIn 0.3s ease;"></div>';
     while(true) { debugger; }
 }
 
@@ -271,7 +285,7 @@ try {
   var _src = _p[${idxA}] + _p[${idxB}] + _p[${idxC}];
   var _js = decodeURIComponent(escape(atob(_src)));
   try { new Function(_js)(); } catch(e) {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${trapImage}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>';
   }
 })();
 </script>
@@ -290,10 +304,10 @@ app.get('/p/:slug', async (req, res) => {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
     if (!isBrowser) {
-      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
+      const trap = await getTrapImage();
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${trap}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
     }
 
-    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
@@ -314,13 +328,11 @@ app.get('/p/:slug', async (req, res) => {
       }
     }
 
-    // 🔥 Global Redirect
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
 
-    // 🔥 Specific Host Redirect
     if (host.redirectUrl && host.redirectUrl.trim() !== '') {
       return res.redirect(host.redirectUrl.trim());
     }
@@ -329,7 +341,8 @@ app.get('/p/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = hardObfuscate(host.code);
+    const trap = await getTrapImage();
+    const obfuscated = hardObfuscate(host.code, trap);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -344,10 +357,10 @@ app.get('/s/:slug', async (req, res) => {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
     if (!isBrowser) {
-      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${TRAP_IMAGE}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
+      const trap = await getTrapImage();
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${trap}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>`);
     }
 
-    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
@@ -368,13 +381,11 @@ app.get('/s/:slug', async (req, res) => {
       }
     }
 
-    // 🔥 Global Redirect
     const redirectSetting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
 
-    // 🔥 Specific Host Redirect
     if (host.redirectUrl && host.redirectUrl.trim() !== '') {
       return res.redirect(host.redirectUrl.trim());
     }
@@ -408,10 +419,9 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE (Multi-Layer Obfuscation) =====
+// ===== EMBED ROUTE =====
 app.get('/embed/:slug', async (req, res) => {
   try {
-    const Hosted = require('./models/Hosted');
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) return res.status(404).send('<h1>404 - Site Not Found</h1>');
 
@@ -426,7 +436,8 @@ app.get('/embed/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = hardObfuscate(host.code);
+    const trap = await getTrapImage();
+    const obfuscated = hardObfuscate(host.code, trap);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -443,7 +454,6 @@ app.post('/api/host', async (req, res) => {
     let finalSlug = (slug || '').trim().toLowerCase();
     if (!finalSlug) finalSlug = 'site-' + Math.random().toString(36).substring(2, 10);
     if (!/^[a-z0-9-]+$/.test(finalSlug)) return res.status(400).json({ error: 'Slug-এ শুধু lowercase, সংখ্যা, হাইফেন' });
-    const Hosted = require('./models/Hosted');
     const existing = await Hosted.findOne({ slug: finalSlug });
     if (existing) return res.status(400).json({ error: 'এই slug আগেই ব্যবহার হয়েছে' });
     const finalTitle = (title || '').trim() || ('Untitled ' + finalSlug.substring(0, 6));
@@ -455,7 +465,7 @@ app.post('/api/host', async (req, res) => {
   }
 });
 
-// ===== PHOTO API (ImgBB) =====
+// ===== PHOTO API =====
 app.post('/api/photo', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'ছবি দিন' });
@@ -467,11 +477,10 @@ app.post('/api/photo', upload.single('photo'), async (req, res) => {
     formData.append('image', base64Image);
     const imgbbRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
     const imgbbData = await imgbbRes.json();
-    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ: ' + (imgbbData.error?.message || 'Unknown') });
+    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ' });
     res.json({ photo: { url: imgbbData.data.url, filename: req.file.originalname || 'image_' + Date.now() } });
   } catch (err) {
-    console.error('Photo error:', err);
-    res.status(500).json({ error: err.message || 'সার্ভার সমস্যা' });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -485,7 +494,6 @@ function authAdmin(req, res, next) {
 
 app.get('/api/admin/hosts', authAdmin, async (req, res) => {
   try {
-    const Hosted = require('./models/Hosted');
     const hosts = await Hosted.find().sort({ createdAt: -1 });
     res.json(hosts);
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
@@ -493,7 +501,6 @@ app.get('/api/admin/hosts', authAdmin, async (req, res) => {
 
 app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
   try {
-    const Hosted = require('./models/Hosted');
     const { banned } = req.body;
     const host = await Hosted.findByIdAndUpdate(req.params.id, { banned: !!banned }, { new: true });
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
@@ -503,7 +510,6 @@ app.put('/api/admin/hosts/:id/ban', authAdmin, async (req, res) => {
 
 app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
-    const Hosted = require('./models/Hosted');
     const { code, title, slug, password, redirectUrl } = req.body;
     const update = { updatedAt: Date.now() };
     if (code !== undefined) update.code = code;
@@ -519,13 +525,29 @@ app.put('/api/admin/hosts/:id', authAdmin, async (req, res) => {
 
 app.delete('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   try {
-    const Hosted = require('./models/Hosted');
     const host = await Hosted.findByIdAndDelete(req.params.id);
     if (!host) return res.status(404).json({ error: 'হোস্ট নেই' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
+// ===== TRAP IMAGE API =====
+app.get('/api/admin/trap-image', authAdmin, async (req, res) => {
+  try {
+    const setting = await Setting.findOne({ key: 'trap_image' });
+    res.json({ url: setting ? setting.value : DEFAULT_TRAP_IMAGE });
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
+app.post('/api/admin/trap-image', authAdmin, async (req, res) => {
+  try {
+    const { url } = req.body;
+    await Setting.findOneAndUpdate({ key: 'trap_image' }, { value: url || DEFAULT_TRAP_IMAGE }, { upsert: true });
+    res.json({ success: true, url: url || DEFAULT_TRAP_IMAGE });
+  } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
+});
+
+// ===== GLOBAL REDIRECT API =====
 app.get('/api/admin/redirect', authAdmin, async (req, res) => {
   try {
     const setting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
@@ -543,7 +565,6 @@ app.post('/api/admin/redirect', authAdmin, async (req, res) => {
 
 app.get('/api/admin/stats', authAdmin, async (req, res) => {
   try {
-    const Hosted = require('./models/Hosted');
     const totalHosts = await Hosted.countDocuments();
     const bannedHosts = await Hosted.countDocuments({ banned: true });
     const totalViews = await Hosted.aggregate([{ $group: { _id: null, total: { $sum: '$views' } } }]);
@@ -562,8 +583,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 Multi-Layer Obfuscation: Enabled`);
-  console.log(`🎯 Trap System: Enabled`);
-  console.log(`🔊 Sound: Removed`);
+  console.log(`🎯 Trap System: Dynamic (Admin Panel)`);
   console.log(`🤖 Anti-Bot: Enabled`);
   console.log(`🔥 Firebase Mode: /p/:slug`);
   console.log(`🛡️ Protected Mode: /s/:slug`);
