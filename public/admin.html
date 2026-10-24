@@ -198,7 +198,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Password Section -->
                                         <div x-show="h.password" class="mt-2 flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
                                             <i class="fa-solid fa-lock text-amber-400 text-xs"></i>
                                             <span class="text-[10px] text-amber-300 font-bold">পাসওয়ার্ড:</span>
@@ -213,10 +212,10 @@
                                             <template x-if="editingPasswordId === h._id">
                                                 <div class="flex items-center gap-2 flex-1">
                                                     <input type="text" x-model="newPasswordValue" class="flex-1 bg-black/40 border border-white/20 rounded px-2 py-1 text-[11px] mono text-white">
-                                                    <button @click="savePassword(h._id)" class="text-[9px] font-black text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
+                                                    <button @click="savePassword(h._id)" class="text-[9px] font-black text-emerald-400 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
                                                         <i class="fa-solid fa-check"></i> সেভ
                                                     </button>
-                                                    <button @click="cancelEditPassword()" class="text-[9px] font-black text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
+                                                    <button @click="cancelEditPassword()" class="text-[9px] font-black text-red-400 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
                                                         <i class="fa-solid fa-xmark"></i>
                                                     </button>
                                                 </div>
@@ -301,22 +300,63 @@
                         </div>
                     </template>
 
-                    <!-- TRAP IMAGE -->
-                    <template x-if="section === 'trap-image'">
-                        <div class="fade-in max-w-2xl">
+                    <!-- SITE SETTINGS (CMS) -->
+                    <template x-if="section === 'site-settings'">
+                        <div class="fade-in max-w-2xl space-y-4">
                             <div class="glass rounded-2xl p-6">
-                                <h3 class="font-black text-lg mb-4">🎯 Trap Image</h3>
-                                <p class="text-xs text-gray-400 mb-4">কেউ ডিকোড করার চেষ্টা করলে এই ছবিটি দেখবে।</p>
+                                <h3 class="font-black text-lg mb-4">📝 সাইট সেটিংস</h3>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="trapImageUrl" placeholder="https://example.com/trap.jpg" class="premium-input w-full px-4 py-3 text-sm">
-                                    <button @click="saveTrapImage()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
-                                        <i class="fa-solid fa-save mr-2"></i> সেভ করুন
-                                    </button>
-                                    <template x-if="trapImageUrl">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">সাইটের নাম</label><input type="text" x-model="siteSettings.siteTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">ট্যাগলাইন</label><input type="text" x-model="siteSettings.siteTagline" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">হিরো টাইটেল</label><input type="text" x-model="siteSettings.heroTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">হিরো সাবটাইটেল</label><textarea x-model="siteSettings.heroSubtitle" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">ফুটার টেক্সট</label><input type="text" x-model="siteSettings.footerText" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- TRAP IMAGE & MESSAGE -->
+                    <template x-if="section === 'trap-image'">
+                        <div class="fade-in max-w-2xl space-y-4">
+                            <div class="glass rounded-2xl p-6">
+                                <h3 class="font-black text-lg mb-4">🎯 Trap Image & Message</h3>
+                                <p class="text-xs text-gray-400 mb-4">কেউ ডিকোড করার চেষ্টা করলে এই ছবি ও লেখা দেখাবে।</p>
+                                <div class="space-y-3">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">ছবির URL</label><input type="text" x-model="siteSettings.trapImage" placeholder="https://example.com/trap.jpg" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">ভয়ংকর মেসেজ (ছবির নিচে)</label><textarea x-model="siteSettings.trapMessage" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none" placeholder="YOUR DEVICE HAS BEEN COMPROMISED!"></textarea></div>
+                                    <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
+                                    <template x-if="siteSettings.trapImage">
                                         <div class="mt-4 rounded-xl overflow-hidden border border-white/10">
-                                            <img :src="trapImageUrl" class="w-full max-h-64 object-contain bg-black">
+                                            <img :src="siteSettings.trapImage" class="w-full max-h-64 object-contain bg-black">
                                         </div>
                                     </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- MAINTENANCE MODE -->
+                    <template x-if="section === 'maintenance'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <h3 class="font-black text-lg mb-4">🔧 Maintenance Mode</h3>
+                                <p class="text-xs text-gray-400 mb-4">চালু করলে পুরো সাইট "Under Maintenance" দেখাবে। অ্যাডমিন প্যানেল কাজ করবে।</p>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between bg-black/30 rounded-xl p-4">
+                                        <div>
+                                            <p class="text-sm font-bold text-white">Maintenance Mode</p>
+                                            <p class="text-[10px] text-gray-400" x-text="(siteSettings.maintenanceMode === true || siteSettings.maintenanceMode === 'true') ? '✅ চালু আছে' : '❌ বন্ধ আছে'"></p>
+                                        </div>
+                                        <button @click="toggleMaintenance()" 
+                                                :class="(siteSettings.maintenanceMode === true || siteSettings.maintenanceMode === 'true') ? 'btn-danger' : 'btn-success'"
+                                                class="px-5 py-3 rounded-xl text-xs font-black text-white">
+                                            <span x-text="(siteSettings.maintenanceMode === true || siteSettings.maintenanceMode === 'true') ? 'বন্ধ করুন' : 'চালু করুন'"></span>
+                                        </button>
+                                    </div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">Maintenance মেসেজ</label><textarea x-model="siteSettings.maintenanceMessage" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea></div>
+                                    <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
                                 </div>
                             </div>
                         </div>
@@ -402,7 +442,7 @@
             <template x-if="redirectHost">
                 <div>
                     <p class="text-[10px] mono text-indigo-300 mb-2" x-text="'/s/' + redirectHost.slug"></p>
-                    <p class="text-xs text-gray-400 mb-4">এই লিংকে কেউ ঢুকলে নিচের URL-এ রিডাইরেক্ট হবে। খালি রাখলে রিডাইরেক্ট বন্ধ হবে।</p>
+                    <p class="text-xs text-gray-400 mb-4">এই লিংকে কেউ ঢুকলে নিচের URL-এ রিডাইরেক্ট হবে।</p>
                     <input type="text" x-model="redirectForm.url" placeholder="https://example.com" class="premium-input w-full px-4 py-3 text-sm mb-3">
                     <div class="flex gap-2">
                         <button @click="saveHostRedirect()" class="btn-primary flex-1 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-save mr-1"></i> সেভ</button>
@@ -432,17 +472,24 @@
                 activityLogs: [],
                 showToast: false, toastMessage: '', toastSubtext: '', toastType: 'success',
                 
-                // Password editing
                 editingPasswordId: null,
                 newPasswordValue: '',
                 
-                // Trap Image
-                trapImageUrl: '',
-                
-                // Redirect modal
                 showRedirectModal: false,
                 redirectHost: null,
                 redirectForm: { url: '' },
+                
+                siteSettings: {
+                    siteTitle: 'FreeHost BD',
+                    siteTagline: 'Premium HTML Deployment',
+                    heroTitle: 'Deploy HTML in Seconds',
+                    heroSubtitle: 'Paste your HTML code and get a live link instantly. No login required.',
+                    footerText: 'FreeHost BD',
+                    trapImage: '',
+                    trapMessage: 'YOUR DEVICE HAS BEEN COMPROMISED!',
+                    maintenanceMode: false,
+                    maintenanceMessage: 'We are currently under maintenance. Please check back soon.'
+                },
 
                 menuGroups: [
                     { label: '📊 Main', items: [{ id: 'dashboard', label: 'ড্যাশবোর্ড', icon: 'fa-chart-line' }] },
@@ -453,7 +500,9 @@
                         { id: 'analytics', label: 'Analytics', icon: 'fa-chart-simple' }
                     ]},
                     { label: '⚙️ Settings', items: [
-                        { id: 'trap-image', label: 'Trap Image', icon: 'fa-image' }
+                        { id: 'site-settings', label: 'Site Settings', icon: 'fa-pen-to-square' },
+                        { id: 'trap-image', label: 'Trap Image', icon: 'fa-image' },
+                        { id: 'maintenance', label: 'Maintenance', icon: 'fa-wrench' }
                     ]},
                     { label: '🔐 Admin', items: [
                         { id: 'change-password', label: 'Change Password', icon: 'fa-key' },
@@ -489,10 +538,17 @@
                         this.loggedIn = true; 
                         this.loadHosts(); 
                         this.loadRedirect(); 
-                        this.loadTrapImage();
+                        this.loadSettings();
                     }
                 },
 
+                async loadSettings() {
+                    try {
+                        const res = await fetch('/api/admin/settings', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        const data = await res.json();
+                        Object.assign(this.siteSettings, data);
+                    } catch(e) {}
+                },
                 async loadRedirect() {
                     try {
                         const res = await fetch('/api/admin/redirect', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
@@ -501,28 +557,6 @@
                         this.redirectActive = data.url || '';
                     } catch(e) {}
                 },
-                
-                async loadTrapImage() {
-                    try {
-                        const res = await fetch('/api/admin/trap-image', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
-                        const data = await res.json();
-                        this.trapImageUrl = data.url || '';
-                    } catch(e) {}
-                },
-
-                login() {
-                    this.loginError = '';
-                    if (this.password === 'NOBITA_VIP') {
-                        this.loggedIn = true;
-                        localStorage.setItem('admin_logged_in', 'true');
-                        this.addLog('Admin logged in');
-                        this.loadHosts();
-                        this.loadRedirect();
-                        this.loadTrapImage();
-                    } else { this.loginError = 'ভুল পাসওয়ার্ড'; }
-                },
-                logout() { this.loggedIn = false; localStorage.removeItem('admin_logged_in'); this.password = ''; },
-
                 async loadHosts() {
                     this.loading = true;
                     try {
@@ -532,7 +566,18 @@
                     } catch(e) {}
                     this.loading = false;
                 },
-                refreshData() { this.loadHosts(); this.loadRedirect(); this.loadTrapImage(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
+                refreshData() { this.loadHosts(); this.loadRedirect(); this.loadSettings(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
+
+                login() {
+                    this.loginError = '';
+                    if (this.password === 'NOBITA_VIP') {
+                        this.loggedIn = true;
+                        localStorage.setItem('admin_logged_in', 'true');
+                        this.addLog('Admin logged in');
+                        this.loadHosts(); this.loadRedirect(); this.loadSettings();
+                    } else { this.loginError = 'ভুল পাসওয়ার্ড'; }
+                },
+                logout() { this.loggedIn = false; localStorage.removeItem('admin_logged_in'); this.password = ''; },
 
                 addLog(action) {
                     this.activityLogs.unshift({ action, time: new Date().toLocaleString('en-GB') });
@@ -556,7 +601,7 @@
                         const idx = this.hosts.findIndex(h => h._id === this.editingHost._id);
                         if (idx > -1) this.hosts[idx].code = this.editingHost.code;
                         this.showCodeModal = false;
-                        this.showToastMsg('সেভ', 'আপডেট');
+                        this.showToastMsg('সেভ', '');
                     }
                 },
                 downloadCode(h) {
@@ -564,23 +609,17 @@
                     const blob = new Blob([h.code], { type: 'text/html;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url;
-                    a.download = h.slug + '.html';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+                    a.href = url; a.download = h.slug + '.html';
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
                     URL.revokeObjectURL(url);
-                    this.showToastMsg('ডাউনলোড হচ্ছে', h.slug + '.html');
+                    this.showToastMsg('ডাউনলোড', h.slug + '.html');
                 },
 
                 startEditPassword(id, currentPassword) {
                     this.editingPasswordId = id;
                     this.newPasswordValue = currentPassword;
                 },
-                cancelEditPassword() {
-                    this.editingPasswordId = null;
-                    this.newPasswordValue = '';
-                },
+                cancelEditPassword() { this.editingPasswordId = null; this.newPasswordValue = ''; },
                 async savePassword(id) {
                     try {
                         const res = await fetch('/api/admin/hosts/' + id, {
@@ -593,12 +632,8 @@
                             if (idx > -1) this.hosts[idx].password = this.newPasswordValue || null;
                             this.showToastMsg('পাসওয়ার্ড আপডেট ✓', '');
                             this.cancelEditPassword();
-                        } else {
-                            throw new Error('Update failed');
                         }
-                    } catch (e) {
-                        this.showToastMsg('ব্যর্থ', e.message, 'error');
-                    }
+                    } catch (e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
                 openRedirectModal(h) {
@@ -617,9 +652,7 @@
                             const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id);
                             if (idx > -1) this.hosts[idx].redirectUrl = this.redirectForm.url || null;
                             this.showRedirectModal = false;
-                            this.showToastMsg('রিডাইরেক্ট সেভ ✓', this.redirectForm.url || 'বন্ধ');
-                        } else {
-                            throw new Error('Server error');
+                            this.showToastMsg('সেভ ✓', this.redirectForm.url || 'বন্ধ');
                         }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
@@ -634,51 +667,48 @@
                             const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id);
                             if (idx > -1) this.hosts[idx].redirectUrl = null;
                             this.showRedirectModal = false;
-                            this.showToastMsg('রিডাইরেক্ট বন্ধ', '');
+                            this.showToastMsg('বন্ধ', '');
                         }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
                 async applyRedirect() {
                     if (!this.redirectUrl) return this.showToastMsg('লিংক দিন', '', 'error');
-                    try {
-                        const res = await fetch('/api/admin/redirect', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify({ url: this.redirectUrl })
-                        });
-                        if (res.ok) {
-                            this.redirectActive = this.redirectUrl;
-                            this.showToastMsg('চালু ✓', 'সব লিংক রিডাইরেক্ট');
-                        }
-                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                    const res = await fetch('/api/admin/redirect', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                        body: JSON.stringify({ url: this.redirectUrl })
+                    });
+                    if (res.ok) { this.redirectActive = this.redirectUrl; this.showToastMsg('চালু ✓', ''); }
                 },
                 async clearRedirect() {
+                    const res = await fetch('/api/admin/redirect', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                        body: JSON.stringify({ url: '' })
+                    });
+                    if (res.ok) { this.redirectActive = ''; this.redirectUrl = ''; this.showToastMsg('বন্ধ', ''); }
+                },
+
+                async saveSiteSettings() {
                     try {
-                        const res = await fetch('/api/admin/redirect', {
+                        const res = await fetch('/api/admin/settings', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify({ url: '' })
+                            body: JSON.stringify(this.siteSettings)
                         });
                         if (res.ok) {
-                            this.redirectActive = '';
-                            this.redirectUrl = '';
-                            this.showToastMsg('বন্ধ', '');
+                            this.addLog('Site settings saved');
+                            this.showToastMsg('সেভ ✓', 'সব পেজে আপডেট হবে');
                         }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
-                async saveTrapImage() {
-                    try {
-                        const res = await fetch('/api/admin/trap-image', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify({ url: this.trapImageUrl })
-                        });
-                        if (res.ok) {
-                            this.showToastMsg('Trap Image সেভ ✓', '');
-                        }
-                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                async toggleMaintenance() {
+                    const current = this.siteSettings.maintenanceMode === true || this.siteSettings.maintenanceMode === 'true';
+                    this.siteSettings.maintenanceMode = !current;
+                    await this.saveSiteSettings();
+                    this.showToastMsg(current ? 'Maintenance বন্ধ' : 'Maintenance চালু', '');
                 },
 
                 changePassword() {
@@ -691,11 +721,10 @@
                 },
 
                 downloadBackup() {
-                    const data = { hosts: this.hosts.map(h => ({ ...h, code: h.code ? '[TRUNCATED]' : '' })), exportedAt: new Date().toISOString() };
+                    const data = { hosts: this.hosts.map(h => ({ ...h, code: h.code ? '[TRUNCATED]' : '' })), settings: this.siteSettings, exportedAt: new Date().toISOString() };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'hosts-backup-' + Date.now() + '.json'; a.click();
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup-' + Date.now() + '.json'; a.click();
                 },
-
                 exportAllCodes() {
                     this.hosts.forEach(h => { const blob = new Blob([h.code], { type: 'text/html' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = h.slug + '.html'; a.click(); });
                     this.showToastMsg('ডাউনলোড', this.hosts.length + ' ফাইল');
