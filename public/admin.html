@@ -27,18 +27,11 @@
         .premium-input::placeholder { color: rgba(148, 163, 184, 0.5); }
         .stat-card { transition: all 0.35s ease; position: relative; overflow: hidden; }
         .stat-card:hover { transform: translateY(-4px); border-color: rgba(139, 92, 246, 0.3); }
-        .table-row { transition: all 0.2s ease; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
-        .table-row:hover { background: rgba(99, 102, 241, 0.06); }
         .badge { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
-        .pulse-dot { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.35s ease; }
         .empty-state { padding: 60px 20px; text-align: center; }
         .empty-state i { font-size: 48px; color: rgba(148, 163, 184, 0.2); margin-bottom: 16px; }
-        .tab-btn { padding: 8px 16px; border-radius: 10px; font-size: 11px; font-weight: 800; transition: all 0.25s; border: 1px solid transparent; }
-        .tab-btn.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
-        .tab-btn:not(.active) { background: rgba(255,255,255,0.03); color: rgba(148, 163, 184, 0.8); border-color: rgba(255,255,255,0.06); }
         .sidebar-bg { background: linear-gradient(180deg, #0a0e1a 0%, #050811 100%); border-right: 1px solid rgba(255, 255, 255, 0.06); }
         .menu-item { transition: all 0.25s ease; border-radius: 10px; position: relative; overflow: hidden; }
         .menu-item:hover { background: rgba(99, 102, 241, 0.08); color: #fff; }
@@ -87,7 +80,6 @@
         <div class="flex min-h-screen relative">
             <div x-show="mobileMenu" x-cloak @click="mobileMenu = false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"></div>
 
-            <!-- SIDEBAR -->
             <aside :class="mobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" class="fixed lg:sticky top-0 left-0 w-64 h-screen sidebar-bg z-50 lg:z-10 flex flex-col transition-transform duration-300 overflow-hidden">
                 <div class="flex items-center gap-3 px-4 py-4 border-b border-white/5 flex-shrink-0">
                     <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 flex items-center justify-center shadow-lg">
@@ -123,7 +115,6 @@
                 </div>
             </aside>
 
-            <!-- MAIN AREA -->
             <main class="flex-1 min-w-0 flex flex-col">
                 <header class="sticky top-0 z-30 glass border-b border-white/5 px-4 lg:px-6 py-3 flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
@@ -193,7 +184,7 @@
                                                     <span x-show="h.banned" class="badge bg-red-500/20 text-red-300">BANNED</span>
                                                     <span x-show="isOnline(h)" class="badge bg-emerald-500/20 text-emerald-300">● ONLINE</span>
                                                 </div>
-                                                <p class="text-[10px] mono text-indigo-300 truncate mt-0.5" x-text="'/s/' + h.slug"></p>
+                                                <p class="text-[10px] mono text-indigo-300 truncate mt-0.5" x-text="'/p/' + h.slug"></p>
                                                 <p class="text-[10px] text-gray-500 mono mt-1">👁 <span x-text="h.views || 0"></span> views</p>
                                             </div>
                                         </div>
@@ -224,7 +215,7 @@
 
                                         <div class="flex gap-1.5 mt-3 flex-wrap">
                                             <button @click="viewCode(h)" class="btn-primary px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-code"></i> কোড</button>
-                                            <a :href="'/s/' + h.slug" target="_blank" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-external-link"></i> ওপেন</a>
+                                            <a :href="'/p/' + h.slug" target="_blank" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-external-link"></i> ওপেন</a>
                                             <button @click="downloadCode(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-download"></i> ডাউনলোড</button>
                                             <button @click="openRedirectModal(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white" title="Redirect"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400"></i> রিডাইরেক্ট</button>
                                             <button @click="toggleHostBan(h)" :class="h.banned ? 'btn-success' : 'btn-warning'" class="px-3 py-2 rounded-lg text-[10px] font-black text-white"><span x-text="h.banned ? 'UNBAN' : 'BAN'"></span></button>
@@ -247,7 +238,7 @@
                                     <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-ban text-red-400"></i></div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-bold text-white truncate" x-text="h.title"></p>
-                                        <p class="text-[10px] mono text-red-300 truncate" x-text="'/s/' + h.slug"></p>
+                                        <p class="text-[10px] mono text-red-300 truncate" x-text="'/p/' + h.slug"></p>
                                     </div>
                                     <button @click="toggleHostBan(h)" class="btn-success px-3 py-2 rounded-lg text-[10px] font-black text-white">UNBAN</button>
                                     <button @click="deleteHost(h._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-trash"></i></button>
@@ -291,7 +282,7 @@
                                     <template x-for="(h, idx) in topSites" :key="h._id">
                                         <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
                                             <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-300" x-text="idx + 1"></div>
-                                            <div class="flex-1 min-w-0"><p class="text-xs font-bold text-white truncate" x-text="h.title"></p><p class="text-[10px] mono text-gray-500 truncate" x-text="'/s/' + h.slug"></p></div>
+                                            <div class="flex-1 min-w-0"><p class="text-xs font-bold text-white truncate" x-text="h.title"></p><p class="text-[10px] mono text-gray-500 truncate" x-text="'/p/' + h.slug"></p></div>
                                             <span class="text-xs font-black text-cyan-300 mono" x-text="h.views || 0"></span>
                                         </div>
                                     </template>
@@ -312,26 +303,6 @@
                                     <div><label class="text-xs text-gray-400 mb-1 block">হিরো সাবটাইটেল</label><textarea x-model="siteSettings.heroSubtitle" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea></div>
                                     <div><label class="text-xs text-gray-400 mb-1 block">ফুটার টেক্সট</label><input type="text" x-model="siteSettings.footerText" class="premium-input w-full px-4 py-3 text-sm"></div>
                                     <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- TRAP IMAGE & MESSAGE -->
-                    <template x-if="section === 'trap-image'">
-                        <div class="fade-in max-w-2xl space-y-4">
-                            <div class="glass rounded-2xl p-6">
-                                <h3 class="font-black text-lg mb-4">🎯 Trap Image & Message</h3>
-                                <p class="text-xs text-gray-400 mb-4">কেউ ডিকোড করার চেষ্টা করলে এই ছবি ও লেখা দেখাবে।</p>
-                                <div class="space-y-3">
-                                    <div><label class="text-xs text-gray-400 mb-1 block">ছবির URL</label><input type="text" x-model="siteSettings.trapImage" placeholder="https://example.com/trap.jpg" class="premium-input w-full px-4 py-3 text-sm"></div>
-                                    <div><label class="text-xs text-gray-400 mb-1 block">ভয়ংকর মেসেজ (ছবির নিচে)</label><textarea x-model="siteSettings.trapMessage" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none" placeholder="YOUR DEVICE HAS BEEN COMPROMISED!"></textarea></div>
-                                    <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
-                                    <template x-if="siteSettings.trapImage">
-                                        <div class="mt-4 rounded-xl overflow-hidden border border-white/10">
-                                            <img :src="siteSettings.trapImage" class="w-full max-h-64 object-contain bg-black">
-                                        </div>
-                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -441,7 +412,7 @@
             </div>
             <template x-if="redirectHost">
                 <div>
-                    <p class="text-[10px] mono text-indigo-300 mb-2" x-text="'/s/' + redirectHost.slug"></p>
+                    <p class="text-[10px] mono text-indigo-300 mb-2" x-text="'/p/' + redirectHost.slug"></p>
                     <p class="text-xs text-gray-400 mb-4">এই লিংকে কেউ ঢুকলে নিচের URL-এ রিডাইরেক্ট হবে।</p>
                     <input type="text" x-model="redirectForm.url" placeholder="https://example.com" class="premium-input w-full px-4 py-3 text-sm mb-3">
                     <div class="flex gap-2">
@@ -485,8 +456,6 @@
                     heroTitle: 'Deploy HTML in Seconds',
                     heroSubtitle: 'Paste your HTML code and get a live link instantly. No login required.',
                     footerText: 'FreeHost BD',
-                    trapImage: '',
-                    trapMessage: 'YOUR DEVICE HAS BEEN COMPROMISED!',
                     maintenanceMode: false,
                     maintenanceMessage: 'We are currently under maintenance. Please check back soon.'
                 },
@@ -501,7 +470,6 @@
                     ]},
                     { label: '⚙️ Settings', items: [
                         { id: 'site-settings', label: 'Site Settings', icon: 'fa-pen-to-square' },
-                        { id: 'trap-image', label: 'Trap Image', icon: 'fa-image' },
                         { id: 'maintenance', label: 'Maintenance', icon: 'fa-wrench' }
                     ]},
                     { label: '🔐 Admin', items: [
