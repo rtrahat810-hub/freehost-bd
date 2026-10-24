@@ -197,10 +197,37 @@
                                                 <p class="text-[10px] text-gray-500 mono mt-1">👁 <span x-text="h.views || 0"></span> views</p>
                                             </div>
                                         </div>
+
+                                        <!-- Password Section -->
+                                        <div x-show="h.password" class="mt-2 flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
+                                            <i class="fa-solid fa-lock text-amber-400 text-xs"></i>
+                                            <span class="text-[10px] text-amber-300 font-bold">পাসওয়ার্ড:</span>
+                                            <template x-if="editingPasswordId !== h._id">
+                                                <div class="flex items-center gap-2 flex-1">
+                                                    <span class="text-[11px] mono text-amber-200 flex-1" x-text="h.password"></span>
+                                                    <button @click="startEditPassword(h._id, h.password)" class="text-[9px] font-black text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20">
+                                                        <i class="fa-solid fa-pen"></i> এডিট
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <template x-if="editingPasswordId === h._id">
+                                                <div class="flex items-center gap-2 flex-1">
+                                                    <input type="text" x-model="newPasswordValue" class="flex-1 bg-black/40 border border-white/20 rounded px-2 py-1 text-[11px] mono text-white">
+                                                    <button @click="savePassword(h._id)" class="text-[9px] font-black text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
+                                                        <i class="fa-solid fa-check"></i> সেভ
+                                                    </button>
+                                                    <button @click="cancelEditPassword()" class="text-[9px] font-black text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+
                                         <div class="flex gap-1.5 mt-3 flex-wrap">
                                             <button @click="viewCode(h)" class="btn-primary px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-code"></i> কোড</button>
                                             <a :href="'/s/' + h.slug" target="_blank" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-external-link"></i> ওপেন</a>
                                             <button @click="downloadCode(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-download"></i> ডাউনলোড</button>
+                                            <button @click="openRedirectModal(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white" title="Redirect"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400"></i> রিডাইরেক্ট</button>
                                             <button @click="toggleHostBan(h)" :class="h.banned ? 'btn-success' : 'btn-warning'" class="px-3 py-2 rounded-lg text-[10px] font-black text-white"><span x-text="h.banned ? 'UNBAN' : 'BAN'"></span></button>
                                             <button @click="deleteHost(h._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-trash"></i></button>
                                         </div>
@@ -267,6 +294,27 @@
                                             <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-300" x-text="idx + 1"></div>
                                             <div class="flex-1 min-w-0"><p class="text-xs font-bold text-white truncate" x-text="h.title"></p><p class="text-[10px] mono text-gray-500 truncate" x-text="'/s/' + h.slug"></p></div>
                                             <span class="text-xs font-black text-cyan-300 mono" x-text="h.views || 0"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- TRAP IMAGE -->
+                    <template x-if="section === 'trap-image'">
+                        <div class="fade-in max-w-2xl">
+                            <div class="glass rounded-2xl p-6">
+                                <h3 class="font-black text-lg mb-4">🎯 Trap Image</h3>
+                                <p class="text-xs text-gray-400 mb-4">কেউ ডিকোড করার চেষ্টা করলে এই ছবিটি দেখবে।</p>
+                                <div class="space-y-3">
+                                    <input type="text" x-model="trapImageUrl" placeholder="https://example.com/trap.jpg" class="premium-input w-full px-4 py-3 text-sm">
+                                    <button @click="saveTrapImage()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-save mr-2"></i> সেভ করুন
+                                    </button>
+                                    <template x-if="trapImageUrl">
+                                        <div class="mt-4 rounded-xl overflow-hidden border border-white/10">
+                                            <img :src="trapImageUrl" class="w-full max-h-64 object-contain bg-black">
                                         </div>
                                     </template>
                                 </div>
@@ -344,6 +392,27 @@
         </div>
     </div>
 
+    <!-- REDIRECT MODAL -->
+    <div x-show="showRedirectModal" x-cloak @click.self="showRedirectModal = false" class="fixed inset-0 z-[60] flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9);">
+        <div class="glass rounded-3xl max-w-md w-full p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-sm text-white"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400 mr-2"></i>রিডাইরেক্ট সেট করুন</h3>
+                <button @click="showRedirectModal = false" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center"><i class="fa-solid fa-xmark text-xs"></i></button>
+            </div>
+            <template x-if="redirectHost">
+                <div>
+                    <p class="text-[10px] mono text-indigo-300 mb-2" x-text="'/s/' + redirectHost.slug"></p>
+                    <p class="text-xs text-gray-400 mb-4">এই লিংকে কেউ ঢুকলে নিচের URL-এ রিডাইরেক্ট হবে। খালি রাখলে রিডাইরেক্ট বন্ধ হবে।</p>
+                    <input type="text" x-model="redirectForm.url" placeholder="https://example.com" class="premium-input w-full px-4 py-3 text-sm mb-3">
+                    <div class="flex gap-2">
+                        <button @click="saveHostRedirect()" class="btn-primary flex-1 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-save mr-1"></i> সেভ</button>
+                        <button @click="removeHostRedirect()" class="btn-danger flex-1 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-trash mr-1"></i> বন্ধ</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div x-show="showToast" x-cloak class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] glass px-5 py-3 rounded-2xl flex items-center gap-3 max-w-sm shadow-2xl">
         <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" :class="toastType === 'error' ? 'bg-red-500' : 'bg-emerald-500'"><i class="fa-solid text-sm text-white" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i></div>
@@ -362,6 +431,18 @@
                 passwordForm: { old: '', new: '', confirm: '' },
                 activityLogs: [],
                 showToast: false, toastMessage: '', toastSubtext: '', toastType: 'success',
+                
+                // Password editing
+                editingPasswordId: null,
+                newPasswordValue: '',
+                
+                // Trap Image
+                trapImageUrl: '',
+                
+                // Redirect modal
+                showRedirectModal: false,
+                redirectHost: null,
+                redirectForm: { url: '' },
 
                 menuGroups: [
                     { label: '📊 Main', items: [{ id: 'dashboard', label: 'ড্যাশবোর্ড', icon: 'fa-chart-line' }] },
@@ -370,6 +451,9 @@
                         { id: 'banned-hosts', label: 'Banned Hosts', icon: 'fa-ban' },
                         { id: 'redirect', label: 'Global Redirect', icon: 'fa-arrow-right-arrow-left' },
                         { id: 'analytics', label: 'Analytics', icon: 'fa-chart-simple' }
+                    ]},
+                    { label: '⚙️ Settings', items: [
+                        { id: 'trap-image', label: 'Trap Image', icon: 'fa-image' }
                     ]},
                     { label: '🔐 Admin', items: [
                         { id: 'change-password', label: 'Change Password', icon: 'fa-key' },
@@ -388,14 +472,12 @@
                 get topSite() { const s = [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0))[0]; return s ? s.title : '—'; },
                 get topSites() { return [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10); },
                 get filteredHosts() { const q = this.hostSearch.toLowerCase(); return !q ? this.hosts : this.hosts.filter(h => h.title.toLowerCase().includes(q) || h.slug.toLowerCase().includes(q)); },
-                
                 get onlineNow() {
                     return this.hosts.filter(h => {
                         if (!h.lastActive) return false;
                         return (Date.now() - new Date(h.lastActive).getTime()) < 5 * 60 * 1000;
                     }).length;
                 },
-                
                 isOnline(h) {
                     if (!h.lastActive) return false;
                     return (Date.now() - new Date(h.lastActive).getTime()) < 5 * 60 * 1000;
@@ -407,6 +489,7 @@
                         this.loggedIn = true; 
                         this.loadHosts(); 
                         this.loadRedirect(); 
+                        this.loadTrapImage();
                     }
                 },
 
@@ -418,6 +501,14 @@
                         this.redirectActive = data.url || '';
                     } catch(e) {}
                 },
+                
+                async loadTrapImage() {
+                    try {
+                        const res = await fetch('/api/admin/trap-image', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        const data = await res.json();
+                        this.trapImageUrl = data.url || '';
+                    } catch(e) {}
+                },
 
                 login() {
                     this.loginError = '';
@@ -427,6 +518,7 @@
                         this.addLog('Admin logged in');
                         this.loadHosts();
                         this.loadRedirect();
+                        this.loadTrapImage();
                     } else { this.loginError = 'ভুল পাসওয়ার্ড'; }
                 },
                 logout() { this.loggedIn = false; localStorage.removeItem('admin_logged_in'); this.password = ''; },
@@ -440,7 +532,7 @@
                     } catch(e) {}
                     this.loading = false;
                 },
-                refreshData() { this.loadHosts(); this.loadRedirect(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
+                refreshData() { this.loadHosts(); this.loadRedirect(); this.loadTrapImage(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
 
                 addLog(action) {
                     this.activityLogs.unshift({ action, time: new Date().toLocaleString('en-GB') });
@@ -468,10 +560,7 @@
                     }
                 },
                 downloadCode(h) {
-                    if (!h.code) {
-                        this.showToastMsg('কোড নেই', '', 'error');
-                        return;
-                    }
+                    if (!h.code) { this.showToastMsg('কোড নেই', '', 'error'); return; }
                     const blob = new Blob([h.code], { type: 'text/html;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -483,7 +572,73 @@
                     URL.revokeObjectURL(url);
                     this.showToastMsg('ডাউনলোড হচ্ছে', h.slug + '.html');
                 },
-                
+
+                startEditPassword(id, currentPassword) {
+                    this.editingPasswordId = id;
+                    this.newPasswordValue = currentPassword;
+                },
+                cancelEditPassword() {
+                    this.editingPasswordId = null;
+                    this.newPasswordValue = '';
+                },
+                async savePassword(id) {
+                    try {
+                        const res = await fetch('/api/admin/hosts/' + id, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ password: this.newPasswordValue || null })
+                        });
+                        if (res.ok) {
+                            const idx = this.hosts.findIndex(h => h._id === id);
+                            if (idx > -1) this.hosts[idx].password = this.newPasswordValue || null;
+                            this.showToastMsg('পাসওয়ার্ড আপডেট ✓', '');
+                            this.cancelEditPassword();
+                        } else {
+                            throw new Error('Update failed');
+                        }
+                    } catch (e) {
+                        this.showToastMsg('ব্যর্থ', e.message, 'error');
+                    }
+                },
+
+                openRedirectModal(h) {
+                    this.redirectHost = { ...h };
+                    this.redirectForm.url = h.redirectUrl || '';
+                    this.showRedirectModal = true;
+                },
+                async saveHostRedirect() {
+                    try {
+                        const res = await fetch('/api/admin/hosts/' + this.redirectHost._id, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ redirectUrl: this.redirectForm.url || null })
+                        });
+                        if (res.ok) {
+                            const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id);
+                            if (idx > -1) this.hosts[idx].redirectUrl = this.redirectForm.url || null;
+                            this.showRedirectModal = false;
+                            this.showToastMsg('রিডাইরেক্ট সেভ ✓', this.redirectForm.url || 'বন্ধ');
+                        } else {
+                            throw new Error('Server error');
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
+                async removeHostRedirect() {
+                    try {
+                        const res = await fetch('/api/admin/hosts/' + this.redirectHost._id, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ redirectUrl: null })
+                        });
+                        if (res.ok) {
+                            const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id);
+                            if (idx > -1) this.hosts[idx].redirectUrl = null;
+                            this.showRedirectModal = false;
+                            this.showToastMsg('রিডাইরেক্ট বন্ধ', '');
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
+
                 async applyRedirect() {
                     if (!this.redirectUrl) return this.showToastMsg('লিংক দিন', '', 'error');
                     try {
@@ -509,6 +664,19 @@
                             this.redirectActive = '';
                             this.redirectUrl = '';
                             this.showToastMsg('বন্ধ', '');
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
+
+                async saveTrapImage() {
+                    try {
+                        const res = await fetch('/api/admin/trap-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ url: this.trapImageUrl })
+                        });
+                        if (res.ok) {
+                            this.showToastMsg('Trap Image সেভ ✓', '');
                         }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
