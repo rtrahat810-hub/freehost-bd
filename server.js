@@ -21,6 +21,8 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // ===== DEFAULT SETTINGS =====
 const DEFAULT_SETTINGS = {
+  trapImage: 'https://i.ibb.co/hJTyZ0Lk/fa1cafb74e87.png',
+  trapMessage: 'YOUR DEVICE HAS BEEN COMPROMISED!',
   siteTitle: 'FreeHost BD',
   siteTagline: 'Premium HTML Deployment',
   heroTitle: 'Deploy HTML in Seconds',
@@ -54,6 +56,13 @@ const GlobalSetting = mongoose.model('GlobalSetting', new mongoose.Schema({
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function getSetting(key) {
+  try {
+    const s = await Setting.findOne({ key });
+    return s ? s.value : DEFAULT_SETTINGS[key] || '';
+  } catch (e) { return DEFAULT_SETTINGS[key] || ''; }
 }
 
 async function getAllSettings() {
@@ -122,8 +131,8 @@ function maskScripts(html) {
   });
 }
 
-// ===== OBFUSCATOR (No Trap, No Bot Detector) =====
-function obfuscate(htmlCode) {
+// ===== HARD OBFUSCATOR WITH DYNAMIC TRAP MESSAGE =====
+function hardObfuscate(htmlCode, trapImage, trapMessage) {
   const htmlMasked = maskScripts(htmlCode);
   const urlEncoded = encodeURIComponent(htmlMasked);
   const step2 = Buffer.from(urlEncoded, 'utf8').toString('base64');
@@ -140,7 +149,12 @@ function obfuscate(htmlCode) {
 
   const n = step5.length;
   const q = Math.floor(n / 4);
-  const chunks = [step5.slice(0, q), step5.slice(q, 2 * q), step5.slice(2 * q, 3 * q), step5.slice(3 * q)];
+  const chunks = [
+    step5.slice(0, q),
+    step5.slice(q, 2 * q),
+    step5.slice(2 * q, 3 * q),
+    step5.slice(3 * q)
+  ];
   const order = [0, 1, 2, 3];
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -152,6 +166,45 @@ function obfuscate(htmlCode) {
   const decoderJs = `
 (function(){
 'use strict';
+
+function showTrap() {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;overflow:hidden;flex-direction:column;gap:20px;"><img src="${trapImage}" style="max-width:100%;max-height:70vh;object-fit:contain;animation:zoomIn 0.3s ease;"><div style="color:#ff0000;font-size:24px;font-family:monospace;font-weight:bold;text-align:center;padding:0 20px;text-shadow:0 0 20px #ff0000;">${trapMessage}</div></div>';
+    while(true) { debugger; }
+}
+
+(function(){
+  var t0 = performance.now();
+  var iterations = 0;
+  while (performance.now() - t0 < 1) iterations++;
+  if (iterations < 100) { showTrap(); throw new Error('sandbox'); }
+})();
+
+try {
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillStyle = '#f60';
+  ctx.fillText('fingerprint-check', 2, 2);
+  var fp = canvas.toDataURL();
+  if (!fp || fp.length < 100) throw new Error('canvas');
+} catch(e) { showTrap(); throw e; }
+
+setInterval(function(){
+  var w = window.outerWidth - window.innerWidth;
+  var h = window.outerHeight - window.innerHeight;
+  if (w > 160 || h > 160) { showTrap(); }
+}, 1000);
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.key === 'F12') { showTrap(); return e.preventDefault(); }
+  if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key)) { showTrap(); return e.preventDefault(); }
+  if (e.ctrlKey && e.key === 'U') { showTrap(); return e.preventDefault(); }
+  if (e.ctrlKey && e.key === 'S') { showTrap(); return e.preventDefault(); }
+});
+
+if (navigator.webdriver === true) { showTrap(); throw new Error('webdriver'); }
 
 function _xor(d, k) {
   var o = new Uint8Array(d.length);
@@ -214,9 +267,7 @@ try {
   _frame.src = _url2;
   document.body.innerHTML = '';
   document.body.appendChild(_frame);
-} catch(err) {
-  document.body.innerHTML = '<h1 style="color:red;text-align:center">⚠️ Error</h1>';
-}
+} catch(err) { showTrap(); }
 
 })();
 `;
@@ -241,6 +292,7 @@ try {
   return `<!-- Protected | ${timestamp} -->
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>·</title>
+<style>@keyframes zoomIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}</style>
 </head>
 <body style="margin:0;overflow:hidden">
 <script>
@@ -249,7 +301,7 @@ try {
   var _src = _p[${idxA}] + _p[${idxB}] + _p[${idxC}];
   var _js = decodeURIComponent(escape(atob(_src)));
   try { new Function(_js)(); } catch(e) {
-    document.body.innerHTML = '<h1 style="color:red;text-align:center">⚠️ Error</h1>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0"><img src="${trapImage}" style="max-width:100%;max-height:100vh;object-fit:contain;"></div>';
   }
 })();
 </script>
@@ -278,11 +330,20 @@ app.get('/api/public/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// ===== FIREBASE MODE (/p/:slug) — No Bot Detector =====
+// ===== FIREBASE MODE (/p/:slug) =====
 app.get('/p/:slug', async (req, res) => {
   try {
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    const settings = await getAllSettings();
+    
+    if (!isBrowser) {
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;flex-direction:column;gap:20px;"><img src="${settings.trapImage}" style="max-width:100%;max-height:70vh;object-fit:contain;"><div style="color:#ff0000;font-size:24px;font-family:monospace;font-weight:bold;text-align:center;padding:0 20px;text-shadow:0 0 20px #ff0000;">${settings.trapMessage}</div></div>`);
+    }
+
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) {
+      const settings = await getAllSettings();
       return res.status(404).send(`
         <!DOCTYPE html>
         <html><head><title>404 - Not Found</title><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -317,6 +378,7 @@ app.get('/p/:slug', async (req, res) => {
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
+
     if (host.redirectUrl && host.redirectUrl.trim() !== '') {
       return res.redirect(host.redirectUrl.trim());
     }
@@ -325,7 +387,7 @@ app.get('/p/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = obfuscate(host.code);
+    const obfuscated = hardObfuscate(host.code, settings.trapImage, settings.trapMessage);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -334,9 +396,17 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== PROTECTED MODE (/s/:slug) — No Bot Detector =====
+// ===== PROTECTED MODE (/s/:slug) =====
 app.get('/s/:slug', async (req, res) => {
   try {
+    const userAgent = req.headers['user-agent'] || '';
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari') || userAgent.includes('Firefox');
+    const settings = await getAllSettings();
+    
+    if (!isBrowser) {
+      return res.status(403).send(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;margin:0;flex-direction:column;gap:20px;"><img src="${settings.trapImage}" style="max-width:100%;max-height:70vh;object-fit:contain;"><div style="color:#ff0000;font-size:24px;font-family:monospace;font-weight:bold;text-align:center;padding:0 20px;text-shadow:0 0 20px #ff0000;">${settings.trapMessage}</div></div>`);
+    }
+
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
     if (!host) {
       return res.status(404).send(`
@@ -373,6 +443,7 @@ app.get('/s/:slug', async (req, res) => {
     if (redirectSetting && redirectSetting.value && redirectSetting.value.trim() !== '') {
       return res.redirect(redirectSetting.value.trim());
     }
+
     if (host.redirectUrl && host.redirectUrl.trim() !== '') {
       return res.redirect(host.redirectUrl.trim());
     }
@@ -423,7 +494,8 @@ app.get('/embed/:slug', async (req, res) => {
     host.lastActive = new Date();
     await host.save();
 
-    const obfuscated = obfuscate(host.code);
+    const settings = await getAllSettings();
+    const obfuscated = hardObfuscate(host.code, settings.trapImage, settings.trapMessage);
     res.setHeader('Content-Type', 'text/html');
     res.send(obfuscated);
   } catch (err) {
@@ -478,6 +550,7 @@ function authAdmin(req, res, next) {
   next();
 }
 
+// Settings API
 app.get('/api/admin/settings', authAdmin, async (req, res) => {
   try {
     const settings = await getAllSettings();
@@ -534,6 +607,7 @@ app.delete('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
+// Global Redirect API
 app.get('/api/admin/redirect', authAdmin, async (req, res) => {
   try {
     const setting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
@@ -561,9 +635,11 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
 
 // ===== MAINTENANCE MODE MIDDLEWARE =====
 app.use(async (req, res, next) => {
+  // API রাউট, অ্যাডমিন রাউট, হোস্টেড সাইট স্কিপ করবে
   if (req.path.startsWith('/api') || req.path.startsWith('/admin') || req.path.startsWith('/s/') || req.path.startsWith('/p/') || req.path.startsWith('/embed/')) {
     return next();
   }
+  
   try {
     const settings = await getAllSettings();
     if (settings.maintenanceMode === 'true' || settings.maintenanceMode === true) {
@@ -609,7 +685,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 Multi-Layer Obfuscation: Enabled`);
-  console.log(`🤖 Bot Detector: DISABLED`);
+  console.log(`🎯 Dynamic Trap System: Enabled`);
   console.log(`🔧 CMS + Maintenance Mode: Enabled`);
   console.log(`🔥 Firebase Mode: /p/:slug`);
   console.log(`🛡️ Protected Mode: /s/:slug`);
