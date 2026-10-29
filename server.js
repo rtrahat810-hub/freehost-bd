@@ -110,9 +110,27 @@ async function getAllSettings() {
   } catch (e) { return DEFAULT_SETTINGS; }
 }
 
-// ===== OBFUSCATOR (RC4 + Hex + Tamper) — আপনার দেওয়া কোডের মতোই =====
+// ===== BRANDING FOOTER (নিচে ডান দিকে ছোট লেখা) =====
+const BRANDING_FOOTER = `
+<a href="https://freehost-bd.onrender.com" target="_blank" rel="noopener" style="position:fixed;bottom:12px;right:12px;z-index:999999;display:flex;align-items:center;gap:6px;background:rgba(15,23,42,0.85);backdrop-filter:blur(10px);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;text-decoration:none;padding:6px 12px;border-radius:10px;font-family:sans-serif;font-size:10px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:all 0.2s ease;letter-spacing:0.3px;text-transform:none;"
+   onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='rgba(99,102,241,0.6)';this.style.color='#e0e7ff';"
+   onmouseout="this.style.background='rgba(15,23,42,0.85)';this.style.borderColor='rgba(99,102,241,0.3)';this.style.color='#a5b4fc';">
+  <span style="font-size:13px;line-height:1;">⚡</span>
+  <span>FreeHost BD</span>
+</a>
+`;
+
+// ===== OBFUSCATOR (RC4 + Hex + Tamper) + Branding =====
 function hardcoreObfuscate(htmlCode) {
   let masked = maskScripts(htmlCode);
+
+  // 🔥 ব্র্যান্ডিং ফুটার যোগ করা
+  if (masked.includes('</body>')) {
+    masked = masked.replace('</body>', BRANDING_FOOTER + '</body>');
+  } else {
+    masked = masked + BRANDING_FOOTER;
+  }
+
   const urlEncoded = encodeURIComponent(masked);
   const b64Bytes = Buffer.from(urlEncoded, 'utf8').toString('base64');
   const b64Buffer = Buffer.from(b64Bytes, 'utf8');
@@ -214,7 +232,7 @@ app.get('/api/public/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// ===== FIREBASE MODE (/p/:slug) =====
+// ===== FIREBASE MODE (/p/:slug) — with Branding Footer =====
 app.get('/p/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
@@ -276,7 +294,7 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== PROTECTED MODE (/s/:slug) =====
+// ===== PROTECTED MODE (/s/:slug) — with Branding Footer =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
@@ -346,6 +364,7 @@ app.get('/s/:slug', async (req, res) => {
 </head>
 <body>
 <iframe src="/embed/${escapeHtml(host.slug)}${pwQuery}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"></iframe>
+${BRANDING_FOOTER}
 </body>
 </html>`);
   } catch (err) {
@@ -354,7 +373,7 @@ app.get('/s/:slug', async (req, res) => {
   }
 });
 
-// ===== EMBED ROUTE =====
+// ===== EMBED ROUTE (RC4 Obfuscation for /s/) =====
 app.get('/embed/:slug', async (req, res) => {
   try {
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
@@ -411,11 +430,10 @@ app.post('/api/photo', upload.single('photo'), async (req, res) => {
     formData.append('image', base64Image);
     const imgbbRes = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
     const imgbbData = await imgbbRes.json();
-    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ: ' + (imgbbData.error?.message || 'Unknown') });
+    if (!imgbbData.success) return res.status(500).json({ error: 'ImgBB ব্যর্থ' });
     res.json({ photo: { url: imgbbData.data.url, filename: req.file.originalname || 'image_' + Date.now() } });
   } catch (err) {
-    console.error('Photo error:', err);
-    res.status(500).json({ error: err.message || 'সার্ভার সমস্যা' });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -427,7 +445,6 @@ function authAdmin(req, res, next) {
   next();
 }
 
-// Admin Settings
 app.get('/api/admin/settings', authAdmin, async (req, res) => {
   try {
     const settings = await getAllSettings();
@@ -445,7 +462,6 @@ app.post('/api/admin/settings', authAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// Admin Hosts
 app.get('/api/admin/hosts', authAdmin, async (req, res) => {
   try {
     const hosts = await Hosted.find().sort({ createdAt: -1 });
@@ -485,7 +501,6 @@ app.delete('/api/admin/hosts/:id', authAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// Admin Redirect
 app.get('/api/admin/redirect', authAdmin, async (req, res) => {
   try {
     const setting = await GlobalSetting.findOne({ key: 'global_redirect_url' });
@@ -501,7 +516,6 @@ app.post('/api/admin/redirect', authAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// Admin Stats
 app.get('/api/admin/stats', authAdmin, async (req, res) => {
   try {
     const totalHosts = await Hosted.countDocuments();
@@ -562,7 +576,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 RC4 + Hex Obfuscation: Enabled`);
-  console.log(`🔥 Firebase Mode: /p/:slug (Direct DOM, No iframe)`);
-  console.log(`🛡️ Protected Mode: /s/:slug (iframe + RC4)`);
-  console.log(`🔧 CMS + Maintenance Mode: Enabled`);
+  console.log(`🎯 Branding Footer: Enabled`);
+  console.log(`🔥 Firebase Mode: /p/:slug`);
+  console.log(`🛡️ Protected Mode: /s/:slug`);
 });
