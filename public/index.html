@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" x-data="hostingApp()" x-init="init()" class="scroll-smooth">
+<html lang="en" x-data="hostingApp()" x-init="init()" class="scroll-smooth" :class="darkMode ? '' : 'light-mode'">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,39 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         * { font-family: 'Inter', 'Hind Siliguri', sans-serif; }
         [x-cloak] { display: none !important; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
         
-        body {
-            background: #05060a;
-            color: #f3f4f6;
-            overflow-x: hidden;
-        }
+        body { background: #05060a; color: #f3f4f6; overflow-x: hidden; transition: background 0.4s ease, color 0.4s ease; }
+        .light-mode body { background: #f8fafc; color: #1e293b; }
 
         .bg-canvas {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            overflow: hidden;
-            background: 
-                radial-gradient(circle at 20% 10%, #0a1428 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, #150826 0%, transparent 40%),
-                #05060a;
+            position: fixed; inset: 0; z-index: 0; overflow: hidden;
+            background: radial-gradient(circle at 20% 10%, #0a1428 0%, transparent 40%), radial-gradient(circle at 80% 80%, #150826 0%, transparent 40%), #05060a;
+            transition: background 0.4s ease;
+        }
+        .light-mode .bg-canvas {
+            background: radial-gradient(circle at 20% 10%, #e0e7ff 0%, transparent 40%), radial-gradient(circle at 80% 80%, #fce7f3 0%, transparent 40%), #f8fafc;
         }
         
-        .aurora-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(140px);
-            opacity: 0.5;
-            mix-blend-mode: screen;
-        }
+        .aurora-orb { position: absolute; border-radius: 50%; filter: blur(140px); opacity: 0.5; mix-blend-mode: screen; }
+        .light-mode .aurora-orb { opacity: 0.3; }
         .aurora-1 { width: 700px; height: 700px; background: linear-gradient(135deg, #6366f1, #3b82f6); top: -250px; left: -200px; animation: aurora-float-1 25s ease-in-out infinite; }
         .aurora-2 { width: 800px; height: 800px; background: linear-gradient(135deg, #a855f7, #ec4899); top: 30%; right: -300px; animation: aurora-float-2 30s ease-in-out infinite; }
         .aurora-3 { width: 600px; height: 600px; background: linear-gradient(135deg, #06b6d4, #6366f1); bottom: -200px; left: 25%; animation: aurora-float-3 28s ease-in-out infinite; }
@@ -50,153 +44,69 @@
 
         .glass {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
         }
+        .light-mode .glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1); }
 
-        .text-gradient {
-            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #22d3ee 100%);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradient-shift 6s ease-in-out infinite;
-        }
+        .text-gradient { background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #22d3ee 100%); background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradient-shift 6s ease-in-out infinite; }
         @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
         .btn-deploy {
-            position: relative;
-            background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #f59e0b 100%);
-            background-size: 200% auto;
-            color: white;
+            position: relative; background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #f59e0b 100%); background-size: 200% auto; color: white;
             box-shadow: 0 20px 50px -10px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden;
         }
-        .btn-deploy::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.7s ease;
-        }
-        .btn-deploy:hover::before { left: 100%; }
-        .btn-deploy:hover {
-            transform: translateY(-3px) scale(1.01);
-            background-position: right center;
-            box-shadow: 0 30px 65px -10px rgba(239, 68, 68, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-        .btn-deploy:active { transform: translateY(-1px) scale(1); }
+        .btn-deploy:hover { transform: translateY(-3px) scale(1.01); background-position: right center; box-shadow: 0 30px 65px -10px rgba(239, 68, 68, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
         .btn-deploy:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-        .editor-wrap {
-            background: linear-gradient(180deg, #0d0618 0%, #150a2e 100%);
-            border: 1px solid rgba(168, 85, 247, 0.25);
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.35s ease;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
-        }
-        .editor-wrap:focus-within {
-            border-color: rgba(168, 85, 247, 0.6);
-            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15), 0 0 40px rgba(168, 85, 247, 0.3);
-        }
-        .editor-wrap textarea {
-            background: transparent; color: #e9d5ff; font-family: 'JetBrains Mono', monospace;
-            font-size: 13.5px; line-height: 1.8; resize: vertical; outline: none;
-            width: 100%; padding: 22px; min-height: 340px;
-        }
-        .editor-wrap textarea::placeholder { color: rgba(168, 85, 247, 0.3); }
+        .editor-wrap { background: linear-gradient(180deg, #0d0618 0%, #150a2e 100%); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 20px; overflow: hidden; transition: all 0.35s ease; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5); position: relative; }
+        .editor-wrap:focus-within { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15), 0 0 40px rgba(168, 85, 247, 0.3); }
 
-        .field-icon {
-            width: 44px; height: 44px; border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; flex-shrink: 0; color: #fff;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
+        .CodeMirror { height: 340px !important; font-family: 'JetBrains Mono', monospace !important; font-size: 13.5px !important; line-height: 1.8 !important; background: transparent !important; color: #e9d5ff !important; padding: 16px !important; }
+        .CodeMirror-gutters { background: rgba(0,0,0,0.2) !important; border: none !important; }
+        .CodeMirror-linenumber { color: rgba(168, 85, 247, 0.4) !important; }
+        .CodeMirror-cursor { border-left: 2px solid #c084fc !important; }
+        .CodeMirror-selected { background: rgba(139, 92, 246, 0.3) !important; }
+        .light-mode .CodeMirror { background: #f1f5f9 !important; color: #1e293b !important; }
+        .light-mode .CodeMirror-gutters { background: #e2e8f0 !important; }
+        .cm-s-default .cm-tag { color: #ff7b72 !important; }
+        .cm-s-default .cm-attribute { color: #79c0ff !important; }
+        .cm-s-default .cm-string { color: #a5d6ff !important; }
+        .cm-s-default .cm-keyword { color: #ff7b72 !important; }
+        .cm-s-default .cm-def { color: #d2a8ff !important; }
+        .cm-s-default .cm-comment { color: #8b949e !important; }
+
+        .field-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2); }
         .icon-indigo { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-        .icon-cyan   { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
-        .icon-amber  { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .icon-cyan { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+        .icon-amber { background: linear-gradient(135deg, #f59e0b, #ef4444); }
 
-        .premium-input {
-            display: flex; align-items: center;
-            background: rgba(15, 10, 30, 0.7);
-            border: 1.5px solid rgba(99, 102, 241, 0.25);
-            border-radius: 14px;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
-            transition: all 0.3s ease; overflow: hidden;
-        }
-        .premium-input:focus-within {
-            border-color: #6366f1; background: rgba(15, 10, 30, 0.9);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 0 25px rgba(99, 102, 241, 0.3);
-        }
-        .premium-input .p-icon {
-            width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
-            color: #a5b4fc; font-size: 16px; border-right: 1px solid rgba(99, 102, 241, 0.15);
-            flex-shrink: 0; background: rgba(99, 102, 241, 0.08);
-        }
-        .premium-input input {
-            flex: 1; background: transparent; color: #fff; border: none; outline: none;
-            font-size: 14px; padding: 15px 16px; font-weight: 500;
-        }
+        .premium-input { display: flex; align-items: center; background: rgba(15, 10, 30, 0.7); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 14px; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4); transition: all 0.3s ease; overflow: hidden; }
+        .light-mode .premium-input { background: rgba(255,255,255,0.9); border-color: rgba(99,102,241,0.2); }
+        .premium-input:focus-within { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 0 25px rgba(99, 102, 241, 0.3); }
+        .premium-input .p-icon { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; color: #a5b4fc; font-size: 16px; border-right: 1px solid rgba(99, 102, 241, 0.15); flex-shrink: 0; background: rgba(99, 102, 241, 0.08); }
+        .premium-input input { flex: 1; background: transparent; color: #fff; border: none; outline: none; font-size: 14px; padding: 15px 16px; font-weight: 500; }
+        .light-mode .premium-input input { color: #1e293b; }
         .premium-input input::placeholder { color: rgba(148, 163, 184, 0.4); }
 
-        .slug-wrap {
-            display: flex; align-items: stretch;
-            background: rgba(6, 20, 30, 0.7);
-            border: 1.5px solid rgba(34, 211, 238, 0.25);
-            border-radius: 14px; overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
-        }
-        .slug-wrap:focus-within {
-            border-color: #22d3ee; background: rgba(6, 20, 30, 0.9);
-            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 0 25px rgba(34, 211, 238, 0.3);
-        }
-        .slug-prefix {
-            padding: 0 18px; display: flex; align-items: center;
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.15));
-            border-right: 1px solid rgba(34, 211, 238, 0.35);
-            color: #67e8f9; font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; font-weight: 700; white-space: nowrap;
-        }
-        .slug-wrap input {
-            flex: 1; background: transparent; border: none; outline: none;
-            color: #fff; padding: 15px 16px; font-family: 'JetBrains Mono', monospace;
-            font-size: 13.5px; font-weight: 500;
-        }
-        .slug-wrap input::placeholder { color: rgba(148, 163, 184, 0.4); }
+        .slug-wrap { display: flex; align-items: stretch; background: rgba(6, 20, 30, 0.7); border: 1.5px solid rgba(34, 211, 238, 0.25); border-radius: 14px; overflow: hidden; transition: all 0.3s ease; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4); }
+        .light-mode .slug-wrap { background: rgba(255,255,255,0.9); }
+        .slug-wrap:focus-within { border-color: #22d3ee; box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15); }
+        .slug-prefix { padding: 0 18px; display: flex; align-items: center; background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.15)); border-right: 1px solid rgba(34, 211, 238, 0.35); color: #67e8f9; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .slug-wrap input { flex: 1; background: transparent; border: none; outline: none; color: #fff; padding: 15px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 500; }
+        .light-mode .slug-wrap input { color: #1e293b; }
 
-        .password-input {
-            display: flex; align-items: center;
-            background: rgba(30, 20, 5, 0.7);
-            border: 1.5px solid rgba(245, 158, 11, 0.25);
-            border-radius: 14px;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
-            transition: all 0.3s ease; overflow: hidden;
-        }
-        .password-input:focus-within {
-            border-color: #f59e0b; background: rgba(30, 20, 5, 0.9);
-            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 0 25px rgba(245, 158, 11, 0.3);
-        }
-        .password-input .p-icon {
-            width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
-            color: #fbbf24; font-size: 16px; border-right: 1px solid rgba(245, 158, 11, 0.15);
-            flex-shrink: 0; background: rgba(245, 158, 11, 0.08);
-        }
-        .password-input input {
-            flex: 1; background: transparent; color: #fff; border: none; outline: none;
-            font-size: 14px; padding: 15px 16px; font-weight: 500;
-        }
-        .password-input input::placeholder { color: rgba(148, 163, 184, 0.4); }
+        .password-input { display: flex; align-items: center; background: rgba(30, 20, 5, 0.7); border: 1.5px solid rgba(245, 158, 11, 0.25); border-radius: 14px; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4); transition: all 0.3s ease; overflow: hidden; }
+        .light-mode .password-input { background: rgba(255,255,255,0.9); }
+        .password-input:focus-within { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15); }
+        .password-input .p-icon { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 16px; border-right: 1px solid rgba(245, 158, 11, 0.15); flex-shrink: 0; background: rgba(245, 158, 11, 0.08); }
+        .password-input input { flex: 1; background: transparent; color: #fff; border: none; outline: none; font-size: 14px; padding: 15px 16px; font-weight: 500; }
+        .light-mode .password-input input { color: #1e293b; }
 
-        .char-counter {
-            font-size: 10px; font-family: 'JetBrains Mono', monospace;
-            color: #c4b5fd; font-weight: 600; padding: 4px 10px;
-            background: rgba(168, 85, 247, 0.12);
-            border: 1px solid rgba(168, 85, 247, 0.25);
-            border-radius: 8px;
-        }
+        .char-counter { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #c4b5fd; font-weight: 600; padding: 4px 10px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; }
 
         @keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .float-y { animation: float-y 6s ease-in-out infinite; }
@@ -207,20 +117,32 @@
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.5s ease; }
 
+        @keyframes pop-in { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        .animate-pop-in { animation: pop-in 0.3s ease; }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #05060a; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #6366f1, #a855f7); border-radius: 4px; }
 
         .nav-pill { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
-        .nav-pill.active {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25));
-            border-color: rgba(168, 85, 247, 0.5);
-            color: white;
-            box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.4);
-        }
+        .nav-pill.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25)); border-color: rgba(168, 85, 247, 0.5); color: white; box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.4); }
+
+        .theme-toggle { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; color: #fbbf24; }
+        .theme-toggle:hover { background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.3); transform: scale(1.05); }
+        .light-mode .theme-toggle { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: #6366f1; }
+
+        .drop-zone-active { border-color: #a855f7 !important; background: rgba(168, 85, 247, 0.15) !important; transform: scale(1.02); }
+
+        .preview-iframe { width: 100%; height: 340px; border: none; border-radius: 16px; background: #ffffff; }
     </style>
 </head>
 <body class="relative">
+
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.add('light-mode');
+        }
+    </script>
 
     <div class="bg-canvas">
         <div class="aurora-orb aurora-1"></div>
@@ -240,9 +162,7 @@
                             </div>
                         </div>
                         <div>
-                            <div class="text-xl font-black text-white leading-none whitespace-nowrap">
-                                FreeHost<span class="text-gradient"> BD</span>
-                            </div>
+                            <div class="text-xl font-black leading-none whitespace-nowrap dark:text-white" x-text="siteSettings.siteTitle"></div>
                             <div class="text-[9px] text-indigo-300 mono tracking-widest uppercase mt-1">Cloud Engine</div>
                         </div>
                     </a>
@@ -251,17 +171,19 @@
                         <button @click="currentTab = 'html'" 
                            :class="currentTab === 'html' ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
                            class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent">
-                            <i class="fa-brands fa-html5 text-cyan-400"></i> HTML Host
+                            <i class="fa-brands fa-html5 text-cyan-400"></i> <span x-text="siteSettings.navHtmlLabel"></span>
                         </button>
                         <button @click="currentTab = 'photo'" 
                            :class="currentTab === 'photo' ? 'active' : 'text-white/60 hover:text-white hover:bg-white/5'"
                            class="nav-pill px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-transparent">
-                            <i class="fa-solid fa-image text-purple-400"></i> Photo Host
+                            <i class="fa-solid fa-image text-purple-400"></i> <span x-text="siteSettings.navPhotoLabel"></span>
                         </button>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <!-- Admin বাটন বাদ দেওয়া হয়েছে -->
+                        <button @click="toggleTheme()" class="theme-toggle" title="Toggle theme">
+                            <i :class="darkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'" class="text-sm"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -269,12 +191,12 @@
                     <button @click="currentTab = 'html'" 
                             :class="currentTab === 'html' ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
                             class="nav-pill flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border whitespace-nowrap px-3">
-                        <i class="fa-brands fa-html5 text-cyan-400 text-xs"></i> HTML
+                        <i class="fa-brands fa-html5 text-cyan-400 text-xs"></i> <span x-text="siteSettings.navHtmlLabel"></span>
                     </button>
                     <button @click="currentTab = 'photo'" 
                             :class="currentTab === 'photo' ? 'active text-white' : 'text-white/60 bg-black/30 border-white/5'"
                             class="nav-pill flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border whitespace-nowrap px-3">
-                        <i class="fa-solid fa-image text-purple-400 text-xs"></i> Photo
+                        <i class="fa-solid fa-image text-purple-400 text-xs"></i> <span x-text="siteSettings.navPhotoLabel"></span>
                     </button>
                 </div>
             </div>
@@ -290,68 +212,84 @@
                     <span class="w-2 h-2 bg-emerald-400 rounded-full pulse-glow"></span>
                     <span class="text-indigo-200 font-bold mono text-[10px] tracking-widest">INSTANT HTML CLOUD ENGINE</span>
                 </div>
-                <h1 class="text-5xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6 text-white">
-                    Deploy HTML<br>
-                    <span class="text-gradient">in Seconds</span>
-                </h1>
-                <p class="text-gray-400 text-base max-w-xl mx-auto leading-relaxed">
-                    Paste your HTML code and get a live link instantly. No login required.
-                </p>
+                <h1 class="text-5xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6 dark:text-white" x-text="siteSettings.heroTitle"></h1>
+                <p class="text-gray-400 text-base max-w-xl mx-auto leading-relaxed" x-text="siteSettings.heroSubtitle"></p>
             </div>
 
-            <div class="max-w-3xl mx-auto">
+            <div class="max-w-6xl mx-auto">
                 <div class="glass p-6 lg:p-10 rounded-3xl">
                     <div class="flex items-center gap-4 mb-8 pb-6 border-b border-white/10">
                         <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/40">
                             <i class="fa-solid fa-bolt text-white text-xl"></i>
                         </div>
                         <div>
-                            <h2 class="font-extrabold text-xl text-white">Configure Deployment</h2>
+                            <h2 class="font-extrabold text-xl dark:text-white">Configure Deployment</h2>
                             <p class="text-xs text-gray-400 mt-0.5">Only HTML code is required. Everything else is optional!</p>
                         </div>
                     </div>
 
                     <div class="space-y-7">
-                        <!-- 1. Code -->
+                        <!-- 1. Code + Live Preview -->
                         <div>
                             <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
                                 <div class="flex items-center gap-3">
                                     <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-sm font-black">1</span>
                                     <div>
-                                        <div class="text-sm font-bold text-white">HTML Source Code <span class="text-pink-400">*</span></div>
-                                        <div class="text-[11px] text-gray-400">Paste your raw HTML document here</div>
+                                        <div class="text-sm font-bold dark:text-white"><span x-text="siteSettings.htmlHostTitle"></span> <span class="text-pink-400">*</span></div>
+                                        <div class="text-[11px] text-gray-400" x-text="siteSettings.htmlHostSubtitle"></div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="char-counter"><span x-text="htmlForm.code.length"></span> chars</span>
-                                    <button x-show="htmlForm.code.length > 0" @click="htmlForm.code = ''" class="text-[10px] font-bold text-red-400 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition flex items-center gap-1">
+                                    <button x-show="htmlForm.code.length > 0" @click="clearCode()" class="text-[10px] font-bold text-red-400 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition flex items-center gap-1">
                                         <i class="fa-solid fa-rotate-left text-[9px]"></i>CLEAR
                                     </button>
                                 </div>
                             </div>
-                            <div class="editor-wrap">
-                                <div class="flex items-center justify-between px-5 py-3 border-b border-purple-500/20 bg-black/40">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex gap-1.5">
-                                            <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
-                                            <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
-                                            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+
+                            <div class="grid lg:grid-cols-2 gap-4">
+                                <!-- Code Editor -->
+                                <div class="editor-wrap" :class="isDragging ? 'drop-zone-active' : ''"
+                                     @dragover.prevent="isDragging = true"
+                                     @dragleave.prevent="isDragging = false"
+                                     @drop.prevent="handleCodeDrop($event)">
+                                    <div class="flex items-center justify-between px-5 py-3 border-b border-purple-500/20 bg-black/40">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex gap-1.5">
+                                                <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                                                <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                                                <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                                            </div>
+                                            <span class="text-xs mono text-purple-300">index.html</span>
                                         </div>
-                                        <span class="text-xs mono text-purple-300">index.html</span>
+                                        <span class="text-[10px] mono text-emerald-300 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-1.5">
+                                            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-glow"></span> LIVE
+                                        </span>
                                     </div>
-                                    <span class="text-[10px] mono text-emerald-300 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-1.5">
-                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-glow"></span> LIVE
-                                    </span>
+                                    <div x-ref="editorContainer" class="relative"></div>
                                 </div>
-                                <textarea x-model="htmlForm.code" placeholder="<!DOCTYPE html>
-<html>
-<head>
-    <title>My App</title>
-</head>
-<body>
-    <h1>Hello World!</h1>
-</body>
-</html>"></textarea>
+
+                                <!-- Live Preview -->
+                                <div class="editor-wrap">
+                                    <div class="flex items-center justify-between px-5 py-3 border-b border-purple-500/20 bg-black/40">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-eye text-cyan-400 text-xs"></i>
+                                            <span class="text-xs mono text-cyan-300">Live Preview</span>
+                                        </div>
+                                        <span class="text-[10px] mono text-cyan-300 px-2.5 py-1 rounded-md bg-cyan-500/15 border border-cyan-500/30">
+                                            <i class="fa-solid fa-circle text-emerald-400 text-[6px] mr-1"></i> REALTIME
+                                        </span>
+                                    </div>
+                                    <template x-if="htmlForm.code">
+                                        <iframe class="preview-iframe" :srcdoc="htmlForm.code" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+                                    </template>
+                                    <template x-if="!htmlForm.code">
+                                        <div class="preview-iframe flex flex-col items-center justify-center bg-gray-900/50">
+                                            <i class="fa-solid fa-eye-slash text-4xl text-gray-500/30 mb-3"></i>
+                                            <p class="text-xs text-gray-500 font-bold">Live preview will appear here</p>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
@@ -360,8 +298,8 @@
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="field-icon icon-indigo"><i class="fa-solid fa-tag"></i></div>
                                 <div class="flex-1">
-                                    <div class="text-sm font-bold text-white flex items-center gap-2">Project Title <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
-                                    <div class="text-[11px] text-gray-400 mt-0.5">Empty হলে auto-generate হবে</div>
+                                    <div class="text-sm font-bold dark:text-white flex items-center gap-2"><span x-text="siteSettings.projectTitleLabel"></span> <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5" x-text="siteSettings.projectTitleSubtitle"></div>
                                 </div>
                             </div>
                             <div class="premium-input">
@@ -375,8 +313,8 @@
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="field-icon icon-cyan"><i class="fa-solid fa-globe"></i></div>
                                 <div class="flex-1">
-                                    <div class="text-sm font-bold text-white flex items-center gap-2">Custom URL <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
-                                    <div class="text-[11px] text-gray-400 mt-0.5">Empty হলে random slug হবে</div>
+                                    <div class="text-sm font-bold dark:text-white flex items-center gap-2"><span x-text="siteSettings.customUrlLabel"></span> <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5" x-text="siteSettings.customUrlSubtitle"></div>
                                 </div>
                             </div>
                             <div class="slug-wrap">
@@ -397,8 +335,8 @@
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="field-icon icon-amber"><i class="fa-solid fa-lock"></i></div>
                                 <div class="flex-1">
-                                    <div class="text-sm font-bold text-white flex items-center gap-2">Access Password <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
-                                    <div class="text-[11px] text-gray-400 mt-0.5">Empty রাখলে পাসওয়ার্ড ছাড়াই খুলবে</div>
+                                    <div class="text-sm font-bold dark:text-white flex items-center gap-2"><span x-text="siteSettings.accessPasswordLabel"></span> <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400">OPTIONAL</span></div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5" x-text="siteSettings.accessPasswordSubtitle"></div>
                                 </div>
                             </div>
                             <div class="password-input">
@@ -415,7 +353,7 @@
                             <template x-if="!deploying">
                                 <span class="flex items-center gap-3">
                                     <i class="fa-solid fa-rocket text-xl sm:text-2xl"></i>
-                                    <span>DEPLOY TO CLOUD</span>
+                                    <span x-text="siteSettings.deployButtonText"></span>
                                     <i class="fa-solid fa-arrow-right text-base sm:text-lg"></i>
                                 </span>
                             </template>
@@ -439,8 +377,8 @@
                                 <i class="fa-solid fa-check text-white text-xl"></i>
                             </div>
                             <div>
-                                <h3 class="font-black text-xl text-white">Success! 🎉</h3>
-                                <p class="text-sm text-gray-300 mt-0.5">Your site is now live</p>
+                                <h3 class="font-black text-xl dark:text-white" x-text="siteSettings.deploySuccessTitle || 'Success! 🎉'"></h3>
+                                <p class="text-sm text-gray-400 mt-0.5" x-text="siteSettings.deploySuccessMessage || 'Your site is now live'"></p>
                             </div>
                         </div>
                         <div class="bg-black/50 border border-white/10 rounded-2xl p-4 flex items-center gap-3 mb-5">
@@ -454,7 +392,7 @@
                             <a :href="lastDeployed.url" target="_blank" class="bg-white text-black text-center py-3.5 rounded-xl text-sm font-extrabold hover:bg-gray-100 transition flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Open URL
                             </a>
-                            <button @click="lastDeployed = null; htmlForm = { title: '', name: '', password: '', code: '' }" class="glass hover:bg-white/10 py-3.5 rounded-xl text-sm font-bold text-white transition flex items-center justify-center gap-2">
+                            <button @click="lastDeployed = null; htmlForm = { title: '', name: '', password: '', code: '' }; if(editor) editor.setValue('')" class="glass hover:bg-white/10 py-3.5 rounded-xl text-sm font-bold dark:text-white transition flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-plus text-xs"></i> Deploy Another
                             </button>
                         </div>
@@ -470,7 +408,7 @@
                     <span class="w-2 h-2 bg-pink-400 rounded-full pulse-glow"></span>
                     <span class="text-pink-200 font-bold mono text-[10px] tracking-widest">INSTANT PHOTO HOSTING</span>
                 </div>
-                <h1 class="text-5xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6 text-white">
+                <h1 class="text-5xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6 dark:text-white">
                     Upload.<br>
                     <span class="text-gradient">Share.</span>
                 </h1>
@@ -480,19 +418,19 @@
             <div class="max-w-3xl mx-auto">
                 <div class="glass p-6 lg:p-10 rounded-3xl">
                     <div class="space-y-5">
-                        <div @dragover.prevent="isDragging = true" 
-                             @dragleave.prevent="isDragging = false"
-                             @drop.prevent="handleDrop($event)"
+                        <div @dragover.prevent="isDraggingPhoto = true" 
+                             @dragleave.prevent="isDraggingPhoto = false"
+                             @drop.prevent="handlePhotoDrop($event)"
                              @click="$refs.photoInput.click()"
-                             :class="isDragging ? 'border-pink-400 bg-pink-500/20 scale-[1.02]' : 'border-pink-500/20 hover:border-pink-400/60 hover:bg-pink-500/5'"
+                             :class="isDraggingPhoto ? 'border-pink-400 bg-pink-500/20 scale-[1.02]' : 'border-pink-500/20 hover:border-pink-400/60 hover:bg-pink-500/5'"
                              class="rounded-3xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-300">
                             <template x-if="!photoPreview">
                                 <div>
                                     <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/40 flex items-center justify-center mx-auto mb-5 float-y">
                                         <i class="fa-solid fa-cloud-arrow-up text-pink-400 text-3xl"></i>
                                     </div>
-                                    <h3 class="font-bold text-lg mb-1.5 text-white">Click or Drop Image</h3>
-                                    <p class="text-xs text-gray-400">JPG, PNG, WEBP • Max 5MB</p>
+                                    <h3 class="font-bold text-lg mb-1.5 dark:text-white" x-text="siteSettings.photoHostTitle"></h3>
+                                    <p class="text-xs text-gray-400" x-text="siteSettings.photoHostSubtitle"></p>
                                 </div>
                             </template>
                             <template x-if="photoPreview">
@@ -511,7 +449,7 @@
                                 style="background: linear-gradient(135deg, #ec4899, #a855f7); box-shadow: 0 15px 40px -10px rgba(236, 72, 153, 0.6), inset 0 1px 0 rgba(255,255,255,0.2);">
                             <span x-show="!deploying" class="flex items-center gap-2">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
-                                Upload & Get Link
+                                <span x-text="siteSettings.photoUploadButton"></span>
                             </span>
                             <span x-show="deploying" class="flex items-center gap-2">
                                 <i class="fa-solid fa-circle-notch fa-spin"></i>
@@ -519,7 +457,6 @@
                             </span>
                         </button>
 
-                        <!-- Photo Success Card -->
                         <template x-if="lastUploaded">
                             <div class="animate-fade-in">
                                 <div class="glass p-6 rounded-3xl border-pink-500/30 bg-gradient-to-br from-pink-500/8 to-purple-500/8">
@@ -528,11 +465,10 @@
                                             <i class="fa-solid fa-check text-white"></i>
                                         </div>
                                         <div>
-                                            <h3 class="font-black text-lg text-white">Upload Successful! 🎉</h3>
-                                            <p class="text-xs text-gray-300">Your image is live</p>
+                                            <h3 class="font-black text-lg dark:text-white" x-text="siteSettings.photoSuccessTitle || 'Upload Successful! 🎉'"></h3>
+                                            <p class="text-xs text-gray-400" x-text="siteSettings.photoSuccessMessage || 'Your image is live'"></p>
                                         </div>
                                     </div>
-                                    
                                     <div class="flex items-center gap-3 bg-black/50 border border-white/10 rounded-xl p-3 mb-4">
                                         <i class="fa-solid fa-link text-pink-400"></i>
                                         <span class="flex-1 text-xs mono text-pink-200 truncate" x-text="lastUploaded.url"></span>
@@ -540,12 +476,11 @@
                                             <i class="fa-regular fa-copy"></i> COPY
                                         </button>
                                     </div>
-
                                     <div class="grid grid-cols-2 gap-2">
                                         <a :href="lastUploaded.url" target="_blank" class="bg-white text-black text-center py-3 rounded-xl text-xs font-extrabold hover:bg-gray-100 transition flex items-center justify-center gap-2">
                                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Open Image
                                         </a>
-                                        <button @click="lastUploaded = null" class="glass hover:bg-white/10 py-3 rounded-xl text-xs font-bold text-white transition flex items-center justify-center gap-2">
+                                        <button @click="lastUploaded = null" class="glass hover:bg-white/10 py-3 rounded-xl text-xs font-bold dark:text-white transition flex items-center justify-center gap-2">
                                             <i class="fa-solid fa-plus text-[10px]"></i> Upload Another
                                         </button>
                                     </div>
@@ -564,13 +499,13 @@
          x-transition:enter="transform transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
-         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass p-4 rounded-2xl flex items-center gap-3 max-w-sm">
+         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass p-4 rounded-2xl flex items-center gap-3 max-w-sm animate-pop-in">
         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
              :class="toastType === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'">
             <i :class="toastType === 'error' ? 'fa-solid fa-xmark' : 'fa-solid fa-check'"></i>
         </div>
         <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-white" x-text="toastMessage"></p>
+            <p class="text-sm font-bold dark:text-white" x-text="toastMessage"></p>
             <p class="text-xs text-gray-400 truncate mono mt-0.5" x-text="toastSubtext"></p>
         </div>
     </div>
@@ -582,19 +517,111 @@
                 deploying: false,
                 showPass: false,
                 isDragging: false,
+                isDraggingPhoto: false,
                 showToast: false,
                 toastMessage: '',
                 toastSubtext: '',
                 toastType: 'success',
-                
+                darkMode: true,
+                editor: null,
+
+                siteSettings: {
+                    siteTitle: 'FreeHost BD',
+                    siteTagline: 'Premium HTML Deployment',
+                    heroTitle: 'Deploy HTML in Seconds',
+                    heroSubtitle: 'Paste your HTML code and get a live link instantly. No login required.',
+                    footerText: 'FreeHost BD',
+                    htmlHostTitle: 'HTML Source Code',
+                    htmlHostSubtitle: 'Paste or drag & drop your HTML file',
+                    projectTitleLabel: 'Project Title',
+                    projectTitleSubtitle: 'Empty হলে auto-generate হবে',
+                    customUrlLabel: 'Custom URL',
+                    customUrlSubtitle: 'Empty হলে random slug হবে',
+                    accessPasswordLabel: 'Access Password',
+                    accessPasswordSubtitle: 'Empty রাখলে পাসওয়ার্ড ছাড়াই খুলবে',
+                    deployButtonText: 'DEPLOY TO CLOUD',
+                    deploySuccessTitle: 'Success! 🎉',
+                    deploySuccessMessage: 'Your site is now live',
+                    photoHostTitle: 'Click or Drop Image',
+                    photoHostSubtitle: 'JPG, PNG, WEBP • Max 5MB',
+                    photoUploadButton: 'Upload & Get Link',
+                    photoSuccessTitle: 'Upload Successful! 🎉',
+                    photoSuccessMessage: 'Your image is live',
+                    navHtmlLabel: 'HTML Host',
+                    navPhotoLabel: 'Photo Host'
+                },
+
                 htmlForm: { title: '', name: '', password: '', code: '' },
                 photoFile: null,
                 photoPreview: null,
-                photoError: '',
                 lastDeployed: null,
                 lastUploaded: null,
 
-                init() {},
+                async init() {
+                    this.darkMode = localStorage.getItem('theme') !== 'light';
+                    this.$nextTick(() => this.initEditor());
+                    
+                    // সেটিংস লোড
+                    try {
+                        const res = await fetch('/api/public/settings');
+                        if (res.ok) {
+                            const data = await res.json();
+                            Object.assign(this.siteSettings, data);
+                        }
+                    } catch(e) {}
+                },
+
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                    if (this.darkMode) {
+                        document.documentElement.classList.remove('light-mode');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        document.documentElement.classList.add('light-mode');
+                        localStorage.setItem('theme', 'light');
+                    }
+                },
+
+                initEditor() {
+                    if (this.editor) return;
+                    const el = this.$refs.editorContainer;
+                    if (!el) return;
+                    el.innerHTML = '';
+                    this.editor = CodeMirror(el, {
+                        value: '',
+                        mode: 'htmlmixed',
+                        theme: 'default',
+                        lineNumbers: true,
+                        autoCloseTags: true,
+                        lineWrapping: true,
+                        placeholder: '<!DOCTYPE html>\n<html>\n<head>\n    <title>My App</title>\n</head>\n<body>\n    <h1>Hello World!</h1>\n</body>\n</html>'
+                    });
+                    this.editor.on('change', (cm) => {
+                        this.htmlForm.code = cm.getValue();
+                    });
+                },
+
+                clearCode() {
+                    this.htmlForm.code = '';
+                    if (this.editor) this.editor.setValue('');
+                },
+
+                handleCodeDrop(e) {
+                    this.isDragging = false;
+                    const file = e.dataTransfer.files[0];
+                    if (!file) return;
+                    if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
+                        return this.showToastMsg('শুধু HTML ফাইল দিন', '', 'error');
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const content = ev.target.result;
+                        this.htmlForm.code = content;
+                        if (this.editor) this.editor.setValue(content);
+                        this.showToastMsg('ফাইল লোড হয়েছে ✓', file.name);
+                    };
+                    reader.readAsText(file);
+                },
 
                 async deployHtml() {
                     if (!this.htmlForm.code.trim()) {
@@ -622,6 +649,7 @@
                         };
                         this.lastDeployed = entry;
                         this.htmlForm = { title: '', name: '', password: '', code: '' };
+                        if (this.editor) this.editor.setValue('');
                         this.showToastMsg('Success! 🎉', entry.url, 'success');
                     } catch (err) {
                         this.showToastMsg('Deploy Failed', err.message, 'error');
@@ -634,13 +662,12 @@
                     const file = e.target.files[0];
                     if (file) this.processPhoto(file);
                 },
-                handleDrop(e) {
-                    this.isDragging = false;
+                handlePhotoDrop(e) {
+                    this.isDraggingPhoto = false;
                     const file = e.dataTransfer.files[0];
                     if (file) this.processPhoto(file);
                 },
                 processPhoto(file) {
-                    this.photoError = '';
                     if (!file.type.startsWith('image/')) return this.showToastMsg('শুধু ছবি', '', 'error');
                     if (file.size > 5 * 1024 * 1024) return this.showToastMsg('৫MB এর বেশি না', '', 'error');
                     this.photoFile = file;
@@ -657,7 +684,6 @@
                         const res = await fetch('/api/photo', { method: 'POST', body: formData });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || 'Upload failed');
-                        
                         this.lastUploaded = { url: data.photo.url };
                         this.showToastMsg('Uploaded! 🎉', data.photo.url, 'success');
                         this.photoFile = null; this.photoPreview = null;
