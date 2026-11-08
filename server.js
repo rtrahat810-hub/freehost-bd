@@ -110,7 +110,7 @@ async function getAllSettings() {
   } catch (e) { return DEFAULT_SETTINGS; }
 }
 
-// ===== BRANDING FOOTER (নিচে ডান দিকে ছোট লেখা) =====
+// ===== BRANDING FOOTER =====
 const BRANDING_FOOTER = `
 <a href="https://freehost-bd.onrender.com" target="_blank" rel="noopener" style="position:fixed;bottom:12px;right:12px;z-index:999999;display:flex;align-items:center;gap:6px;background:rgba(15,23,42,0.85);backdrop-filter:blur(10px);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;text-decoration:none;padding:6px 12px;border-radius:10px;font-family:sans-serif;font-size:10px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:all 0.2s ease;letter-spacing:0.3px;text-transform:none;"
    onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='rgba(99,102,241,0.6)';this.style.color='#e0e7ff';"
@@ -124,7 +124,6 @@ const BRANDING_FOOTER = `
 function hardcoreObfuscate(htmlCode) {
   let masked = maskScripts(htmlCode);
 
-  // 🔥 ব্র্যান্ডিং ফুটার যোগ করা
   if (masked.includes('</body>')) {
     masked = masked.replace('</body>', BRANDING_FOOTER + '</body>');
   } else {
@@ -211,6 +210,306 @@ try { var _final = decodeURIComponent(atob(_b)); document.open(); document.write
 </body></html>`;
 }
 
+// ===== NEW BEAUTIFUL PASSWORD PAGE FUNCTION =====
+function getPasswordPage(title, error = false) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔒 ${escapeHtml(title || 'Protected')} — FreeHost BD</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #05020a;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+}
+
+.background {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, #35005d 0%, transparent 40%), radial-gradient(circle at 80% 80%, #24004c 0%, transparent 40%), #05020a;
+}
+
+.grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(170,0,255,.045) 1px,transparent 1px), linear-gradient(90deg,rgba(170,0,255,.045) 1px,transparent 1px);
+    background-size: 35px 35px;
+    mask-image: linear-gradient(to bottom,black,transparent);
+}
+
+.particle {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: #d58aff;
+    border-radius: 50%;
+    box-shadow: 0 0 12px #bb00ff;
+    animation: float 7s infinite ease-in-out;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); opacity: .2; }
+    50% { transform: translateY(-100px); opacity: 1; }
+}
+
+.card {
+    position: relative;
+    z-index: 5;
+    width: 90%;
+    max-width: 390px;
+    padding: 38px 27px 30px;
+    border-radius: 27px;
+    background: linear-gradient(145deg, rgba(39,15,57,.92), rgba(10,5,19,.96));
+    border: 1px solid rgba(192,91,255,.45);
+    box-shadow: 0 0 50px rgba(146,0,255,.18), inset 0 0 30px rgba(180,0,255,.05);
+    backdrop-filter: blur(25px);
+    animation: cardIn 1s ease;
+}
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(40px) scale(.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.logo-area { display: flex; justify-content: center; margin-bottom: 23px; }
+.logo {
+    width: 88px; height: 88px;
+    border-radius: 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 43px;
+    background: linear-gradient(145deg,#bd42ff,#5100a5,#18002d);
+    border: 1px solid #d99aff;
+    box-shadow: 0 0 20px #9b00ff, 0 0 55px rgba(160,0,255,.35), inset 0 0 20px rgba(255,255,255,.15);
+    animation: glow 3s infinite alternate;
+}
+@keyframes glow {
+    from { box-shadow: 0 0 15px #8500ff; }
+    to { box-shadow: 0 0 35px #d000ff, 0 0 65px #6500ff; }
+}
+
+.title {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg,#fff,#d28aff,#fff);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.subtitle {
+    text-align: center;
+    color: #a991b8;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-top: 11px;
+}
+
+.line {
+    height: 1px;
+    margin: 25px 0;
+    background: linear-gradient(90deg,transparent,#b700ff,transparent);
+}
+
+.label {
+    font-size: 11px;
+    color: #d4b3e7;
+    letter-spacing: 1.5px;
+    margin-bottom: 11px;
+    display: block;
+}
+
+.input-wrapper { position: relative; }
+
+.input-wrapper input {
+    width: 100%;
+    height: 57px;
+    background: rgba(255,255,255,.035);
+    border: 1px solid #66318a;
+    border-radius: 14px;
+    padding: 0 52px 0 17px;
+    color: white;
+    outline: none;
+    font-size: 13px;
+    letter-spacing: 1px;
+    transition: .3s;
+}
+.input-wrapper input:focus {
+    border-color: #d000ff;
+    box-shadow: 0 0 18px rgba(184,0,255,.25);
+}
+.input-wrapper input::placeholder { color: #806d8c; }
+
+.eye {
+    position: absolute;
+    right: 17px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 19px;
+}
+
+.unlock {
+    width: 100%;
+    height: 57px;
+    margin-top: 25px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(100deg,#7600e8,#c000ff,#8500ff);
+    color: white;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 7px 25px rgba(157,0,255,.3);
+    transition: .3s;
+}
+.unlock:hover { box-shadow: 0 0 30px #a900ff; }
+.unlock:active { transform: scale(.96); }
+
+.message {
+    min-height: 20px;
+    margin-top: 17px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.footer {
+    margin-top: 27px;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    color: #796487;
+    letter-spacing: 2px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 12px;
+    font-size: 9px;
+    color: #a58caf;
+}
+
+.dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #00ff9d;
+    box-shadow: 0 0 10px #00ff9d;
+}
+</style>
+</head>
+<body>
+
+<div class="background">
+    <div class="grid"></div>
+</div>
+
+<div id="particles"></div>
+
+<div class="card">
+    <div class="logo-area">
+        <div class="logo">♛</div>
+    </div>
+
+    <h1 class="title">LOGIN ACCESS</h1>
+    <p class="subtitle">✦ 100% SECURE THIS PAGE ✦</p>
+
+    <div class="line"></div>
+
+    <label class="label">ENTER ACCESS PASSWORD</label>
+
+    <div class="input-wrapper">
+        <input type="password" id="password" placeholder="Enter your secret password" autocomplete="current-password">
+        <span class="eye" id="eye" onclick="togglePassword()">👁</span>
+    </div>
+
+    <button class="unlock" onclick="login()">
+        ♛ &nbsp; UNLOCK SYSTEM
+    </button>
+
+    <div class="message" id="message">${error ? '<span style="color:#ff426b">✕ INVALID PASSWORD</span>' : ''}</div>
+
+    <div class="footer">
+        ${escapeHtml(title || 'PROTECTED PAGE')}
+    </div>
+
+    <div class="status">
+        <span class="dot"></span>
+        SECURE ACCESS GATE
+    </div>
+</div>
+
+<script>
+function togglePassword(){
+    const input = document.getElementById("password");
+    const eye = document.getElementById("eye");
+    if(input.type === "password"){
+        input.type = "text";
+        eye.innerHTML = "🙈";
+    } else {
+        input.type = "password";
+        eye.innerHTML = "👁";
+    }
+}
+
+function login(){
+    const pass = document.getElementById("password").value;
+    const msg = document.getElementById("message");
+
+    if(!pass){
+        msg.style.color = "#ff6b8a";
+        msg.innerHTML = "⚠ PASSWORD REQUIRED";
+        return;
+    }
+
+    // সার্ভারে পাসওয়ার্ড পাঠানো হবে
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('pw', pass);
+    window.location.search = urlParams.toString();
+}
+
+document.getElementById("password").addEventListener("keydown", function(e){
+    if(e.key === "Enter") login();
+});
+
+// Particle generator
+const particleBox = document.getElementById("particles");
+for(let i=0; i<35; i++){
+    const p = document.createElement("div");
+    p.className = "particle";
+    p.style.left = Math.random() * 100 + "%";
+    p.style.top = Math.random() * 100 + "%";
+    p.style.animationDelay = Math.random() * 7 + "s";
+    p.style.animationDuration = (4 + Math.random() * 6) + "s";
+    particleBox.appendChild(p);
+}
+
+// Auto focus
+document.getElementById("password").focus();
+</script>
+
+</body>
+</html>
+  `;
+}
+
 // ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), service: 'FreeHost BD' });
@@ -232,7 +531,7 @@ app.get('/api/public/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'সার্ভার সমস্যা' }); }
 });
 
-// ===== FIREBASE MODE (/p/:slug) — with Branding Footer =====
+// ===== FIREBASE MODE (/p/:slug) =====
 app.get('/p/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
@@ -259,17 +558,7 @@ app.get('/p/:slug', async (req, res) => {
     if (host.password) {
       const provided = req.query.pw;
       if (provided !== host.password) {
-        return res.send(`
-          <!DOCTYPE html>
-          <html><head><title>Protected</title><meta name="viewport" content="width=device-width,initial-scale=1">
-          <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff}
-          .box{background:#1e293b;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-width:90%}
-          input{padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;width:100%;margin:16px 0;box-sizing:border-box}
-          button{padding:12px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
-          </style></head>
-          <body><div class="box"><h2>🔒 Password Required</h2>
-          <form method="GET"><input type="password" name="pw" placeholder="Enter password" autofocus><button type="submit">Unlock</button></form></body></html>
-        `);
+        return res.send(getPasswordPage(host.title, provided !== undefined));
       }
     }
 
@@ -294,7 +583,7 @@ app.get('/p/:slug', async (req, res) => {
   }
 });
 
-// ===== PROTECTED MODE (/s/:slug) — with Branding Footer =====
+// ===== PROTECTED MODE (/s/:slug) =====
 app.get('/s/:slug', async (req, res) => {
   try {
     const userAgent = req.headers['user-agent'] || '';
@@ -321,17 +610,7 @@ app.get('/s/:slug', async (req, res) => {
     if (host.password) {
       const provided = req.query.pw;
       if (provided !== host.password) {
-        return res.send(`
-          <!DOCTYPE html>
-          <html><head><title>Protected</title><meta name="viewport" content="width=device-width,initial-scale=1">
-          <style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0f172a;color:#fff}
-          .box{background:#1e293b;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-width:90%}
-          input{padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;width:100%;margin:16px 0;box-sizing:border-box}
-          button{padding:12px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
-          </style></head>
-          <body><div class="box"><h2>🔒 Password Required</h2>
-          <form method="GET"><input type="password" name="pw" placeholder="Enter password" autofocus><button type="submit">Unlock</button></form></body></html>
-        `);
+        return res.send(getPasswordPage(host.title, provided !== undefined));
       }
     }
 
@@ -373,7 +652,7 @@ ${BRANDING_FOOTER}
   }
 });
 
-// ===== EMBED ROUTE (RC4 Obfuscation for /s/) =====
+// ===== EMBED ROUTE =====
 app.get('/embed/:slug', async (req, res) => {
   try {
     const host = await Hosted.findOne({ slug: req.params.slug, banned: false });
@@ -577,6 +856,7 @@ app.listen(PORT, () => {
   console.log(`🚀 FreeHost BD running on port ${PORT}`);
   console.log(`🔐 RC4 + Hex Obfuscation: Enabled`);
   console.log(`🎯 Branding Footer: Enabled`);
+  console.log(`🔒 Beautiful Password Page: Enabled`);
   console.log(`🔥 Firebase Mode: /p/:slug`);
   console.log(`🛡️ Protected Mode: /s/:slug`);
 });
