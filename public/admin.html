@@ -6,6 +6,7 @@
     <title>Admin Panel — FreeHost BD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
@@ -32,11 +33,16 @@
         .fade-in { animation: fadeIn 0.35s ease; }
         .empty-state { padding: 60px 20px; text-align: center; }
         .empty-state i { font-size: 48px; color: rgba(148, 163, 184, 0.2); margin-bottom: 16px; }
+        .tab-btn { padding: 8px 16px; border-radius: 10px; font-size: 11px; font-weight: 800; transition: all 0.25s; border: 1px solid transparent; }
+        .tab-btn.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+        .tab-btn:not(.active) { background: rgba(255,255,255,0.03); color: rgba(148, 163, 184, 0.8); border-color: rgba(255,255,255,0.06); }
         .sidebar-bg { background: linear-gradient(180deg, #0a0e1a 0%, #050811 100%); border-right: 1px solid rgba(255, 255, 255, 0.06); }
         .menu-item { transition: all 0.25s ease; border-radius: 10px; position: relative; overflow: hidden; }
         .menu-item:hover { background: rgba(99, 102, 241, 0.08); color: #fff; }
         .menu-item.active { background: linear-gradient(90deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.08)); color: #fff; box-shadow: inset 3px 0 0 #818cf8; }
         .group-label { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(148, 163, 184, 0.5); padding: 12px 12px 6px; }
+        .checkbox { width: 18px; height: 18px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.15); background: transparent; cursor: pointer; transition: all 0.2s; accent-color: #6366f1; }
+        .checkbox:checked { background: #6366f1; border-color: #6366f1; }
     </style>
 </head>
 <body>
@@ -80,6 +86,7 @@
         <div class="flex min-h-screen relative">
             <div x-show="mobileMenu" x-cloak @click="mobileMenu = false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"></div>
 
+            <!-- SIDEBAR -->
             <aside :class="mobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" class="fixed lg:sticky top-0 left-0 w-64 h-screen sidebar-bg z-50 lg:z-10 flex flex-col transition-transform duration-300 overflow-hidden">
                 <div class="flex items-center gap-3 px-4 py-4 border-b border-white/5 flex-shrink-0">
                     <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-cyan-400 flex items-center justify-center shadow-lg">
@@ -87,7 +94,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-black text-white truncate">FreeHost BD</div>
-                        <div class="text-[9px] mono text-indigo-300 tracking-wider">HOSTING ADMIN</div>
+                        <div class="text-[9px] mono text-indigo-300 tracking-wider">ADMIN v2.0</div>
                     </div>
                     <button @click="mobileMenu = false" class="lg:hidden w-8 h-8 rounded-lg btn-ghost flex items-center justify-center">
                         <i class="fa-solid fa-xmark text-xs"></i>
@@ -102,6 +109,9 @@
                                 <button @click="section = item.id; mobileMenu = false" :class="section === item.id ? 'active' : 'text-gray-400'" class="menu-item w-full text-left px-3 py-2.5 text-xs font-bold flex items-center gap-3 mb-0.5">
                                     <i :class="'fa-solid ' + item.icon" class="w-4 text-sm"></i>
                                     <span class="flex-1" x-text="item.label"></span>
+                                    <template x-if="item.badge && item.badge() > 0">
+                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-500 text-white" x-text="item.badge()"></span>
+                                    </template>
                                 </button>
                             </template>
                         </div>
@@ -115,6 +125,7 @@
                 </div>
             </aside>
 
+            <!-- MAIN AREA -->
             <main class="flex-1 min-w-0 flex flex-col">
                 <header class="sticky top-0 z-30 glass border-b border-white/5 px-4 lg:px-6 py-3 flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
@@ -127,6 +138,13 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        <!-- Notifications Bell -->
+                        <button @click="section = 'notifications'" class="relative w-9 h-9 rounded-xl btn-ghost flex items-center justify-center">
+                            <i class="fa-solid fa-bell text-xs text-amber-400"></i>
+                            <template x-if="unreadNotifs > 0">
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center" x-text="unreadNotifs"></span>
+                            </template>
+                        </button>
                         <button @click="refreshData()" class="w-9 h-9 rounded-xl btn-ghost flex items-center justify-center">
                             <i class="fa-solid fa-rotate text-xs" :class="loading ? 'fa-spin' : ''"></i>
                         </button>
@@ -135,7 +153,7 @@
 
                 <div class="flex-1 p-4 lg:p-6 overflow-x-hidden">
 
-                    <!-- DASHBOARD -->
+                    <!-- ============ DASHBOARD ============ -->
                     <template x-if="section === 'dashboard'">
                         <div class="fade-in space-y-5">
                             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -163,20 +181,43 @@
                         </div>
                     </template>
 
-                    <!-- ALL HOSTS -->
+                    <!-- ============ ALL HOSTS ============ -->
                     <template x-if="section === 'hosts'">
                         <div class="fade-in space-y-3">
-                            <input type="text" x-model="hostSearch" placeholder="🔍 হোস্ট লিংক সার্চ..." class="premium-input w-full px-4 py-3 text-sm">
+                            <!-- Search & Filter -->
+                            <div class="flex flex-wrap gap-2">
+                                <input type="text" x-model="hostSearch" placeholder="🔍 নাম বা স্লাগ সার্চ..." class="premium-input flex-1 min-w-[200px] px-4 py-3 text-sm">
+                                <select x-model="statusFilter" class="premium-input px-4 py-3 text-sm">
+                                    <option value="all">সব</option>
+                                    <option value="active">শুধু Active</option>
+                                    <option value="banned">শুধু Banned</option>
+                                    <option value="password">পাসওয়ার্ড আছে</option>
+                                </select>
+                            </div>
+
+                            <!-- Bulk Action Bar -->
+                            <template x-if="selectedHosts.length > 0">
+                                <div class="glass rounded-2xl p-3 flex items-center gap-2 flex-wrap border-indigo-500/40">
+                                    <span class="text-xs font-bold text-indigo-300"><span x-text="selectedHosts.length"></span> টি সিলেক্ট</span>
+                                    <div class="flex-1"></div>
+                                    <button @click="bulkAction('ban')" class="btn-warning px-3 py-2 rounded-lg text-[10px] font-black text-white">BAN</button>
+                                    <button @click="bulkAction('unban')" class="btn-success px-3 py-2 rounded-lg text-[10px] font-black text-white">UNBAN</button>
+                                    <button @click="bulkAction('delete')" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-trash"></i> DELETE</button>
+                                </div>
+                            </template>
+
                             <template x-if="filteredHosts.length === 0">
                                 <div class="glass rounded-2xl empty-state">
                                     <i class="fa-solid fa-cloud"></i>
                                     <p class="text-sm text-gray-400">কোনো হোস্ট নেই</p>
                                 </div>
                             </template>
+
                             <div class="space-y-2">
                                 <template x-for="h in filteredHosts" :key="h._id">
                                     <div class="glass rounded-2xl p-4">
                                         <div class="flex items-start gap-3">
+                                            <input type="checkbox" class="checkbox mt-2" :checked="selectedHosts.includes(h._id)" @change="toggleSelect(h._id)">
                                             <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0"><i class="fa-brands fa-html5 text-cyan-400"></i></div>
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-2 flex-wrap">
@@ -195,7 +236,7 @@
                                             <template x-if="editingPasswordId !== h._id">
                                                 <div class="flex items-center gap-2 flex-1">
                                                     <span class="text-[11px] mono text-amber-200 flex-1" x-text="h.password"></span>
-                                                    <button @click="startEditPassword(h._id, h.password)" class="text-[9px] font-black text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20">
+                                                    <button @click="startEditPassword(h._id, h.password)" class="text-[9px] font-black text-indigo-400 px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20">
                                                         <i class="fa-solid fa-pen"></i> এডিট
                                                     </button>
                                                 </div>
@@ -204,7 +245,7 @@
                                                 <div class="flex items-center gap-2 flex-1">
                                                     <input type="text" x-model="newPasswordValue" class="flex-1 bg-black/40 border border-white/20 rounded px-2 py-1 text-[11px] mono text-white">
                                                     <button @click="savePassword(h._id)" class="text-[9px] font-black text-emerald-400 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
-                                                        <i class="fa-solid fa-check"></i> সেভ
+                                                        <i class="fa-solid fa-check"></i>
                                                     </button>
                                                     <button @click="cancelEditPassword()" class="text-[9px] font-black text-red-400 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
                                                         <i class="fa-solid fa-xmark"></i>
@@ -215,9 +256,10 @@
 
                                         <div class="flex gap-1.5 mt-3 flex-wrap">
                                             <button @click="viewCode(h)" class="btn-primary px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-code"></i> কোড</button>
-                                            <a :href="'/p/' + h.slug" target="_blank" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-external-link"></i> ওপেন</a>
-                                            <button @click="downloadCode(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-download"></i> ডাউনলোড</button>
-                                            <button @click="openRedirectModal(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white" title="Redirect"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400"></i> রিডাইরেক্ট</button>
+                                            <a :href="'/p/' + h.slug" target="_blank" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-external-link"></i></a>
+                                            <button @click="downloadCode(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white" title="Download"><i class="fa-solid fa-download"></i></button>
+                                            <button @click="showQR(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white" title="QR Code"><i class="fa-solid fa-qrcode text-cyan-400"></i></button>
+                                            <button @click="openRedirectModal(h)" class="btn-ghost px-3 py-2 rounded-lg text-[10px] font-black text-white" title="Redirect"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400"></i></button>
                                             <button @click="toggleHostBan(h)" :class="h.banned ? 'btn-success' : 'btn-warning'" class="px-3 py-2 rounded-lg text-[10px] font-black text-white"><span x-text="h.banned ? 'UNBAN' : 'BAN'"></span></button>
                                             <button @click="deleteHost(h._id)" class="btn-danger px-3 py-2 rounded-lg text-[10px] font-black text-white"><i class="fa-solid fa-trash"></i></button>
                                         </div>
@@ -227,7 +269,7 @@
                         </div>
                     </template>
 
-                    <!-- BANNED HOSTS -->
+                    <!-- ============ BANNED HOSTS ============ -->
                     <template x-if="section === 'banned-hosts'">
                         <div class="fade-in space-y-2">
                             <template x-if="bannedHosts.length === 0">
@@ -247,7 +289,7 @@
                         </div>
                     </template>
 
-                    <!-- GLOBAL REDIRECT -->
+                    <!-- ============ GLOBAL REDIRECT ============ -->
                     <template x-if="section === 'redirect'">
                         <div class="fade-in max-w-2xl">
                             <div class="glass rounded-2xl p-6">
@@ -267,7 +309,7 @@
                         </div>
                     </template>
 
-                    <!-- ANALYTICS -->
+                    <!-- ============ ANALYTICS ============ -->
                     <template x-if="section === 'analytics'">
                         <div class="fade-in space-y-4">
                             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -276,14 +318,36 @@
                                 <div class="glass rounded-2xl p-5"><div class="text-[10px] mono text-gray-400 mb-2">TOP SITE</div><div class="text-xs font-black text-emerald-300 truncate" x-text="topSite"></div></div>
                                 <div class="glass rounded-2xl p-5"><div class="text-[10px] mono text-gray-400 mb-2">ACTIVE</div><div class="text-3xl font-black text-orange-300" x-text="hosts.filter(h => !h.banned).length"></div></div>
                             </div>
-                            <div class="glass rounded-2xl p-5">
-                                <h3 class="font-black text-sm mb-3">🏆 Top 10 Sites</h3>
-                                <div class="space-y-2">
-                                    <template x-for="(h, idx) in topSites" :key="h._id">
-                                        <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
-                                            <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-300" x-text="idx + 1"></div>
-                                            <div class="flex-1 min-w-0"><p class="text-xs font-bold text-white truncate" x-text="h.title"></p><p class="text-[10px] mono text-gray-500 truncate" x-text="'/p/' + h.slug"></p></div>
-                                            <span class="text-xs font-black text-cyan-300 mono" x-text="h.views || 0"></span>
+                        </div>
+                    </template>
+
+                    <!-- ============ ACTIVITY LOG ============ -->
+                    <template x-if="section === 'activity-log'">
+                        <div class="fade-in space-y-3">
+                            <div class="flex gap-2 flex-wrap">
+                                <input type="text" x-model="logSearch" placeholder="🔍 অ্যাক্টিভিটি সার্চ..." class="premium-input flex-1 px-4 py-3 text-sm">
+                                <button @click="loadLogs()" class="btn-primary px-4 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-rotate mr-1"></i> রিফ্রেশ</button>
+                            </div>
+                            <div class="glass rounded-2xl overflow-hidden">
+                                <div class="max-h-[600px] overflow-y-auto">
+                                    <template x-if="activityLogs.length === 0">
+                                        <div class="empty-state"><i class="fa-solid fa-list"></i><p class="text-sm text-gray-400">কোনো লগ নেই</p></div>
+                                    </template>
+                                    <template x-for="(log, idx) in filteredLogs" :key="idx">
+                                        <div class="flex items-start gap-3 p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition">
+                                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <i class="fa-solid fa-circle text-indigo-400 text-[6px]"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-bold text-white" x-text="log.action"></p>
+                                                <p class="text-[10px] text-gray-400 truncate" x-text="log.details"></p>
+                                                <div class="flex items-center gap-2 mt-1 text-[9px] text-gray-500 mono">
+                                                    <i class="fa-solid fa-clock text-[7px]"></i>
+                                                    <span x-text="new Date(log.createdAt).toLocaleString('en-GB')"></span>
+                                                    <span x-show="log.ip">•</span>
+                                                    <span x-show="log.ip" x-text="log.ip"></span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </template>
                                 </div>
@@ -291,93 +355,162 @@
                         </div>
                     </template>
 
-                    <!-- SITE SETTINGS (CMS) -->
-                    <template x-if="section === 'site-settings'">
-                        <div class="fade-in max-w-2xl space-y-4">
-                            <div class="glass rounded-2xl p-6">
-                                <h3 class="font-black text-lg mb-4">📝 সাইট সেটিংস</h3>
-                                <div class="space-y-3">
-                                    <div><label class="text-xs text-gray-400 mb-1 block">সাইটের নাম</label><input type="text" x-model="siteSettings.siteTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
-                                    <div><label class="text-xs text-gray-400 mb-1 block">ট্যাগলাইন</label><input type="text" x-model="siteSettings.siteTagline" class="premium-input w-full px-4 py-3 text-sm"></div>
-                                    <div><label class="text-xs text-gray-400 mb-1 block">হিরো টাইটেল</label><input type="text" x-model="siteSettings.heroTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
-                                    <div><label class="text-xs text-gray-400 mb-1 block">হিরো সাবটাইটেল</label><textarea x-model="siteSettings.heroSubtitle" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea></div>
-                                    <div><label class="text-xs text-gray-400 mb-1 block">ফুটার টেক্সট</label><input type="text" x-model="siteSettings.footerText" class="premium-input w-full px-4 py-3 text-sm"></div>
-                                    <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
-                                </div>
+                    <!-- ============ NOTIFICATIONS ============ -->
+                    <template x-if="section === 'notifications'">
+                        <div class="fade-in space-y-3">
+                            <div class="flex gap-2">
+                                <button @click="markAllRead()" class="btn-primary flex-1 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-check-double mr-1"></i> সব পড়া হয়েছে</button>
+                                <button @click="clearNotifications()" class="btn-danger py-3 px-4 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div class="glass rounded-2xl overflow-hidden">
+                                <template x-if="notifications.length === 0">
+                                    <div class="empty-state"><i class="fa-solid fa-bell-slash"></i><p class="text-sm text-gray-400">কোনো নোটিফিকেশন নেই</p></div>
+                                </template>
+                                <template x-for="n in notifications" :key="n._id">
+                                    <div class="flex items-start gap-3 p-4 border-b border-white/5 last:border-0" :class="!n.read ? 'bg-indigo-500/5' : ''">
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" :class="n.type === 'new_host' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-indigo-500/20 text-indigo-400'">
+                                            <i class="fa-solid text-xs" :class="n.type === 'new_host' ? 'fa-cloud' : 'fa-bell'"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-white" x-text="n.title"></p>
+                                            <p class="text-xs text-gray-400" x-text="n.message"></p>
+                                            <p class="text-[10px] text-gray-500 mono mt-1" x-text="new Date(n.createdAt).toLocaleString('en-GB')"></p>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </template>
 
-                    <!-- MAINTENANCE MODE -->
+                    <!-- ============ SYSTEM STATUS ============ -->
+                    <template x-if="section === 'system-status'">
+                        <div class="fade-in space-y-3">
+                            <button @click="loadSystemStatus()" class="btn-primary w-full py-3 rounded-xl text-xs font-black text-white">
+                                <i class="fa-solid fa-rotate mr-1"></i> রিফ্রেশ
+                            </button>
+                            <template x-if="systemStatus">
+                                <div class="glass rounded-2xl p-5 space-y-3">
+                                    <div class="flex items-center justify-between p-3 bg-black/30 rounded-xl">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-database text-cyan-400"></i>
+                                            <span class="text-xs font-bold text-white">MongoDB</span>
+                                        </div>
+                                        <span class="text-[10px] font-black px-3 py-1 rounded-full" :class="systemStatus.dbStatus === 'Connected' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'" x-text="systemStatus.dbStatus"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-black/30 rounded-xl">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-server text-indigo-400"></i>
+                                            <span class="text-xs font-bold text-white">Node.js</span>
+                                        </div>
+                                        <span class="text-[10px] font-black text-indigo-300" x-text="systemStatus.nodeVersion"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-black/30 rounded-xl">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-clock text-emerald-400"></i>
+                                            <span class="text-xs font-bold text-white">Uptime</span>
+                                        </div>
+                                        <span class="text-[10px] font-black text-emerald-300" x-text="systemStatus.uptimeFormatted"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-black/30 rounded-xl">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-memory text-amber-400"></i>
+                                            <span class="text-xs font-bold text-white">Memory</span>
+                                        </div>
+                                        <span class="text-[10px] font-black text-amber-300">
+                                            <span x-text="systemStatus.memoryUsed"></span>MB / <span x-text="systemStatus.memoryTotal"></span>MB
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-black/30 rounded-xl">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-microchip text-cyan-400"></i>
+                                            <span class="text-xs font-bold text-white">Platform</span>
+                                        </div>
+                                        <span class="text-[10px] font-black text-cyan-300" x-text="systemStatus.platform"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- ============ CMS SETTINGS ============ -->
+                    <template x-if="section === 'cms'">
+                        <div class="fade-in max-w-3xl space-y-4">
+                            <div class="glass rounded-2xl p-5">
+                                <h3 class="font-black text-lg mb-4">📝 সাইট ব্র্যান্ডিং</h3>
+                                <div class="space-y-3">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">সাইটের নাম</label><input type="text" x-model="settings.siteTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">ট্যাগলাইন</label><input type="text" x-model="settings.siteTagline" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">ফুটার টেক্সট</label><input type="text" x-model="settings.footerText" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                </div>
+                            </div>
+
+                            <div class="glass rounded-2xl p-5">
+                                <h3 class="font-black text-lg mb-4">🏠 হোমপেজ হিরো</h3>
+                                <div class="space-y-3">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">হিরো টাইটেল</label><input type="text" x-model="settings.heroTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">হিরো সাবটাইটেল</label><textarea x-model="settings.heroSubtitle" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea></div>
+                                </div>
+                            </div>
+
+                            <div class="glass rounded-2xl p-5">
+                                <h3 class="font-black text-lg mb-4">🎨 HTML Host পেজ</h3>
+                                <div class="space-y-3">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">কোড সেকশন টাইটেল</label><input type="text" x-model="settings.htmlHostTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">কোড সেকশন সাবটাইটেল</label><input type="text" x-model="settings.htmlHostSubtitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">প্রজেক্ট টাইটেল লেবেল</label><input type="text" x-model="settings.projectTitleLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">কাস্টম URL লেবেল</label><input type="text" x-model="settings.customUrlLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">পাসওয়ার্ড লেবেল</label><input type="text" x-model="settings.accessPasswordLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">Deploy বাটন টেক্সট</label><input type="text" x-model="settings.deployButtonText" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                </div>
+                            </div>
+
+                            <div class="glass rounded-2xl p-5">
+                                <h3 class="font-black text-lg mb-4">📸 Photo Host পেজ</h3>
+                                <div class="space-y-3">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">আপলোড এরিয়া টাইটেল</label><input type="text" x-model="settings.photoHostTitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">আপলোড এরিয়া সাবটাইটেল</label><input type="text" x-model="settings.photoHostSubtitle" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">আপলোড বাটন টেক্সট</label><input type="text" x-model="settings.photoUploadButton" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                </div>
+                            </div>
+
+                            <div class="glass rounded-2xl p-5">
+                                <h3 class="font-black text-lg mb-4">🧭 নেভিগেশন</h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div><label class="text-xs text-gray-400 mb-1 block">HTML লেবেল</label><input type="text" x-model="settings.navHtmlLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">Photo লেবেল</label><input type="text" x-model="settings.navPhotoLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">Shop লেবেল</label><input type="text" x-model="settings.navShopLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                    <div><label class="text-xs text-gray-400 mb-1 block">Dashboard লেবেল</label><input type="text" x-model="settings.navDashboardLabel" class="premium-input w-full px-4 py-3 text-sm"></div>
+                                </div>
+                            </div>
+
+                            <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                <i class="fa-solid fa-save mr-2"></i> সব সেটিংস সেভ করুন
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- ============ MAINTENANCE MODE ============ -->
                     <template x-if="section === 'maintenance'">
                         <div class="fade-in max-w-2xl">
                             <div class="glass rounded-2xl p-6">
                                 <h3 class="font-black text-lg mb-4">🔧 Maintenance Mode</h3>
-                                <p class="text-xs text-gray-400 mb-4">চালু করলে পুরো সাইট "Under Maintenance" দেখাবে। অ্যাডমিন প্যানেল কাজ করবে।</p>
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between bg-black/30 rounded-xl p-4">
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-4 bg-black/30 rounded-xl">
                                         <div>
                                             <p class="text-sm font-bold text-white">Maintenance Mode</p>
-                                            <p class="text-[10px] text-gray-400" x-text="(siteSettings.maintenanceMode === true || siteSettings.maintenanceMode === 'true') ? '✅ চালু আছে' : '❌ বন্ধ আছে'"></p>
+                                            <p class="text-[10px] text-gray-400" x-text="(settings.maintenanceMode === true || settings.maintenanceMode === 'true') ? '✅ চালু' : '❌ বন্ধ'"></p>
                                         </div>
-                                        <button @click="toggleMaintenance()" 
-                                                :class="(siteSettings.maintenanceMode === true || siteSettings.maintenanceMode === 'true') ? 'btn-danger' : 'btn-success'"
-                                                class="px-5 py-3 rounded-xl text-xs font-black text-white">
-                                            <span x-text="(siteSettings.maintenanceMode === true || siteSettings.maintenanceMode === 'true') ? 'বন্ধ করুন' : 'চালু করুন'"></span>
+                                        <button @click="toggleMaintenance()" :class="(settings.maintenanceMode === true || settings.maintenanceMode === 'true') ? 'btn-danger' : 'btn-success'" class="px-5 py-3 rounded-xl text-xs font-black text-white">
+                                            <span x-text="(settings.maintenanceMode === true || settings.maintenanceMode === 'true') ? 'বন্ধ' : 'চালু'"></span>
                                         </button>
                                     </div>
-                                    <div><label class="text-xs text-gray-400 mb-1 block">Maintenance মেসেজ</label><textarea x-model="siteSettings.maintenanceMessage" class="premium-input w-full px-4 py-3 text-sm h-20 resize-none"></textarea></div>
-                                    <button @click="saveSiteSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-save mr-2"></i> সেভ করুন</button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- CHANGE PASSWORD -->
-                    <template x-if="section === 'change-password'">
-                        <div class="fade-in max-w-2xl">
-                            <div class="glass rounded-2xl p-6">
-                                <h3 class="font-black text-lg mb-4">🔑 অ্যাডমিন পাসওয়ার্ড</h3>
-                                <div class="space-y-3">
-                                    <input type="password" x-model="passwordForm.old" placeholder="পুরনো পাসওয়ার্ড" class="premium-input w-full px-4 py-3 text-sm">
-                                    <input type="password" x-model="passwordForm.new" placeholder="নতুন পাসওয়ার্ড" class="premium-input w-full px-4 py-3 text-sm">
-                                    <input type="password" x-model="passwordForm.confirm" placeholder="নতুন পাসওয়ার্ড আবার" class="premium-input w-full px-4 py-3 text-sm">
-                                    <button @click="changePassword()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-key mr-2"></i> পরিবর্তন করুন</button>
-                                    <p class="text-[10px] text-gray-500 text-center">ডিফল্ট পাসওয়ার্ড: NOBITA_VIP</p>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- ACTIVITY LOG -->
-                    <template x-if="section === 'activity-log'">
-                        <div class="fade-in space-y-3">
-                            <button @click="clearLogs()" class="btn-danger px-4 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-trash mr-1"></i> লগ ক্লিয়ার</button>
-                            <div class="glass rounded-2xl p-4">
-                                <template x-if="activityLogs.length === 0">
-                                    <div class="empty-state"><i class="fa-solid fa-list"></i><p class="text-sm text-gray-400">কোনো লগ নেই</p></div>
-                                </template>
-                                <template x-for="(log, i) in activityLogs" :key="i">
-                                    <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
-                                        <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-circle text-indigo-400 text-[6px]"></i></div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-bold text-white" x-text="log.action"></p>
-                                            <p class="text-[10px] mono text-gray-500" x-text="log.time"></p>
-                                        </div>
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">Maintenance মেসেজ</label>
+                                        <textarea x-model="settings.maintenanceMessage" class="premium-input w-full px-4 py-3 text-sm h-24 resize-none"></textarea>
                                     </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- BACKUP -->
-                    <template x-if="section === 'backup'">
-                        <div class="fade-in max-w-2xl">
-                            <div class="glass rounded-2xl p-6">
-                                <h3 class="font-black text-lg mb-4">💾 ব্যাকআপ</h3>
-                                <div class="space-y-3">
-                                    <button @click="downloadBackup()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-download mr-2"></i> সব ডেটা ডাউনলোড (JSON)</button>
-                                    <button @click="exportAllCodes()" class="btn-warning w-full py-4 rounded-2xl font-black text-sm text-white"><i class="fa-solid fa-file-code mr-2"></i> সব হোস্টেড কোড (HTML)</button>
+                                    <button @click="saveSettings()" class="btn-primary w-full py-4 rounded-2xl font-black text-sm text-white">
+                                        <i class="fa-solid fa-save mr-2"></i> সেভ করুন
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -388,7 +521,7 @@
         </div>
     </template>
 
-    <!-- CODE VIEWER MODAL -->
+    <!-- ===== CODE VIEWER MODAL ===== -->
     <div x-show="showCodeModal" x-cloak @click.self="showCodeModal = false" class="fixed inset-0 z-[60] flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9);">
         <div class="glass rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="p-4 border-b border-white/10 flex items-center justify-between">
@@ -403,17 +536,16 @@
         </div>
     </div>
 
-    <!-- REDIRECT MODAL -->
+    <!-- ===== REDIRECT MODAL ===== -->
     <div x-show="showRedirectModal" x-cloak @click.self="showRedirectModal = false" class="fixed inset-0 z-[60] flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9);">
         <div class="glass rounded-3xl max-w-md w-full p-5">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-sm text-white"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400 mr-2"></i>রিডাইরেক্ট সেট করুন</h3>
+                <h3 class="font-black text-sm text-white"><i class="fa-solid fa-arrow-right-arrow-left text-orange-400 mr-2"></i>রিডাইরেক্ট সেট</h3>
                 <button @click="showRedirectModal = false" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center"><i class="fa-solid fa-xmark text-xs"></i></button>
             </div>
             <template x-if="redirectHost">
                 <div>
-                    <p class="text-[10px] mono text-indigo-300 mb-2" x-text="'/p/' + redirectHost.slug"></p>
-                    <p class="text-xs text-gray-400 mb-4">এই লিংকে কেউ ঢুকলে নিচের URL-এ রিডাইরেক্ট হবে।</p>
+                    <p class="text-[10px] mono text-indigo-300 mb-3" x-text="'/p/' + redirectHost.slug"></p>
                     <input type="text" x-model="redirectForm.url" placeholder="https://example.com" class="premium-input w-full px-4 py-3 text-sm mb-3">
                     <div class="flex gap-2">
                         <button @click="saveHostRedirect()" class="btn-primary flex-1 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-save mr-1"></i> সেভ</button>
@@ -424,40 +556,62 @@
         </div>
     </div>
 
-    <!-- TOAST -->
+    <!-- ===== QR CODE MODAL ===== -->
+    <div x-show="showQRModal" x-cloak @click.self="showQRModal = false" class="fixed inset-0 z-[60] flex items-center justify-center p-3" style="background: rgba(0,0,0,0.9);">
+        <div class="glass rounded-3xl max-w-sm w-full p-6 text-center">
+            <h3 class="font-black text-lg text-white mb-4">📱 QR Code</h3>
+            <p class="text-[10px] mono text-indigo-300 mb-4" x-text="qrUrl"></p>
+            <div id="qrContainer" class="bg-white p-4 rounded-2xl inline-block mb-4"></div>
+            <div class="flex gap-2">
+                <button @click="downloadQR()" class="btn-primary flex-1 py-3 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-download mr-1"></i> ডাউনলোড</button>
+                <button @click="showQRModal = false" class="btn-ghost px-4 py-3 rounded-xl text-xs font-black text-white">বন্ধ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
     <div x-show="showToast" x-cloak class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] glass px-5 py-3 rounded-2xl flex items-center gap-3 max-w-sm shadow-2xl">
         <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" :class="toastType === 'error' ? 'bg-red-500' : 'bg-emerald-500'"><i class="fa-solid text-sm text-white" :class="toastType === 'error' ? 'fa-xmark' : 'fa-check'"></i></div>
         <div class="min-w-0"><p class="text-xs font-bold text-white" x-text="toastMessage"></p><p class="text-[10px] text-gray-400 truncate" x-text="toastSubtext"></p></div>
     </div>
 
-    <!-- SCRIPT -->
+    <!-- ===== SCRIPT ===== -->
     <script>
         function adminApp() {
             return {
                 loggedIn: false, password: '', showPass: false, loginError: '',
                 section: 'dashboard', mobileMenu: false, loading: false,
-                hosts: [], hostSearch: '',
+                hosts: [], hostSearch: '', statusFilter: 'all', selectedHosts: [],
                 redirectUrl: '', redirectActive: '',
                 showCodeModal: false, editingHost: null,
                 passwordForm: { old: '', new: '', confirm: '' },
-                activityLogs: [],
+                activityLogs: [], logSearch: '',
+                notifications: [], unreadNotifs: 0,
+                systemStatus: null,
                 showToast: false, toastMessage: '', toastSubtext: '', toastType: 'success',
+                editingPasswordId: null, newPasswordValue: '',
+                showRedirectModal: false, redirectHost: null, redirectForm: { url: '' },
+                showQRModal: false, qrUrl: '', qrInstance: null,
                 
-                editingPasswordId: null,
-                newPasswordValue: '',
-                
-                showRedirectModal: false,
-                redirectHost: null,
-                redirectForm: { url: '' },
-                
-                siteSettings: {
-                    siteTitle: 'FreeHost BD',
-                    siteTagline: 'Premium HTML Deployment',
+                settings: {
+                    siteTitle: 'FreeHost BD', siteTagline: 'Premium HTML Deployment',
                     heroTitle: 'Deploy HTML in Seconds',
                     heroSubtitle: 'Paste your HTML code and get a live link instantly. No login required.',
                     footerText: 'FreeHost BD',
                     maintenanceMode: false,
-                    maintenanceMessage: 'We are currently under maintenance. Please check back soon.'
+                    maintenanceMessage: 'We are currently under maintenance. Please check back soon.',
+                    htmlHostTitle: 'HTML Source Code', htmlHostSubtitle: 'Paste or drag & drop your HTML file',
+                    projectTitleLabel: 'Project Title', projectTitleSubtitle: 'Empty হলে auto-generate হবে',
+                    customUrlLabel: 'Custom URL', customUrlSubtitle: 'Empty হলে random slug হবে',
+                    accessPasswordLabel: 'Access Password', accessPasswordSubtitle: 'Empty রাখলে পাসওয়ার্ড ছাড়াই খুলবে',
+                    deployButtonText: 'DEPLOY TO CLOUD',
+                    deploySuccessTitle: 'Success! 🎉', deploySuccessMessage: 'Your site is now live',
+                    photoHostTitle: 'Click or Drop Image', photoHostSubtitle: 'JPG, PNG, WEBP • Max 5MB',
+                    photoUploadButton: 'Upload & Get Link',
+                    photoSuccessTitle: 'Upload Successful! 🎉', photoSuccessMessage: 'Your image is live',
+                    navHtmlLabel: 'HTML Host', navPhotoLabel: 'Photo Host',
+                    navShopLabel: 'Shop', navAccountLabel: 'Account', navDashboardLabel: 'Dashboard',
+                    footerBrandText: 'FreeHost BD', footerBrandSubtitle: 'PREMIUM PROJECT'
                 },
 
                 menuGroups: [
@@ -468,14 +622,14 @@
                         { id: 'redirect', label: 'Global Redirect', icon: 'fa-arrow-right-arrow-left' },
                         { id: 'analytics', label: 'Analytics', icon: 'fa-chart-simple' }
                     ]},
-                    { label: '⚙️ Settings', items: [
-                        { id: 'site-settings', label: 'Site Settings', icon: 'fa-pen-to-square' },
+                    { label: '🎨 CMS', items: [
+                        { id: 'cms', label: 'Site Settings', icon: 'fa-pen-to-square' },
                         { id: 'maintenance', label: 'Maintenance', icon: 'fa-wrench' }
                     ]},
-                    { label: '🔐 Admin', items: [
-                        { id: 'change-password', label: 'Change Password', icon: 'fa-key' },
+                    { label: '🔔 System', items: [
+                        { id: 'notifications', label: 'Notifications', icon: 'fa-bell', badge: () => this.unreadNotifs },
                         { id: 'activity-log', label: 'Activity Log', icon: 'fa-list' },
-                        { id: 'backup', label: 'Backup', icon: 'fa-database' }
+                        { id: 'system-status', label: 'System Status', icon: 'fa-server' }
                     ]}
                 ],
 
@@ -487,13 +641,22 @@
                 get totalViews() { return this.hosts.reduce((s, h) => s + (h.views || 0), 0); },
                 get avgViews() { return this.hosts.length ? Math.round(this.totalViews / this.hosts.length) : 0; },
                 get topSite() { const s = [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0))[0]; return s ? s.title : '—'; },
-                get topSites() { return [...this.hosts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10); },
-                get filteredHosts() { const q = this.hostSearch.toLowerCase(); return !q ? this.hosts : this.hosts.filter(h => h.title.toLowerCase().includes(q) || h.slug.toLowerCase().includes(q)); },
+                get filteredHosts() {
+                    let list = this.hosts;
+                    if (this.statusFilter === 'active') list = list.filter(h => !h.banned);
+                    else if (this.statusFilter === 'banned') list = list.filter(h => h.banned);
+                    else if (this.statusFilter === 'password') list = list.filter(h => h.password);
+                    const q = this.hostSearch.toLowerCase();
+                    if (q) list = list.filter(h => h.title.toLowerCase().includes(q) || h.slug.toLowerCase().includes(q));
+                    return list;
+                },
+                get filteredLogs() {
+                    if (!this.logSearch) return this.activityLogs;
+                    const q = this.logSearch.toLowerCase();
+                    return this.activityLogs.filter(l => l.action.toLowerCase().includes(q) || (l.details || '').toLowerCase().includes(q));
+                },
                 get onlineNow() {
-                    return this.hosts.filter(h => {
-                        if (!h.lastActive) return false;
-                        return (Date.now() - new Date(h.lastActive).getTime()) < 5 * 60 * 1000;
-                    }).length;
+                    return this.hosts.filter(h => h.lastActive && (Date.now() - new Date(h.lastActive).getTime()) < 5 * 60 * 1000).length;
                 },
                 isOnline(h) {
                     if (!h.lastActive) return false;
@@ -502,19 +665,31 @@
 
                 init() {
                     const saved = localStorage.getItem('admin_logged_in');
-                    if (saved === 'true') { 
-                        this.loggedIn = true; 
-                        this.loadHosts(); 
-                        this.loadRedirect(); 
-                        this.loadSettings();
+                    if (saved === 'true') {
+                        this.loggedIn = true;
+                        this.loadAll();
                     }
                 },
 
-                async loadSettings() {
+                async loadAll() {
+                    this.loading = true;
                     try {
-                        const res = await fetch('/api/admin/settings', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
-                        const data = await res.json();
-                        Object.assign(this.siteSettings, data);
+                        await Promise.all([
+                            this.loadHosts(),
+                            this.loadRedirect(),
+                            this.loadSettings(),
+                            this.loadLogs(),
+                            this.loadNotifications(),
+                            this.loadSystemStatus()
+                        ]);
+                    } catch(e) {}
+                    this.loading = false;
+                },
+
+                async loadHosts() {
+                    try {
+                        const res = await fetch('/api/admin/hosts', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        this.hosts = await res.json();
                     } catch(e) {}
                 },
                 async loadRedirect() {
@@ -525,33 +700,67 @@
                         this.redirectActive = data.url || '';
                     } catch(e) {}
                 },
-                async loadHosts() {
-                    this.loading = true;
+                async loadSettings() {
                     try {
-                        const res = await fetch('/api/admin/hosts', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
-                        const data = await res.json();
-                        this.hosts = Array.isArray(data) ? data : [];
+                        const res = await fetch('/api/admin/settings', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        Object.assign(this.settings, await res.json());
                     } catch(e) {}
-                    this.loading = false;
                 },
-                refreshData() { this.loadHosts(); this.loadRedirect(); this.loadSettings(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
+                async loadLogs() {
+                    try {
+                        const res = await fetch('/api/admin/logs', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        this.activityLogs = await res.json();
+                    } catch(e) {}
+                },
+                async loadNotifications() {
+                    try {
+                        const res = await fetch('/api/admin/notifications', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        this.notifications = await res.json();
+                        this.unreadNotifs = this.notifications.filter(n => !n.read).length;
+                    } catch(e) {}
+                },
+                async loadSystemStatus() {
+                    try {
+                        const res = await fetch('/api/admin/system-status', { headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                        this.systemStatus = await res.json();
+                    } catch(e) {}
+                },
+
+                refreshData() { this.loadAll(); this.showToastMsg('রিফ্রেশ', 'ডেটা লোড'); },
 
                 login() {
                     this.loginError = '';
                     if (this.password === 'NOBITA_VIP') {
                         this.loggedIn = true;
                         localStorage.setItem('admin_logged_in', 'true');
-                        this.addLog('Admin logged in');
-                        this.loadHosts(); this.loadRedirect(); this.loadSettings();
+                        this.loadAll();
                     } else { this.loginError = 'ভুল পাসওয়ার্ড'; }
                 },
                 logout() { this.loggedIn = false; localStorage.removeItem('admin_logged_in'); this.password = ''; },
 
-                addLog(action) {
-                    this.activityLogs.unshift({ action, time: new Date().toLocaleString('en-GB') });
-                    if (this.activityLogs.length > 100) this.activityLogs = this.activityLogs.slice(0, 100);
+                toggleSelect(id) {
+                    const idx = this.selectedHosts.indexOf(id);
+                    if (idx > -1) this.selectedHosts.splice(idx, 1);
+                    else this.selectedHosts.push(id);
                 },
-                clearLogs() { if (!confirm('সব লগ মুছবেন?')) return; this.activityLogs = []; this.showToastMsg('ক্লিয়ার', ''); },
+
+                async bulkAction(action) {
+                    if (this.selectedHosts.length === 0) return;
+                    const actionText = action === 'delete' ? 'ডিলিট' : action === 'ban' ? 'ব্যান' : 'আনব্যান';
+                    if (!confirm(`${this.selectedHosts.length} টি হোস্ট ${actionText} করবেন?`)) return;
+                    try {
+                        const res = await fetch('/api/admin/hosts/bulk', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
+                            body: JSON.stringify({ ids: this.selectedHosts, action })
+                        });
+                        if (res.ok) {
+                            this.selectedHosts = [];
+                            this.loadHosts();
+                            this.showToastMsg('সফল', actionText);
+                        }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                },
 
                 async toggleHostBan(h) {
                     const res = await fetch('/api/admin/hosts/' + h._id + '/ban', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ banned: !h.banned }) });
@@ -565,137 +774,98 @@
                 viewCode(h) { this.editingHost = { ...h }; this.showCodeModal = true; },
                 async saveCode() {
                     const res = await fetch('/api/admin/hosts/' + this.editingHost._id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ code: this.editingHost.code }) });
-                    if (res.ok) {
-                        const idx = this.hosts.findIndex(h => h._id === this.editingHost._id);
-                        if (idx > -1) this.hosts[idx].code = this.editingHost.code;
-                        this.showCodeModal = false;
-                        this.showToastMsg('সেভ', '');
-                    }
+                    if (res.ok) { const idx = this.hosts.findIndex(h => h._id === this.editingHost._id); if (idx > -1) this.hosts[idx].code = this.editingHost.code; this.showCodeModal = false; this.showToastMsg('সেভ', ''); }
                 },
                 downloadCode(h) {
-                    if (!h.code) { this.showToastMsg('কোড নেই', '', 'error'); return; }
+                    if (!h.code) return this.showToastMsg('কোড নেই', '', 'error');
                     const blob = new Blob([h.code], { type: 'text/html;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url; a.download = h.slug + '.html';
+                    a.href = url; a.download = (h.slug || 'site') + '.html';
                     document.body.appendChild(a); a.click(); document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                     this.showToastMsg('ডাউনলোড', h.slug + '.html');
                 },
 
-                startEditPassword(id, currentPassword) {
-                    this.editingPasswordId = id;
-                    this.newPasswordValue = currentPassword;
+                showQR(h) {
+                    this.qrUrl = window.location.origin + '/p/' + h.slug;
+                    this.showQRModal = true;
+                    this.$nextTick(() => {
+                        const container = document.getElementById('qrContainer');
+                        container.innerHTML = '';
+                        new QRCode(container, {
+                            text: this.qrUrl,
+                            width: 220,
+                            height: 220,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff"
+                        });
+                    });
                 },
+                downloadQR() {
+                    const canvas = document.querySelector('#qrContainer canvas');
+                    if (!canvas) return;
+                    const a = document.createElement('a');
+                    a.href = canvas.toDataURL('image/png');
+                    a.download = 'qrcode-' + Date.now() + '.png';
+                    a.click();
+                },
+
+                startEditPassword(id, currentPassword) { this.editingPasswordId = id; this.newPasswordValue = currentPassword; },
                 cancelEditPassword() { this.editingPasswordId = null; this.newPasswordValue = ''; },
                 async savePassword(id) {
                     try {
-                        const res = await fetch('/api/admin/hosts/' + id, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify({ password: this.newPasswordValue || null })
-                        });
-                        if (res.ok) {
-                            const idx = this.hosts.findIndex(h => h._id === id);
-                            if (idx > -1) this.hosts[idx].password = this.newPasswordValue || null;
-                            this.showToastMsg('পাসওয়ার্ড আপডেট ✓', '');
-                            this.cancelEditPassword();
-                        }
-                    } catch (e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
+                        const res = await fetch('/api/admin/hosts/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ password: this.newPasswordValue || null }) });
+                        if (res.ok) { const idx = this.hosts.findIndex(h => h._id === id); if (idx > -1) this.hosts[idx].password = this.newPasswordValue || null; this.cancelEditPassword(); this.showToastMsg('আপডেট ✓', ''); }
+                    } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
-                openRedirectModal(h) {
-                    this.redirectHost = { ...h };
-                    this.redirectForm.url = h.redirectUrl || '';
-                    this.showRedirectModal = true;
-                },
+                openRedirectModal(h) { this.redirectHost = { ...h }; this.redirectForm.url = h.redirectUrl || ''; this.showRedirectModal = true; },
                 async saveHostRedirect() {
                     try {
-                        const res = await fetch('/api/admin/hosts/' + this.redirectHost._id, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify({ redirectUrl: this.redirectForm.url || null })
-                        });
-                        if (res.ok) {
-                            const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id);
-                            if (idx > -1) this.hosts[idx].redirectUrl = this.redirectForm.url || null;
-                            this.showRedirectModal = false;
-                            this.showToastMsg('সেভ ✓', this.redirectForm.url || 'বন্ধ');
-                        }
+                        const res = await fetch('/api/admin/hosts/' + this.redirectHost._id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ redirectUrl: this.redirectForm.url || null }) });
+                        if (res.ok) { const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id); if (idx > -1) this.hosts[idx].redirectUrl = this.redirectForm.url || null; this.showRedirectModal = false; this.showToastMsg('সেভ ✓', ''); }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
                 async removeHostRedirect() {
                     try {
-                        const res = await fetch('/api/admin/hosts/' + this.redirectHost._id, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify({ redirectUrl: null })
-                        });
-                        if (res.ok) {
-                            const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id);
-                            if (idx > -1) this.hosts[idx].redirectUrl = null;
-                            this.showRedirectModal = false;
-                            this.showToastMsg('বন্ধ', '');
-                        }
+                        const res = await fetch('/api/admin/hosts/' + this.redirectHost._id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ redirectUrl: null }) });
+                        if (res.ok) { const idx = this.hosts.findIndex(h => h._id === this.redirectHost._id); if (idx > -1) this.hosts[idx].redirectUrl = null; this.showRedirectModal = false; this.showToastMsg('বন্ধ', ''); }
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
                 async applyRedirect() {
                     if (!this.redirectUrl) return this.showToastMsg('লিংক দিন', '', 'error');
-                    const res = await fetch('/api/admin/redirect', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                        body: JSON.stringify({ url: this.redirectUrl })
-                    });
+                    const res = await fetch('/api/admin/redirect', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ url: this.redirectUrl }) });
                     if (res.ok) { this.redirectActive = this.redirectUrl; this.showToastMsg('চালু ✓', ''); }
                 },
                 async clearRedirect() {
-                    const res = await fetch('/api/admin/redirect', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                        body: JSON.stringify({ url: '' })
-                    });
+                    const res = await fetch('/api/admin/redirect', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify({ url: '' }) });
                     if (res.ok) { this.redirectActive = ''; this.redirectUrl = ''; this.showToastMsg('বন্ধ', ''); }
                 },
 
-                async saveSiteSettings() {
+                async saveSettings() {
                     try {
-                        const res = await fetch('/api/admin/settings', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' },
-                            body: JSON.stringify(this.siteSettings)
-                        });
-                        if (res.ok) {
-                            this.addLog('Site settings saved');
-                            this.showToastMsg('সেভ ✓', 'সব পেজে আপডেট হবে');
-                        }
+                        const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-pass': 'NOBITA_VIP' }, body: JSON.stringify(this.settings) });
+                        if (res.ok) this.showToastMsg('সেভ ✓', 'সব পেজে আপডেট হবে');
                     } catch(e) { this.showToastMsg('ব্যর্থ', e.message, 'error'); }
                 },
 
                 async toggleMaintenance() {
-                    const current = this.siteSettings.maintenanceMode === true || this.siteSettings.maintenanceMode === 'true';
-                    this.siteSettings.maintenanceMode = !current;
-                    await this.saveSiteSettings();
-                    this.showToastMsg(current ? 'Maintenance বন্ধ' : 'Maintenance চালু', '');
+                    const current = this.settings.maintenanceMode === true || this.settings.maintenanceMode === 'true';
+                    this.settings.maintenanceMode = !current;
+                    await this.saveSettings();
                 },
 
-                changePassword() {
-                    if (!this.passwordForm.old || !this.passwordForm.new) return this.showToastMsg('সব ফিল্ড দিন', '', 'error');
-                    if (this.passwordForm.new !== this.passwordForm.confirm) return this.showToastMsg('পাসওয়ার্ড মিলছে না', '', 'error');
-                    if (this.passwordForm.old !== 'NOBITA_VIP') return this.showToastMsg('পুরনো পাসওয়ার্ড ভুল', '', 'error');
-                    this.addLog('Password changed');
-                    this.passwordForm = { old: '', new: '', confirm: '' };
-                    this.showToastMsg('সফল', 'শুধু local');
+                async markAllRead() {
+                    await fetch('/api/admin/notifications/read', { method: 'POST', headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                    this.loadNotifications();
                 },
-
-                downloadBackup() {
-                    const data = { hosts: this.hosts.map(h => ({ ...h, code: h.code ? '[TRUNCATED]' : '' })), settings: this.siteSettings, exportedAt: new Date().toISOString() };
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'backup-' + Date.now() + '.json'; a.click();
-                },
-                exportAllCodes() {
-                    this.hosts.forEach(h => { const blob = new Blob([h.code], { type: 'text/html' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = h.slug + '.html'; a.click(); });
-                    this.showToastMsg('ডাউনলোড', this.hosts.length + ' ফাইল');
+                async clearNotifications() {
+                    if (!confirm('সব নোটিফিকেশন মুছবেন?')) return;
+                    await fetch('/api/admin/notifications', { method: 'DELETE', headers: { 'x-admin-pass': 'NOBITA_VIP' } });
+                    this.notifications = [];
+                    this.unreadNotifs = 0;
                 },
 
                 showToastMsg(msg, sub, type = 'success') {
